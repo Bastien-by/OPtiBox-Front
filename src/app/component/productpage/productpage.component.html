@@ -1,0 +1,17 @@
+<div class="flex flex-col gap-3 p-5">
+  <div>
+    <h1 class="text-2xl font-bold py-3">Ajout de produit</h1>
+    <input class="border border-gray-300 p-2" type="text" [(ngModel)]="product.title" placeholder="Nom du produit">
+    <input class="border border-gray-300 p-2" type="text" [(ngModel)]="product.type" placeholder="Type">
+    <input class="border border-gray-300 p-2" type="text" [(ngModel)]="product.size" placeholder="Size">
+    <input class="border border-gray-300 p-2" type="text" [(ngModel)]="product.cmu" placeholder="Cmu">
+    <input class="border border-gray-300 p-2" type="text" [(ngModel)]="product.location" placeholder="Localisation">
+    <input class="border border-gray-300 p-2" type="text" [(ngModel)]="product.picture" placeholder="image">
+    <button class="bg-blue-500 text-white rounded shadow p-3" (click)="productService.addProduct(product)">Ajouter</button>
+  </div>
+  <div class="rounded overflow-auto shadow-lg bg-gray-100 border p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+    <div class="" *ngFor="let product of productService.getAllProducts()">
+      <app-product [productInput]="product" (trigger)="handleTrigger(product.id)"></app-product>
+    </div>
+  </div>
+</div>
