@@ -7,7 +7,7 @@
     <input class="border border-gray-300 p-2" type="text" [(ngModel)]="product.cmu" placeholder="Cmu">
     <input class="border border-gray-300 p-2" type="text" [(ngModel)]="product.location" placeholder="Localisation">
     <input class="border border-gray-300 p-2" type="file" [(ngModel)]="product.picture" placeholder="Image">
-    <button class="bg-blue-500 text-white rounded shadow p-3" (click)="productService.addProduct(product)">Ajouter</button>
+    <button class="bg-blue-500 text-white rounded shadow p-3" (click)="[productService.addProduct(product),showAddToast()]">Ajouter</button>
   </div>
   <div class="rounded overflow-auto shadow-lg bg-gray-100 border p-5 gap-3">
     <!-- if productService.getAllProducts() is empty, display a message -->
@@ -27,9 +27,13 @@
               <h6 class="mt-0 mb-3">{{ product.cmu }}</h6>
               <h6 class="mt-0 mb-3">{{ product.location }}</h6>
               <p-tag [value]="product.type"></p-tag>
-              <div class="mt-5 flex align-items-center justify-content-center gap-2 p-5">
-                <p-button class="bg-blue-500 rounded-full" icon="pi pi-pencil" [rounded]="true" (click)="showDialog(product)"/>
-                <p-button class="bg-red-800 rounded-full" icon="pi pi-trash" [rounded]="true" (click)="productService.removeProduct(product.id)"/>
+              <div class="mt-5 align-items-center justify-content-center gap-2 p-5">
+                <div class="bg-blue-500 rounded-full p-button p-3 m-2" (click)="showDialog(product, 1)">
+                  <i class="pi pi-pencil"></i>
+                </div>
+                <div class="bg-red-800 rounded-full p-button p-3 m-2" (click)="showDialog(product, 2)">
+                  <i class="pi pi-trash"></i>
+                </div>
               </div>
             </div>
           </div>
@@ -43,7 +47,7 @@
 <!--    </div>-->
 
   </div>
-  <p-dialog header="Modification de produit" [(visible)]="visible" [style]="{ width: '50vw' }" >
+  <p-dialog header="Modification de produit" [(visible)]="dialog1Visible" [style]="{ width: '50vw' }" >
     <div class="flex flex-col gap-3 p-5">
       <h1 class="text-2xl font-bold py-3">Produit n° {{ selectedProduct.id }}</h1>
       <input class="border border-gray-300 p-2" type="text" [(ngModel)]="selectedProduct.title" placeholder="Nom du produit">
@@ -52,8 +56,18 @@
       <input class="border border-gray-300 p-2" type="text" [(ngModel)]="selectedProduct.cmu" placeholder="Cmu">
       <input class="border border-gray-300 p-2" type="text" [(ngModel)]="selectedProduct.location" placeholder="Localisation">
       <input class="border border-gray-300 p-2" type="file" [(ngModel)]="selectedProduct.picture" placeholder="Image">
-      <button class="bg-blue-500 text-white rounded shadow p-3" (click)="[productService.updateProduct(selectedProduct), hideDialog()]">Modifier</button>
+      <button class="bg-blue-500 text-white rounded shadow p-3" (click)="[productService.updateProduct(selectedProduct), hideDialog(), showUpdateToast()]">Modifier</button>
     </div>
   </p-dialog>
+
+  <p-dialog header="Supprimer un produit" [(visible)]="dialog2Visible" [style]="{ width: '50vw' }" >
+    <div class="flex flex-col gap-3 p-5">
+      <h1 class="text-2xl font-bold py-3">Produit n° {{ selectedProduct.id }}</h1>
+      <p>Voulez-vous définitivement supprimer ce produit ?</p>
+      <button class="bg-red-800 text-white rounded shadow p-3" (click)="[productService.removeProduct(selectedProduct.id), hideDialog(), showDeleteToast()]">Supprimer</button>
+    </div>
+  </p-dialog>
+
+  <p-toast></p-toast>
 
 </div>

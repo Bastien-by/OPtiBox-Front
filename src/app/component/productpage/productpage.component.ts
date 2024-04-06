@@ -8,6 +8,8 @@ import {CarouselModule} from "primeng/carousel";
 import {TagModule} from "primeng/tag";
 import {ButtonModule} from "primeng/button";
 import {DialogModule} from "primeng/dialog";
+import {ToastModule} from "primeng/toast";
+import {MessageService} from "primeng/api";
 
 @Component({
   selector: 'app-productpage',
@@ -21,9 +23,11 @@ import {DialogModule} from "primeng/dialog";
     CarouselModule,
     TagModule,
     ButtonModule,
-    DialogModule
+    DialogModule,
+    ToastModule
   ],
   templateUrl: './productpage.component.html',
+  providers: [MessageService],
   styleUrl: './productpage.component.css'
 })
 export class ProductpageComponent {
@@ -45,11 +49,12 @@ export class ProductpageComponent {
     picture: '',
   }
 
-  visible: boolean = false;
+  dialog1Visible: boolean = false;
+  dialog2Visible: boolean = false;
 
   responsiveOptions: any[] | undefined;
 
-  constructor(protected productService: ProductService) {}
+  constructor(protected productService: ProductService, private messageService: MessageService) {}
 
   ngOnInit(){
     this.responsiveOptions = [
@@ -72,18 +77,35 @@ export class ProductpageComponent {
   }
 
 
-  showDialog(product: any) {
-    this.visible = true;
+  showDialog(product: any, dialogNumber: number) {
+    if(dialogNumber === 1){
+      this.dialog1Visible = true;
+    } else {
+      this.dialog2Visible = true;
+    }
     // copy the product to selectedProduct
     this.selectedProduct = {...product};
   }
 
   hideDialog() {
-    this.visible = false;
+    this.dialog1Visible = false;
+    this.dialog2Visible = false;
   }
 
   handleTrigger(id: number){
     this.productService.removeProduct(id);
+  }
+
+  showAddToast(){
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Un produit a été ajouté' });
+  }
+
+  showUpdateToast(){
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Un produit a été modifié' });
+  }
+
+  showDeleteToast(){
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Un produit a été supprimé' });
   }
 
 }
