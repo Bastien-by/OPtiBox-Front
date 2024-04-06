@@ -6,12 +6,54 @@
     <input class="border border-gray-300 p-2" type="text" [(ngModel)]="product.size" placeholder="Size">
     <input class="border border-gray-300 p-2" type="text" [(ngModel)]="product.cmu" placeholder="Cmu">
     <input class="border border-gray-300 p-2" type="text" [(ngModel)]="product.location" placeholder="Localisation">
-    <input class="border border-gray-300 p-2" type="text" [(ngModel)]="product.picture" placeholder="image">
+    <input class="border border-gray-300 p-2" type="file" [(ngModel)]="product.picture" placeholder="Image">
     <button class="bg-blue-500 text-white rounded shadow p-3" (click)="productService.addProduct(product)">Ajouter</button>
   </div>
-  <div class="rounded overflow-auto shadow-lg bg-gray-100 border p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-    <div class="" *ngFor="let product of productService.getAllProducts()">
-      <app-product [productInput]="product" (trigger)="handleTrigger(product.id)"></app-product>
+  <div class="rounded overflow-auto shadow-lg bg-gray-100 border p-5 gap-3">
+    <!-- if productService.getAllProducts() is empty, display a message -->
+    <div *ngIf="productService.getAllProducts().length === 0" class="text-center text-gray-500">
+      <p>Aucun produit n'a été ajouté</p>
     </div>
+    <p-carousel [value]="productService.getAllProducts()" [numVisible]="3" [numScroll]="1" [responsiveOptions]="responsiveOptions">
+      <ng-template let-product pTemplate="item">
+        <div class="product-item">
+          <div class="product-item-content">
+            <div class="mb-3">
+              <img src="https://openseauserdata.com/files/b261626a159edf64a8a92aa7306053b8.png" [alt]="product.title" class="product-image" />
+            </div>
+            <div>
+              <h4 class="mb-1 font-bold">{{ product.title }}</h4>
+              <h6 class="mt-0 mb-3">{{ product.size }}</h6>
+              <h6 class="mt-0 mb-3">{{ product.cmu }}</h6>
+              <h6 class="mt-0 mb-3">{{ product.location }}</h6>
+              <p-tag [value]="product.type"></p-tag>
+              <div class="mt-5 flex align-items-center justify-content-center gap-2 p-5">
+                <p-button class="bg-blue-500 rounded-full" icon="pi pi-pencil" [rounded]="true" (click)="showDialog(product)"/>
+                <p-button class="bg-red-800 rounded-full" icon="pi pi-trash" [rounded]="true" (click)="productService.removeProduct(product.id)"/>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </p-carousel>
+
+
+<!--    <div class="" *ngFor="let product of productService.getAllProducts()">-->
+<!--      <app-product [productInput]="product" (trigger)="handleTrigger(product.id)"></app-product>-->
+<!--    </div>-->
+
   </div>
+  <p-dialog header="Modification de produit" [(visible)]="visible" [style]="{ width: '50vw' }" >
+    <div class="flex flex-col gap-3 p-5">
+      <h1 class="text-2xl font-bold py-3">Produit n° {{ selectedProduct.id }}</h1>
+      <input class="border border-gray-300 p-2" type="text" [(ngModel)]="selectedProduct.title" placeholder="Nom du produit">
+      <input class="border border-gray-300 p-2" type="text" [(ngModel)]="selectedProduct.type" placeholder="Type">
+      <input class="border border-gray-300 p-2" type="text" [(ngModel)]="selectedProduct.size" placeholder="Size">
+      <input class="border border-gray-300 p-2" type="text" [(ngModel)]="selectedProduct.cmu" placeholder="Cmu">
+      <input class="border border-gray-300 p-2" type="text" [(ngModel)]="selectedProduct.location" placeholder="Localisation">
+      <input class="border border-gray-300 p-2" type="file" [(ngModel)]="selectedProduct.picture" placeholder="Image">
+      <button class="bg-blue-500 text-white rounded shadow p-3" (click)="[productService.updateProduct(selectedProduct), hideDialog()]">Modifier</button>
+    </div>
+  </p-dialog>
+
 </div>

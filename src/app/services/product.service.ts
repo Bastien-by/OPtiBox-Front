@@ -34,6 +34,27 @@ export class ProductService {
     });
   }
 
+  updateProduct(productSent: any){
+    let product = {
+      id: productSent.id,
+      title: productSent.title,
+      type: productSent.type,
+      size: productSent.size,
+      cmu: productSent.cmu,
+      location: productSent.location,
+      picture: productSent.picture,
+    };
+    this.httpClient.post('api/products', product).subscribe((productReceived: any) => {
+      this.productArray = this.productArray.map(p => {
+        if(p.id === productReceived.id){
+          return productReceived;
+        }
+        return p;
+      });
+    });
+
+  }
+
   removeProduct(id: number){
     this.productArray = this.productArray.filter(product => product.id !== id);
     this.httpClient.delete('api/products/' + id).subscribe(() => {
