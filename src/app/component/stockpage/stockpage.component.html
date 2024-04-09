@@ -1,0 +1,82 @@
+<div class="flex flex-col gap-3 p-5">
+  <div>
+    <h1 class="text-2xl font-bold py-3">Ajout de stock</h1>
+
+    <select class="border border-gray-300 p-2" [(ngModel)]="stock.product.id">
+      <option *ngFor="let product of productService.getAllProducts()" [value]="product.id">{{ product.title }}</option>
+    </select>
+    <button class="bg-blue-500 text-white rounded shadow p-3" (click)="[stockService.addStock(stock),showAddToast()]">Ajouter</button>
+  </div>
+  <div class="rounded overflow-auto shadow-lg bg-gray-100 border p-5 gap-3">
+    <!-- if stockService.getAllStocks() is empty, display a message -->
+    <div *ngIf="stockService.getAllStocks().length === 0" class="text-center text-gray-500">
+      <p>Aucun stock n'a été ajouté</p>
+    </div>
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+      <tr>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Titre</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Taille</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CMU</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Emplacement</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Disponibilité</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date de Création</th>
+        <th scope="col" class="relative px-6 py-3"><span class="sr-only">Actions</span></th>
+      </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+      <ng-container *ngFor="let stock of stockService.getAllStocks()">
+        <tr>
+          <td class="px-6 py-4 whitespace-nowrap">{{ stock.product.title }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">{{ stock.product.size }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">{{ stock.product.cmu }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">{{ stock.product.location }}</td>
+          <td class="px-6 py-4 whitespace-nowrap"><p-tag [value]="stock.product.type"></p-tag></td>
+          <td class="px-6 py-4 whitespace-nowrap">{{ stock.available ? 'Disponible' : 'Indisponible' }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">{{ stock.status === 0 ? 'NOK' : stock.status === 1 ? 'OK' : 'HS' }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">{{ stock.creationDate | date: 'dd/MM/yyyy' }}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+            <div class="flex justify-end items-center space-x-2">
+              <div class="bg-blue-500 rounded-full p-3 cursor-pointer" (click)="showDialog(stock, 1)">
+                <i class="pi pi-pencil text-white"></i>
+              </div>
+              <div class="bg-red-800 rounded-full p-3 cursor-pointer" (click)="showDialog(stock, 2)">
+                <i class="pi pi-trash text-white"></i>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </ng-container>
+      </tbody>
+    </table>
+
+
+  </div>
+  <p-dialog header="Modification de stock" [(visible)]="dialog1Visible" [style]="{ width: '50vw' }" >
+    <div class="flex flex-col gap-3 p-5">
+      <h1 class="text-2xl font-bold py-3">Stock n° {{ selectedStock.id }}</h1>
+      <label class="text-gray-700" for="availability">{{ selectedStock.available ? 'Disponible' : 'Indisponible' }}</label>
+      <input id="availability" class="" type="checkbox" [(ngModel)]="selectedStock.available" placeholder="Disponible">
+      <label class="text-gray-700" for="status">Statut</label>
+      <select id="status" class="border border-gray-300 p-2" [(ngModel)]="selectedStock.status">
+        <option value="0">NOK</option>
+        <option value="1">OK</option>
+        <option value="2">HS</option>
+      </select>
+      <button class="bg-blue-500 text-white rounded shadow p-3" (click)="[stockService.updateStock(selectedStock), hideDialog(), showUpdateToast()]">Modifier</button>
+    </div>
+  </p-dialog>
+
+  <p-dialog header="Supprimer un stock" [(visible)]="dialog2Visible" [style]="{ width: '50vw' }" >
+    <div class="flex flex-col gap-3 p-5">
+      <h1 class="text-2xl font-bold py-3">Stock n° {{ selectedStock.id }}</h1>
+      <p>Voulez-vous définitivement supprimer ce stock ?</p>
+      <button class="bg-red-800 text-white rounded shadow p-3" (click)="[stockService.removeStock(selectedStock.id), hideDialog(), showDeleteToast()]">Supprimer</button>
+    </div>
+  </p-dialog>
+
+  <p-toast></p-toast>
+
+</div>
