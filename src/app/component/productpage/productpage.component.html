@@ -6,7 +6,7 @@
     <input class="border border-gray-300 p-2" type="text" [(ngModel)]="product.size" placeholder="Size">
     <input class="border border-gray-300 p-2" type="text" [(ngModel)]="product.cmu" placeholder="Cmu">
     <input class="border border-gray-300 p-2" type="text" [(ngModel)]="product.location" placeholder="Localisation">
-    <input class="border border-gray-300 p-2" type="file" (change)="onFileSelected($event)" accept="image/*" placeholder="Image">
+    <input class="border border-gray-300 p-2" type="file" (change)="onFileSelected($event, product)" accept="image/*" placeholder="Image">
     <button class="bg-blue-500 text-white rounded shadow p-3" (click)="addProduct()">Ajouter</button>
   </div>
   <div class="rounded overflow-auto shadow-lg bg-gray-100 border p-5 gap-3">
@@ -19,7 +19,8 @@
         <div class="product-item">
           <div class="product-item-content">
             <div class="mb-3">
-              <img src="{{ product.picture }}" alt="Image du produit" class="product-image">
+              <img *ngIf="product.picture" src="{{ product.picture }}" alt="Image du produit" class="product-image">
+              <img *ngIf="!product.picture" src="assets/images/default_image.jpg" alt="Image du produit" class="product-image">
             </div>
             <div>
               <h4 class="mb-1 font-bold">{{ product.title }}</h4>
@@ -52,7 +53,9 @@
       <input class="border border-gray-300 p-2" type="text" [(ngModel)]="selectedProduct.size" placeholder="Size">
       <input class="border border-gray-300 p-2" type="text" [(ngModel)]="selectedProduct.cmu" placeholder="Cmu">
       <input class="border border-gray-300 p-2" type="text" [(ngModel)]="selectedProduct.location" placeholder="Localisation">
-      <input class="border border-gray-300 p-2" type="file" [(ngModel)]="selectedProduct.picture" placeholder="Image">
+      <img *ngIf="selectedProduct.picture" src="{{ selectedProduct.picture }}" alt="Image du produit" class="product-image">
+      <img *ngIf="!selectedProduct.picture" src="assets/images/default_image.jpg" alt="Image du produit" class="product-image">
+      <input class="border border-gray-300 p-2" type="file" (change)="onFileSelected($event, selectedProduct)" accept="image/*" placeholder="Image">
       <button class="bg-blue-500 text-white rounded shadow p-3" (click)="[productService.updateProduct(selectedProduct), hideDialog(), showUpdateToast()]">Modifier</button>
     </div>
   </p-dialog>

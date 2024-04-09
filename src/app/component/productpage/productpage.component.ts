@@ -76,16 +76,16 @@ export class ProductpageComponent {
     ];
   }
 
-  onFileSelected(event: any) {
+  onFileSelected(event: any, productToUpdate: any) {
     const file: File = event.target.files[0];
-    this.encodeImageAsBase64(file);
+    this.encodeImageAsBase64(file, productToUpdate);
   }
 
 
-  encodeImageAsBase64(file: any) {
+  encodeImageAsBase64(file: any, productToUpdate: any) {
     const reader = new FileReader();
     reader.onload = () => {
-      this.product.picture = reader.result;
+      productToUpdate.picture = reader.result;
     }
     reader.readAsDataURL(file);
   }
