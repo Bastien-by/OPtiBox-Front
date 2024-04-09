@@ -20,31 +20,30 @@ export class ProductService {
     return this.productArray;
   }
 
-  addProduct(productSent: any){
-    let product = {
-      title: productSent.title,
-      type: productSent.type,
-      size: productSent.size,
-      cmu: productSent.cmu,
-      location: productSent.location,
-      picture: productSent.picture,
-    };
-    this.httpClient.post('api/products', product).subscribe(() => {
+  addProduct(productSent: any) {
+    const formData = new FormData();
+    formData.append('title', productSent.title);
+    formData.append('type', productSent.type);
+    formData.append('size', productSent.size);
+    formData.append('cmu', productSent.cmu);
+    formData.append('location', productSent.location);
+    formData.append('picture', productSent.picture); // Base64 de l'image
+
+    this.httpClient.post('api/products', formData).subscribe(() => {
       this.refreshProducts();
     });
   }
 
   updateProduct(productSent: any){
-    let product = {
-      id: productSent.id,
-      title: productSent.title,
-      type: productSent.type,
-      size: productSent.size,
-      cmu: productSent.cmu,
-      location: productSent.location,
-      picture: productSent.picture,
-    };
-    this.httpClient.post('api/products', product).subscribe((productReceived: any) => {
+    const formData = new FormData();
+    formData.append('id', productSent.id);
+    formData.append('title', productSent.title);
+    formData.append('type', productSent.type);
+    formData.append('size', productSent.size);
+    formData.append('cmu', productSent.cmu);
+    formData.append('location', productSent.location);
+    formData.append('picture', productSent.picture); // Base64 de l'image
+    this.httpClient.put('api/products', formData).subscribe((productReceived: any) => {
       this.productArray = this.productArray.map(p => {
         if(p.id === productReceived.id){
           return productReceived;

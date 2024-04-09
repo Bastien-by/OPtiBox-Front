@@ -37,7 +37,7 @@ export class ProductpageComponent {
     size: '',
     cmu: '',
     location: '',
-    picture: '',
+    picture: null,
   }
 
   selectedProduct: any = {
@@ -74,6 +74,26 @@ export class ProductpageComponent {
         numScroll: 1
       }
     ];
+  }
+
+  onFileSelected(event: any) {
+    const file: File = event.target.files[0];
+    this.encodeImageAsBase64(file);
+  }
+
+
+  encodeImageAsBase64(file: any) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.product.picture = reader.result;
+    }
+    reader.readAsDataURL(file);
+  }
+
+
+  addProduct() {
+    this.productService.addProduct(this.product);
+    this.showAddToast();
   }
 
 
