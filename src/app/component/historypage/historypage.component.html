@@ -1,0 +1,98 @@
+<div class="flex flex-col gap-3 p-5">
+  <div class="rounded overflow-auto shadow-lg bg-gray-100 border p-5 gap-3">
+    <div *ngIf="historyService.getAllWithdrawHistory().length === 0" class="text-center text-gray-500">
+      <p>Aucun historique de retrait n'a été créé</p>
+    </div>
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+      <tr>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom du produit</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utilisateur</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type de produit</th>
+      </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+      <ng-container *ngFor="let history of historyService.getAllWithdrawHistory()">
+        <tr>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <img [src]="history.stock.product.picture" alt="product image" class="h-10 w-10 rounded-full">
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">{{ history.stock.product.title }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">{{ history.type }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">{{ history.date | date: 'dd/MM/yyyy HH:mm' }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">{{ history.user.username }}</td>
+          <td class="px-6 py-4 whitespace-nowrap"><p-tag [value]="history.stock.product.type"></p-tag></td>
+        </tr>
+      </ng-container>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="rounded overflow-auto shadow-lg bg-gray-100 border p-5 gap-3">
+    <div *ngIf="historyService.getAllDepositHistory().length === 0" class="text-center text-gray-500">
+      <p>Aucun historique de dépôts n'a été créé</p>
+    </div>
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+      <tr>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom du produit</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utilisateur</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type de produit</th>
+      </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+      <ng-container *ngFor="let history of historyService.getAllDepositHistory()">
+        <tr>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <img [src]="history.stock.product.picture" alt="product image" class="h-10 w-10 rounded-full">
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">{{ history.stock.product.title }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">{{ history.type }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">{{ history.date | date: 'dd/MM/yyyy HH:mm' }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">{{ history.user.username }}</td>
+          <td class="px-6 py-4 whitespace-nowrap"><p-tag [value]="history.stock.product.type"></p-tag></td>
+        </tr>
+      </ng-container>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="rounded overflow-auto shadow-lg bg-gray-100 border p-5 gap-3">
+    <div *ngIf="historyService.getAllCheckHistory().length === 0" class="text-center text-gray-500">
+      <p>Aucun historique de contrôle n'a été créé</p>
+    </div>
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+      <tr>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom du produit</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utilisateur</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type de produit</th>
+      </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+      <ng-container *ngFor="let history of historyService.getAllCheckHistory()">
+        <tr>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <img [src]="history.stock.product.picture" alt="product image" class="h-10 w-10 rounded-full">
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">{{ history.stock.product.title }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">{{ history.type }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">{{ history.date | date: 'dd/MM/yyyy HH:mm' }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">{{ history.user.username }}</td>
+          <td class="px-6 py-4 whitespace-nowrap"><p-tag [value]="history.stock.product.type"></p-tag></td>
+        </tr>
+      </ng-container>
+      </tbody>
+    </table>
+  </div>
+
+</div>

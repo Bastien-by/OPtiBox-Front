@@ -5,6 +5,7 @@ import {ProductpageComponent} from "./component/productpage/productpage.componen
 import {StockpageComponent} from "./component/stockpage/stockpage.component";
 import {UserpageComponent} from "./component/userpage/userpage.component";
 import {ScanpageComponent} from "./component/scanpage/scanpage.component";
+import {HistorypageComponent} from "./component/historypage/historypage.component";
 
 export const routes: Routes = [
   {
@@ -12,6 +13,9 @@ export const routes: Routes = [
   },
   {
     path: "scan", component: ScanpageComponent
+  },
+  {
+    path: "history", component: HistorypageComponent
   },
   {
     path: "product", component: ProductpageComponent
