@@ -17,6 +17,9 @@ export class ProductComponent {
     creationDate: null,
   }
 
+  @Input('userInput')
+  user: any = {}
+
   @Output("trigger")
   trigger: EventEmitter<any> = new EventEmitter<any>();
   launchTrigger(){

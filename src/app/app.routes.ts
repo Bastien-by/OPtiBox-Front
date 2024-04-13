@@ -4,10 +4,14 @@ import {RacinePageComponent} from "./component/racine-page/racine-page.component
 import {ProductpageComponent} from "./component/productpage/productpage.component";
 import {StockpageComponent} from "./component/stockpage/stockpage.component";
 import {UserpageComponent} from "./component/userpage/userpage.component";
+import {ScanpageComponent} from "./component/scanpage/scanpage.component";
 
 export const routes: Routes = [
   {
     path: "light", component: LightpageComponent
+  },
+  {
+    path: "scan", component: ScanpageComponent
   },
   {
     path: "product", component: ProductpageComponent
