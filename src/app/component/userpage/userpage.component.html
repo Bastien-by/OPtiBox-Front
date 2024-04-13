@@ -1,0 +1,66 @@
+<div class="flex flex-col gap-3 p-5">
+  <div>
+    <h1 class="text-2xl font-bold py-3">Ajout d'utilisateur</h1>
+    <input class="border border-gray-300 p-2" type="text" [(ngModel)]="user.username" placeholder="Nom de l'utilisateur">
+    <input class="border border-gray-300 p-2" type="password" [(ngModel)]="user.password" placeholder="Mot de passe">
+    <input class="border border-gray-300 p-2" type="text" [(ngModel)]="user.token" placeholder="token">
+    <select class="border border-gray-300 p-2" [(ngModel)]="user.role">
+      <option value="ADMIN">Admin</option>
+      <option value="BASIC">Basic</option>
+    </select>
+    <button class="bg-blue-500 text-white rounded shadow p-3" (click)="addUser()">Ajouter</button>
+  </div>
+  <div class="rounded overflow-auto shadow-lg bg-gray-100 border p-5 gap-3">
+    <!-- if userService.getAllUsers() is empty, display a message -->
+    <div *ngIf="userService.getAllUsers().length === 0" class="text-center text-gray-500">
+      <p>Aucun utilisateur n'a été ajouté</p>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div *ngFor="let user of userService.getAllUsers()" class="bg-white shadow-md rounded-lg p-4 mb-4">
+        <div class="flex flex-col justify-center items-center">
+
+          <div class="text-xl text-dark font-bold">
+            <i class="pi pi-user"></i>
+            {{ user.username}}
+          </div>
+          <div class="border-b-2 border-gray-300 w-full my-3"></div>
+          <div class="text-dark font-bold p-3">
+            <i class="pi pi-key"></i> {{ user.token }}
+          </div>
+          <p-tag [value]="user.role"></p-tag>
+        </div>
+        <div class="mt-5 flex justify-center items-center align-items-center justify-content-center gap-2 p-5">
+          <div class="bg-blue-500 rounded-full p-button p-3 m-2" (click)="showDialog(user, 1)">
+            <i class="pi pi-pencil"></i>
+          </div>
+          <div class="bg-red-800 rounded-full p-button p-3 m-2" (click)="showDialog(user, 2)">
+            <i class="pi pi-trash"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p-dialog header="Modification de utilisateur" [(visible)]="dialog1Visible" [style]="{ width: '50vw' }" >
+    <div class="flex flex-col gap-3 p-5">
+      <h1 class="text-2xl font-bold py-3">Utilisateur n° {{ selectedUser.id }}</h1>
+      <input class="border border-gray-300 p-2" type="text" [(ngModel)]="selectedUser.username" placeholder="Nom de l'utilisateur">
+      <input class="border border-gray-300 p-2" type="text" [(ngModel)]="selectedUser.token" placeholder="token">
+      <select class="border border-gray-300 p-2" [(ngModel)]="selectedUser.role">
+        <option value="ADMIN">Admin</option>
+        <option value="BASIC">Basic</option>
+      </select>
+      <button class="bg-blue-500 text-white rounded shadow p-3" (click)="[userService.updateUser(selectedUser), hideDialog(), showUpdateToast()]">Modifier</button>
+    </div>
+  </p-dialog>
+
+  <p-dialog header="Supprimer un utilisateur" [(visible)]="dialog2Visible" [style]="{ width: '50vw' }" >
+    <div class="flex flex-col gap-3 p-5">
+      <h1 class="text-2xl font-bold py-3">Utilisateur n° {{ selectedUser.id }}</h1>
+      <p>Voulez-vous définitivement supprimer cet utilisateur ?</p>
+      <button class="bg-red-800 text-white rounded shadow p-3" (click)="[userService.removeUser(selectedUser.id), hideDialog(), showDeleteToast()]">Supprimer</button>
+    </div>
+  </p-dialog>
+
+  <p-toast></p-toast>
+
+</div>
