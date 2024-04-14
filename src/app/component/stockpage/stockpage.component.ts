@@ -49,7 +49,6 @@ export class StockpageComponent implements OnInit{
     creationDate: null,
   }
 
-  stockArray: any[] = [];
 
   dialog1Visible: boolean = false;
   dialog2Visible: boolean = false;
@@ -81,6 +80,7 @@ export class StockpageComponent implements OnInit{
 
     //get product service to get all products
     this.listOfProducts = this.productService.getAllProducts();
+    this.stockService.refreshStocks();
   }
 
 

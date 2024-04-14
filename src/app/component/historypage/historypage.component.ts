@@ -35,29 +35,9 @@ export class HistorypageComponent implements OnInit{
     status: null,
     creationDate: null,
   }
-
-  responsiveOptions: any[] | undefined;
-
-  constructor(protected historyService: HistoryService, private messageService: MessageService, protected productService: ProductService) {}
+  constructor(protected historyService: HistoryService) {}
 
   ngOnInit(){
-    this.responsiveOptions = [
-      {
-        breakpoint: '1400px',
-        numVisible: 3,
-        numScroll: 3
-      },
-      {
-        breakpoint: '1220px',
-        numVisible: 2,
-        numScroll: 2
-      },
-      {
-        breakpoint: '1100px',
-        numVisible: 1,
-        numScroll: 1
-      }
-    ];
     this.historyService.refreshHistory();
   }
 }
