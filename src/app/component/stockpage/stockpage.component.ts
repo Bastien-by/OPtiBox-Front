@@ -1,6 +1,5 @@
 import {Component, OnInit} from '@angular/core';
 import {StockService} from "../../services/stock.service";
-import {LightComponent} from "../light/light.component";
 import {NgForOf} from "@angular/common";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {CarouselModule} from "primeng/carousel";
@@ -15,7 +14,6 @@ import { ProductService } from '../../services/product.service';
   selector: 'app-stockpage',
   standalone: true,
   imports: [
-    LightComponent,
     NgForOf,
     ReactiveFormsModule,
     FormsModule,
@@ -50,6 +48,8 @@ export class StockpageComponent implements OnInit{
     status: null,
     creationDate: null,
   }
+
+  stockArray: any[] = [];
 
   dialog1Visible: boolean = false;
   dialog2Visible: boolean = false;
@@ -97,10 +97,6 @@ export class StockpageComponent implements OnInit{
   hideDialog() {
     this.dialog1Visible = false;
     this.dialog2Visible = false;
-  }
-
-  handleTrigger(id: number){
-    this.stockService.removeStock(id);
   }
 
   showAddToast(){

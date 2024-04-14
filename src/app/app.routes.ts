@@ -1,18 +1,18 @@
 import { Routes } from '@angular/router';
-import {LightpageComponent} from "./component/lightpage/lightpage.component";
 import {RacinePageComponent} from "./component/racine-page/racine-page.component";
 import {ProductpageComponent} from "./component/productpage/productpage.component";
 import {StockpageComponent} from "./component/stockpage/stockpage.component";
 import {UserpageComponent} from "./component/userpage/userpage.component";
 import {ScanpageComponent} from "./component/scanpage/scanpage.component";
 import {HistorypageComponent} from "./component/historypage/historypage.component";
+import {CheckpageComponent} from "./component/checkpage/checkpage.component";
 
 export const routes: Routes = [
   {
-    path: "light", component: LightpageComponent
+    path: "scan", component: ScanpageComponent
   },
   {
-    path: "scan", component: ScanpageComponent
+    path: "check", component: CheckpageComponent
   },
   {
     path: "history", component: HistorypageComponent

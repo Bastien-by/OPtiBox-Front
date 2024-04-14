@@ -1,6 +1,5 @@
 import {Component, OnInit} from '@angular/core';
 import {HistoryService} from "../../services/history.service";
-import {LightComponent} from "../light/light.component";
 import {NgForOf} from "@angular/common";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {CarouselModule} from "primeng/carousel";
@@ -12,7 +11,6 @@ import { ProductService } from '../../services/product.service';
   selector: 'app-historypage',
   standalone: true,
   imports: [
-    LightComponent,
     NgForOf,
     ReactiveFormsModule,
     FormsModule,

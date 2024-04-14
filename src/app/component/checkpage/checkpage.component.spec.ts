@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { LightpageComponent } from './lightpage.component';
+import { CheckpageComponent } from './checkpage.component';
 
-describe('LightpageComponent', () => {
-  let component: LightpageComponent;
-  let fixture: ComponentFixture<LightpageComponent>;
+describe('CheckpageComponent', () => {
+  let component: CheckpageComponent;
+  let fixture: ComponentFixture<CheckpageComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [LightpageComponent]
+      imports: [CheckpageComponent]
     })
     .compileComponents();
     
-    fixture = TestBed.createComponent(LightpageComponent);
+    fixture = TestBed.createComponent(CheckpageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

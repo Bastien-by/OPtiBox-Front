@@ -21,7 +21,7 @@ export class HistoryService {
       this.depositHistoryArray = depositHistory;
     })
 
-    this.httpClient.get('api/history/checks').subscribe((checkHistory: any) => {
+    this.httpClient.get('api/checks').subscribe((checkHistory: any) => {
       this.checkHistoryArray = checkHistory;
     })
   }

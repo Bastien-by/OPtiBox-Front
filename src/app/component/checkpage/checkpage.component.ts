@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {ScanService} from "../../services/scan.service";
+import {CheckService} from "../../services/check.service";
 import {NgForOf} from "@angular/common";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {CarouselModule} from "primeng/carousel";
@@ -10,7 +10,7 @@ import {ToastModule} from "primeng/toast";
 import {MessageService} from "primeng/api";
 
 @Component({
-  selector: 'app-scanpage',
+  selector: 'app-checkpage',
   standalone: true,
   imports: [
     NgForOf,
@@ -22,27 +22,29 @@ import {MessageService} from "primeng/api";
     DialogModule,
     ToastModule
   ],
-  templateUrl: './scanpage.component.html',
+  templateUrl: './checkpage.component.html',
   providers: [MessageService],
-  styleUrl: './scanpage.component.css'
+  styleUrl: './checkpage.component.css'
 })
-export class ScanpageComponent implements OnInit{
+export class CheckpageComponent implements OnInit{
 
-  availableStocks: any[] = [];
-  loanedStocks: any[] = [];
+  stocksArray: any[] = [];
+
+  check: any = {
+    id: '',
+    date: '',
+    status: '',
+    user: {
+      id: '',
+    },
+    stock: {
+      id: '',
+    },
+    comment: '',
+  };
 
   stock: any = {
-    product: {
-      title: '',
-      type: '',
-      size: '',
-      cmu: '',
-      location: '',
-      picture: '',
-    },
-    available: null,
-    status: null,
-    creationDate: null,
+    id: '',
   }
 
   scan: any = {
@@ -50,32 +52,16 @@ export class ScanpageComponent implements OnInit{
   }
 
   user: any = {
+    id: '',
     username: '',
     token: '',
   }
 
   users: any[] = [];
 
-
-  history: any = {
-    stock: {
-      id : '',
-    },
-    user: {
-      id: '',
-    },
-    date: '',
-    type: 'withdraw',
-  }
-
-
-
-  dialog1Visible: boolean = false;
-  dialog2Visible: boolean = false;
-
   responsiveOptions: any[] | undefined;
 
-  constructor(protected scanService: ScanService, private messageService: MessageService) {}
+  constructor(protected checkService: CheckService, private messageService: MessageService) {}
 
   ngOnInit(){
     this.responsiveOptions = [
@@ -95,18 +81,16 @@ export class ScanpageComponent implements OnInit{
         numScroll: 1
       }
     ];
-    this.scanService.refreshAvailableStocks();
-    this.scanService.refreshLoanedStocks();
-    this.availableStocks = this.scanService.getAvailableStocks();
-    this.loanedStocks = this.scanService.getLoanedStocks();
+    this.checkService.refreshStocks();
+    this.stocksArray = this.checkService.getStocks();
   }
 
   async detectBadge() {
-    this.users = this.scanService.getUsers();
+    this.users = this.checkService.getUsers();
     let badgeExist = false;
 
     this.users.forEach((user: any) => {
-      if(user.token === this.scan.badge){
+      if(user.token === this.check.badge){
         this.user = user;
         console.log(this.user);
         this.showFindToast();
@@ -119,52 +103,48 @@ export class ScanpageComponent implements OnInit{
     }
 
     try {
-      await this.scanService.refreshData();
-      this.updateAvailableStocks();
+      await this.checkService.refreshData();
+      this.updateStocks();
     } catch (error) {
       console.error('Error refreshing data:', error);
     }
   }
 
 
-  setType(type: string){
-    this.history.type = type;
-  }
-
-  async addScan(type: string) {
+  async setStatus(status: boolean){
+    this.check.status = status;
     // vérifier si l'utilisateur est connecté
     if(this.user.username === ''){
       this.showErrorToast();
       return;
     }
-
     // get date
     let date = new Date();
     // serialize date as java Date
-    this.history.date = date.toISOString();
-    this.history.user.id = this.user.id;
-    this.history.stock.id = this.stock.id;
-    this.history.type = type;
+    this.check.date = date.toISOString();
+    this.check.user.id = this.user.id;
+    this.check.stock.id = this.stock.id;
 
     try {
-      await this.scanService.createHistory(this.history);
+      await this.checkService.createCheck(this.check);
       this.showAddToast();
-      await this.scanService.refreshData(); // Attendre que les données soient rafraîchies
-      this.updateAvailableStocks();
+      await this.checkService.refreshData(); // Attendre que les données soient rafraîchies
+      this.updateStocks();
     } catch (error) {
-      console.error('Error adding scan:', error);
+      console.error('Error adding check:', error);
     }
 
-    this.stock.id = '';
-    this.history.stock.id = '';
+    this.check.id = '';
+    this.check.stock.id = '';
+    this.check.user.id = '';
+    this.check.comment = '';
+    this.check.status = '';
+    this.check.date = '';
   }
 
-
-  async updateAvailableStocks() {
-    await this.scanService.refreshAvailableStocks();
-    await this.scanService.refreshLoanedStocks();
-    this.availableStocks = this.scanService.getAvailableStocks();
-    this.loanedStocks = this.scanService.getLoanedStocks();
+  async updateStocks() {
+    await this.checkService.refreshStocks();
+    this.stocksArray = this.checkService.getStocks();
   }
 
 
@@ -176,7 +156,7 @@ export class ScanpageComponent implements OnInit{
   }
 
   showAddToast(){
-    this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Vous avez sorti un élement du stock' });
+    this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Vous avez réalisé un contrôle sur un produit' });
   }
 
   showFindToast(){

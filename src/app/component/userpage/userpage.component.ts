@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import {UserService} from "../../services/user.service";
-import {LightComponent} from "../light/light.component";
 import {NgForOf} from "@angular/common";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {CarouselModule} from "primeng/carousel";
@@ -14,7 +13,6 @@ import {MessageService} from "primeng/api";
   selector: 'app-userpage',
   standalone: true,
   imports: [
-    LightComponent,
     NgForOf,
     ReactiveFormsModule,
     FormsModule,
