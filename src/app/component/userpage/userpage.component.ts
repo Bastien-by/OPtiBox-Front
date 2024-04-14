@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {UserService} from "../../services/user.service";
 import {NgForOf} from "@angular/common";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
@@ -26,7 +26,7 @@ import {MessageService} from "primeng/api";
   providers: [MessageService],
   styleUrl: './userpage.component.css'
 })
-export class UserpageComponent {
+export class UserpageComponent implements OnInit{
   user: any = {
     username: '',
     password: '',
@@ -69,8 +69,20 @@ export class UserpageComponent {
   }
 
   addUser() {
+    if(this.user.username === '' || this.user.password === '' || this.user.token === '' || this.user.role === ''){
+      this.showMissingFieldsToast();
+      return;
+    }
     this.userService.addUser(this.user);
     this.showAddToast();
+
+    // reset the user
+    this.user = {
+      username: '',
+      password: '',
+      token: '',
+      role: '',
+    }
   }
 
 
@@ -89,10 +101,6 @@ export class UserpageComponent {
     this.dialog2Visible = false;
   }
 
-  handleTrigger(id: number){
-    this.userService.removeUser(id);
-  }
-
   showAddToast(){
     this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Un utilisateur a été ajouté' });
   }
@@ -103,6 +111,10 @@ export class UserpageComponent {
 
   showDeleteToast(){
     this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Un utilisateur a été supprimé' });
+  }
+
+  showMissingFieldsToast() {
+    this.messageService.add({severity: 'error', summary: 'Error', detail: 'Veuillez remplir tous les champs'});
   }
 
 }

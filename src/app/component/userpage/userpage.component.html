@@ -1,9 +1,9 @@
 <div class="flex flex-col gap-3 p-5">
   <div>
     <h1 class="text-2xl font-bold py-3">Ajout d'utilisateur</h1>
-    <input class="border border-gray-300 p-2" type="text" [(ngModel)]="user.username" placeholder="Nom de l'utilisateur">
-    <input class="border border-gray-300 p-2" type="password" [(ngModel)]="user.password" placeholder="Mot de passe">
-    <input class="border border-gray-300 p-2" type="text" [(ngModel)]="user.token" placeholder="token">
+    <input class="border border-gray-300 p-2" type="text" [(ngModel)]="user.username" placeholder="Nom de l'utilisateur" maxlength="20">
+    <input class="border border-gray-300 p-2" type="password" [(ngModel)]="user.password" placeholder="Mot de passe" maxlength="50">
+    <input class="border border-gray-300 p-2" type="text" [(ngModel)]="user.token" placeholder="token" maxlength="20">
     <select class="border border-gray-300 p-2" [(ngModel)]="user.role">
       <option value="ADMIN">Admin</option>
       <option value="BASIC">Basic</option>

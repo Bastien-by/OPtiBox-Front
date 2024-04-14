@@ -1,8 +1,7 @@
-import { Component } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {ProductService} from "../../services/product.service";
 import {NgForOf} from "@angular/common";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
-import {ProductComponent} from "../product/product.component";
 import {CarouselModule} from "primeng/carousel";
 import {TagModule} from "primeng/tag";
 import {ButtonModule} from "primeng/button";
@@ -17,7 +16,6 @@ import {MessageService} from "primeng/api";
     NgForOf,
     ReactiveFormsModule,
     FormsModule,
-    ProductComponent,
     CarouselModule,
     TagModule,
     ButtonModule,
@@ -28,7 +26,7 @@ import {MessageService} from "primeng/api";
   providers: [MessageService],
   styleUrl: './productpage.component.css'
 })
-export class ProductpageComponent {
+export class ProductpageComponent implements OnInit {
   product: any = {
     title: '',
     type: '',
@@ -76,6 +74,14 @@ export class ProductpageComponent {
 
   onFileSelected(event: any, productToUpdate: any) {
     const file: File = event.target.files[0];
+
+    // check if the file is an image and is less than 20MB
+    if(file.type.split('/')[0] !== 'image' || file.size > 20000000){
+      this.showErrorImageToast();
+      // clear the input file
+      event.target.value = '';
+      return;
+    }
     this.encodeImageAsBase64(file, productToUpdate);
   }
 
@@ -90,8 +96,24 @@ export class ProductpageComponent {
 
 
   addProduct() {
+    // check if the product has a title, type, size, cmu and location
+    if(this.product.title === '' || this.product.type === '' || this.product.size === '' || this.product.cmu === '' || this.product.location === ''){
+      this.showMissingFieldsToast();
+      return;
+    }
+
     this.productService.addProduct(this.product);
     this.showAddToast();
+
+    // reset the product
+    this.product = {
+      title: '',
+      type: '',
+      size: '',
+      cmu: '',
+      location: '',
+      picture: null,
+    }
   }
 
 
@@ -124,6 +146,14 @@ export class ProductpageComponent {
 
   showDeleteToast(){
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Un produit a été supprimé' });
+  }
+
+  showMissingFieldsToast() {
+    this.messageService.add({severity: 'error', summary: 'Error', detail: 'Veuillez remplir tous les champs'});
+  }
+
+  showErrorImageToast(){
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Veuillez choisir une image valide (<20MB)' });
   }
 
 }
