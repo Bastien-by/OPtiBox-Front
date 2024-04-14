@@ -13,8 +13,7 @@ import {HttpClient} from "@angular/common/http";
 export class AppComponent implements OnInit{
   title = 'SHOP-STI';
 
-  constructor(private httpClient: HttpClient) {
-  }
+  constructor() {}
 
   ngOnInit() {}
 }
