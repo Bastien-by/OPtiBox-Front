@@ -4,10 +4,18 @@
         <div class="flex flex-col items-center">
             <h1 class="text-6xl font-bold text-gray-800">Bienvenue sur <span class="text-blue-500">SHOP-STI</span></h1>
             <p class="text-2xl text-gray-600">Votre outil de gestion de stock</p>
-
-            <div class="mt-12">
-                <a href="/login" class="px-4 py-2 bg-blue-500 text-white rounded-md">Se connecter</a>
+          <div class="mt-12 grid grid-cols-2 gap-4">
+            <div class="space-y-4">
+              <a routerLink="/scan" class="block bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Scanner un produit</a>
+              <a routerLink="/check" class="block bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Contrôles réglementaires</a>
+              <a routerLink="/history" class="block bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Historique</a>
             </div>
+            <div class="col-span-1 space-y-4">
+              <a routerLink="/product" class="block bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Gestion des produits</a>
+              <a routerLink="/stock" class="block bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Gestion des stocks</a>
+              <a routerLink="/user" class="block bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Gestion des utilisateurs</a>
+            </div>
+          </div>
         </div>
     </div>
 </div>

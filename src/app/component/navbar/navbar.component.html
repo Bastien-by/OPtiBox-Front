@@ -12,12 +12,19 @@
                       <div routerLink="scan" routerLinkActive="bg-gray-700" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 text-sm font-medium">Scan</div>
                       <div routerLink="check" routerLinkActive="bg-gray-700" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 text-sm font-medium">Contrôles</div>
                       <div routerLink="history" routerLinkActive="bg-gray-700" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 text-sm font-medium">Historique</div>
-                      <div routerLink="product" routerLinkActive="bg-gray-700" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 text-sm font-medium">Produits</div>
-                      <div routerLink="stock" routerLinkActive="bg-gray-700" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 text-sm font-medium">Stock</div>
-                      <div routerLink="user" routerLinkActive="bg-gray-700" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 text-sm font-medium">Utilisateurs</div>
+                      <div *ngIf="isLoggedIn() && isAdmin()" routerLink="product" routerLinkActive="bg-gray-700" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 text-sm font-medium">Produits</div>
+                      <div *ngIf="isLoggedIn() && isAdmin()" routerLink="stock" routerLinkActive="bg-gray-700" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 text-sm font-medium">Stock</div>
+                      <div *ngIf="isLoggedIn() && isAdmin()" routerLink="user" routerLinkActive="bg-gray-700" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 text-sm font-medium">Utilisateurs</div>
                     </div>
                   </div>
             </div>
+            <!-- Afficher le nom de l'utilisateur et le lien de déconnexion s'il est connecté -->
+            <div *ngIf="isLoggedIn()" class="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Bonjour {{ getUsername() }}
+              <button (click)="logout()" class="text-gray-300 hover:text-white px-1 py-1 text-sm font-medium bg-red-800 rounded">
+                Se déconnecter
+              </button>
+            </div>
+            <div *ngIf="!isLoggedIn()" routerLink="login" routerLinkActive="bg-gray-700" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 text-sm font-medium">Se connecter</div>
         </div>
     </div>
 </nav>
