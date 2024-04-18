@@ -3,6 +3,7 @@
     <h1 class="text-2xl font-bold py-3">Ajout de stock</h1>
 
     <select class="border border-gray-300 p-2" [(ngModel)]="stock.product.id">
+      <option value="" disabled selected>Choisir un produit</option>
       <option *ngFor="let product of productService.getAllProducts()" [value]="product.id">{{ product.title }}</option>
     </select>
     <button class="bg-blue-500 text-white rounded shadow p-3" (click)="[stockService.addStock(stock),showAddToast()]">Ajouter</button>

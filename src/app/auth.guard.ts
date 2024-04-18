@@ -17,6 +17,7 @@ export class AuthGuard implements CanActivate {
     if (this.keycloakService.isUserInRole(requiredRole)) {
       return true; // L'utilisateur a le rôle nécessaire pour accéder à la page
     } else {
+      alert('Vous n\'avez pas les autorisations nécessaires pour accéder à cette page');
       this.router.navigate(['/']); // Redirige vers la page d'accueil si l'utilisateur n'a pas les autorisations nécessaires
       return false;
     }

@@ -19,7 +19,7 @@
                   </div>
             </div>
             <!-- Afficher le nom de l'utilisateur et le lien de déconnexion s'il est connecté -->
-            <div *ngIf="isLoggedIn()" class="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Bonjour {{ getUsername() }}
+            <div *ngIf="isLoggedIn()" class="mx-5 text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Bonjour {{ getUsername() }}
               <button (click)="logout()" class="text-gray-300 hover:text-white px-1 py-1 text-sm font-medium bg-red-800 rounded">
                 Se déconnecter
               </button>
