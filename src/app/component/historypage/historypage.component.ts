@@ -5,6 +5,7 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {CarouselModule} from "primeng/carousel";
 import {TagModule} from "primeng/tag";
 import {MessageService} from "primeng/api";
+import { ProductService } from '../../services/product.service';
 
 @Component({
   selector: 'app-historypage',

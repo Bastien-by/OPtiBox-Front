@@ -1,22 +1,74 @@
-<!-- welcome page, tailwindcss body -->
-<div class="bg-gray-100 h-full">
-    <div class="flex flex-col items-center justify-center h-full">
-        <div class="flex flex-col items-center">
-            <h1 class="text-6xl font-bold text-gray-800">Bienvenue sur <span class="text-blue-500">SHOP-STI</span></h1>
-            <p class="text-2xl text-gray-600">Votre outil de gestion de stock</p>
-          <div class="mt-12 grid grid-cols-2 gap-4">
-            <div class="space-y-4">
-              <a routerLink="/scan" class="block bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Scanner un produit</a>
-              <a routerLink="/check" class="block bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Contrôles réglementaires</a>
-              <a routerLink="/history" class="block bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Historique</a>
+<div class="bg-gray-100 min-h-screen p-4">
+  <div class="container mx-auto">
+    <div class="flex flex-col md:flex-row items-start md:items-start md:space-x-8">
+      <div class="flex flex-col md:w-2/3 w-full rounded-3xl shadow-md p-10 bg-white">
+        <p class="text-gray-600 rounded-full border p-3 font-bold self-start max-w-max">Bonjour, {{ getUsername() }}</p>
+        <h1 class="text-4xl font-bold text-gray-800 mt-2">Bienvenue sur <span class="text-blue-500">SHOP-STI</span> <span class="bg-green-100 text-green-600 text-sm m-2 px-2 py-1 rounded">Version Alpha 1.0</span></h1>
+        <p class="text-xl text-gray-600 mt-2">Votre outil de gestion de stock et de contrôles réglementaires</p>
+        <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+          <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white"
+             [ngClass]="{'bg-blue-500 hover:bg-blue-600': isLoggedIn(), 'bg-gray-500': !isLoggedIn()}"
+             (click)="navigateOrShowToast('/scan', isLoggedIn())">
+            Scanner un produit
+          </a>
+          <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white"
+             [ngClass]="{'bg-blue-500 hover:bg-blue-600': isLoggedIn() && isAdmin(), 'bg-gray-500': !(isLoggedIn() && isAdmin())}"
+             (click)="navigateOrShowToast('/product', isLoggedIn() && isAdmin())">
+            Gestion des produits
+          </a>
+          <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white"
+             [ngClass]="{'bg-blue-500 hover:bg-blue-600': isLoggedIn(), 'bg-gray-500': !isLoggedIn()}"
+             (click)="navigateOrShowToast('/check', isLoggedIn())">
+            Contrôler un produit
+          </a>
+          <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white"
+             [ngClass]="{'bg-blue-500 hover:bg-blue-600': isLoggedIn() && isAdmin(), 'bg-gray-500': !(isLoggedIn() && isAdmin())}"
+             (click)="navigateOrShowToast('/stock', isLoggedIn() && isAdmin())">
+            Gestion de stock
+          </a>
+          <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white"
+             [ngClass]="{'bg-blue-500 hover:bg-blue-600': isLoggedIn(), 'bg-gray-500': !isLoggedIn()}"
+             (click)="navigateOrShowToast('/history', isLoggedIn())">
+            Historique
+          </a>
+          <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white"
+             [ngClass]="{'bg-blue-500 hover:bg-blue-600': isLoggedIn() && isAdmin(), 'bg-gray-500': !(isLoggedIn() && isAdmin())}"
+             (click)="navigateOrShowToast('/user', isLoggedIn() && isAdmin())">
+            Gestion des utilisateurs
+          </a>
+        </div>
+      </div>
+      <div class="mt-8 md:mt-0 md:ml-8 md:w-1/3 w-full">
+        <div class="bg-white p-10 rounded-3xl shadow-md mb-4">
+          <div class="flex justify-between items-center">
+            <div class="text-center">
+              <p class="text-blue-600 text-2xl font-bold">OK</p>
+              <p class="flex items-center justify-center text-2xl rounded-full border h-12 w-12">32</p>
             </div>
-            <div class="col-span-1 space-y-4">
-              <a routerLink="/product" class="block bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Gestion des produits</a>
-              <a routerLink="/stock" class="block bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Gestion des stocks</a>
-              <a routerLink="/user" class="block bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Gestion des utilisateurs</a>
+            <div class="text-center">
+              <p class="text-black text-2xl font-bold">NOK</p>
+              <p class="flex items-center justify-center text-2xl rounded-full border h-12 w-12">12</p>
+            </div>
+            <div class="text-center">
+              <p class="text-red-600 text-2xl font-bold">HS</p>
+              <p class="flex items-center justify-center text-2xl rounded-full border h-12 w-12">2</p>
             </div>
           </div>
         </div>
+        <div class="bg-white p-4 rounded-3xl shadow-md">
+          <div class="flex items-center justify-between mb-2">
+            <p class="font-bold">Dernier contrôle interne</p>
+            <button class="bg-blue-500 text-white px-2 py-1 rounded-md">PDF</button>
+          </div>
+          <p class="text-gray-600 text-sm">le lundi 27 mai 2024 à 08:27</p>
+          <div class="flex items-center justify-between mt-4">
+            <p class="font-bold">Dernier contrôle réglementaire</p>
+            <button class="bg-blue-500 text-white px-2 py-1 rounded-md">PDF</button>
+          </div>
+          <p class="text-gray-600 text-sm">le lundi 27 mai 2024 à 08:27</p>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
-
+<p-toast></p-toast>

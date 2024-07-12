@@ -68,6 +68,11 @@ export class ScanpageComponent implements OnInit{
     type: 'withdraw',
   }
 
+
+
+  dialog1Visible: boolean = false;
+  dialog2Visible: boolean = false;
+
   responsiveOptions: any[] | undefined;
 
   constructor(protected scanService: ScanService, private messageService: MessageService) {}
