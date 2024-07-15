@@ -1,41 +1,116 @@
 <div class="flex flex-col gap-6 p-6 sm:p-8 md:p-10">
-  <div class="bg-white shadow-md rounded-lg p-6">
-    <label class="block text-gray-700 font-bold mb-2">Utilisateur</label>
-    <div class="flex items-center gap-4">
-      <input class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="scan.badge" type="text" placeholder="Badge utilisateur">
-      <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" (click)="detectBadge()">S'identifier</button>
+  <!-- Deux colonnes responsives, sur mobile, les colonnes passent en une seule colonne -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div>
+      <h1 class="text-2xl font-bold py-3">Scanner Entrées-Sorties</h1>
+      <h2 class="text-xl">
+        Scannez votre matricule, choisissez une action "Retirer un produit" ou "Déposer un produit" et sélectionnez le produit à retirer ou déposer.
+      </h2>
     </div>
+    <div class="bg-white shadow-md rounded-lg p-6">
+      <label class="block text-gray-700 font-bold mb-2">Utilisateur</label>
+      <div class="flex items-center gap-4">
+        <input class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="scan.badge" type="text" placeholder="Badge utilisateur">
+        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" (click)="detectBadge()">S'identifier</button>
+      </div>
+      <label class="block text-gray-700 font-lighter mb-2">Scannez votre carte</label>
 
-    <div *ngIf="user.username" class="mt-4">
-      <p class="text-green-500 text-lg font-bold">Bonjour, {{ user.username }}</p>
-      <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 mt-2" (click)="disconnect()">Se déconnecter</button>
+      <div *ngIf="user.username" class="mt-4">
+        <p class="text-green-500 text-lg font-bold">Vous êtes identifié en tant que {{ user.username }}</p>
+        <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 mt-2" (click)="disconnect()">Se déconnecter</button>
+      </div>
     </div>
   </div>
 
+  <!-- line separator -->
+  <div class="border-b-2 border-gray-200"></div>
+
   <div *ngIf="user.username" class="mt-4">
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" (click)="setType('withdraw')">Retirer un produit</button>
-      <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" (click)="setType('deposit')">Déposer un produit</button>
+      <button [ngClass]="history.type == 'withdraw' ? 'bg-blue-500 hover:bg-blue-700 text-white font-bold rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 p-5 text-2xl' : 'bg-gray-300 text-gray-700 font-bold rounded focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 p-5 text-2xl'" (click)="setType('withdraw')">Retirer un produit</button>
+      <button [ngClass]="history.type == 'deposit' ? 'bg-blue-500 hover:bg-blue-700 text-white font-bold rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 p-5 text-2xl' : 'bg-gray-300 text-gray-700 font-bold rounded focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 p-5 text-2xl'" (click)="setType('deposit')">Déposer un produit</button>
     </div>
 
-    <div *ngIf="history.type == 'withdraw'" class="bg-white shadow-md rounded-lg p-6">
-      <h1 class="text-2xl font-bold mb-4">Retirer un produit</h1>
-      <label class="block text-gray-700 font-bold mb-2">Choisir un produit disponible</label>
-      <select id="selectWithdraw" class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="stock.id">
-        <option value="0" disabled selected>Choisir un produit disponible</option>
-        <option *ngFor="let item of availableStocks" [value]="item.id">{{ item.product.title }}</option>
-      </select>
-      <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 mt-4" (click)="addScan('withdraw')">Retirer le produit</button>
-    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div *ngIf="history.type == 'withdraw'" class="bg-white shadow-md rounded-lg p-6">
+        <h1 class="text-2xl font-bold mb-4">Retirer un produit</h1>
+        <label class="block text-gray-700 font-bold mb-2">Choisir un produit disponible</label>
+        <select id="selectWithdraw" class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="stock.id" (change)="detectStock()">
+          <option value="0" disabled selected>Choisir un produit disponible</option>
+          <option *ngFor="let item of availableStocks" [value]="item.id">{{ item.product.title }}</option>
+        </select>
+        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 mt-4" (click)="addScan('withdraw')">Retirer le produit</button>
+      </div>
 
-    <div *ngIf="history.type == 'deposit'" class="bg-white shadow-md rounded-lg p-6">
-      <h1 class="text-2xl font-bold mb-4">Retourner un produit</h1>
-      <label class="block text-gray-700 font-bold mb-2">Choisir un produit emprunté</label>
-      <select id="selectDeposit" class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="stock.id">
-        <option value="0" disabled selected>Choisir un produit emprunté</option>
-        <option *ngFor="let item of loanedStocks" [value]="item.id">{{ item.product.title }}</option>
-      </select>
-      <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 mt-4" (click)="addScan('deposit')">Rendre le produit</button>
+      <div *ngIf="history.type == 'deposit'" class="bg-white shadow-md rounded-lg p-6">
+        <h1 class="text-2xl font-bold mb-4">Retourner un produit</h1>
+        <label class="block text-gray-700 font-bold mb-2">Choisir un produit emprunté</label>
+        <select id="selectDeposit" class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="stock.id" (change)="detectStock()">
+          <option value="0" disabled selected>Choisir un produit emprunté</option>
+          <option *ngFor="let item of loanedStocks" [value]="item.id">{{ item.product.title }}</option>
+        </select>
+        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 mt-4" (click)="addScan('deposit')">Rendre le produit</button>
+      </div>
+
+      <div class="bg-white shadow-md rounded-lg p-6">
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Aperçu du produit</div>
+              <p class="text-lg leading-tight font-medium text-black">{{ review.id }} - {{ review.product.title }}</p>
+            </div>
+            <div>
+              <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Statut</div>
+              <p class="text-lg leading-tight font-medium text-green-500">{{ review.status == 1 ? 'OK' : 'NOK' }}</p>
+            </div>
+            <div>
+              <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Dernier contrôle effectué</div>
+              <p class="text-lg leading-tight text-gray-500">none</p>
+            </div>
+            <div>
+              <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Date de création</div>
+              <p class="text-lg leading-tight text-gray-500">{{ review.creationDate| date:"dd/MM/yyyy" }}</p>
+            </div>
+          </div>
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <img class="h-48 w-48 object-cover" src="{{ review.product.picture ? review.product.picture : 'assets/images/default_image.jpg' }}" alt="Product Image">
+            </div>
+            <div class="ml-6">
+              <div class="grid grid-cols-2 gap-x-12">
+                <div>
+                  <div class="mt-4">
+                    <div class="text-gray-500">Type</div>
+                    <div class="text-black">{{ review.product.type }}</div>
+                  </div>
+                  <div class="mt-4">
+                    <div class="text-gray-500">Marque</div>
+                    <div class="text-black">none</div>
+                  </div>
+                  <div class="mt-4">
+                    <div class="text-gray-500">Taille</div>
+                    <div class="text-black">{{ review.product.size }}</div>
+                  </div>
+                </div>
+                <div>
+                  <div class="mt-4">
+                    <div class="text-gray-500">Emplacement</div>
+                    <div class="text-black">{{ review.product.location }}</div>
+                  </div>
+                  <div class="mt-4">
+                    <div class="text-gray-500">Charge maximale d’utilisation</div>
+                    <div class="text-black">{{ review.product.cmu }}</div>
+                  </div>
+                  <div class="mt-4">
+                    <div class="text-gray-500">ID ALITRACER</div>
+                    <div class="text-black">none</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 

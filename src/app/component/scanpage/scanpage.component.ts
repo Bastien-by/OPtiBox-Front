@@ -8,6 +8,7 @@ import {ButtonModule} from "primeng/button";
 import {DialogModule} from "primeng/dialog";
 import {ToastModule} from "primeng/toast";
 import {MessageService} from "primeng/api";
+import {StockService} from "../../services/stock.service";
 
 @Component({
   selector: 'app-scanpage',
@@ -32,6 +33,20 @@ export class ScanpageComponent implements OnInit{
   loanedStocks: any[] = [];
 
   stock: any = {
+    product: {
+      title: '',
+      type: '',
+      size: '',
+      cmu: '',
+      location: '',
+      picture: '',
+    },
+    available: null,
+    status: null,
+    creationDate: null,
+  }
+
+  review: any = {
     product: {
       title: '',
       type: '',
@@ -75,7 +90,7 @@ export class ScanpageComponent implements OnInit{
 
   responsiveOptions: any[] | undefined;
 
-  constructor(protected scanService: ScanService, private messageService: MessageService) {}
+  constructor(protected scanService: ScanService, private messageService: MessageService, private stockService: StockService) {}
 
   ngOnInit(){
     this.responsiveOptions = [
@@ -129,6 +144,11 @@ export class ScanpageComponent implements OnInit{
 
   setType(type: string){
     this.history.type = type;
+  }
+
+  async detectStock() {
+    this.review = this.stockService.getStockById(this.stock.id);
+    console.log(this.review);
   }
 
   async addScan(type: string) {
