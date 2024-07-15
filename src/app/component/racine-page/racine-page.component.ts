@@ -5,11 +5,20 @@ import {KeycloakService} from "keycloak-angular";
 import {NgClass} from "@angular/common";
 import {MessageService} from "primeng/api";
 import {ToastModule} from "primeng/toast";
+import {
+  faBarcode,
+  faBox,
+  faBoxesStacked,
+  faClockRotateLeft,
+  faListCheck,
+  faPeopleGroup
+} from "@fortawesome/free-solid-svg-icons";
+import {FaIconComponent} from "@fortawesome/angular-fontawesome";
 
 @Component({
   selector: 'app-racine-page',
   standalone: true,
-  imports: [RouterModule, NgClass, ToastModule],
+  imports: [RouterModule, NgClass, ToastModule, FaIconComponent],
   templateUrl: './racine-page.component.html',
   providers: [MessageService],
   styleUrl: './racine-page.component.css'
@@ -60,4 +69,11 @@ export class RacinePageComponent implements OnInit {
     console.log('Vous devez avoir un rôle admin pour accéder à cette page');
     this.messageService.add({ severity: 'error', summary: 'Accès non autorisé', detail: 'Vous devez avoir un rôle admin pour accéder à cette page' });
   }
+
+    protected readonly faBarcode = faBarcode;
+  protected readonly faListCheck = faListCheck;
+  protected readonly faClockRotateLeft = faClockRotateLeft;
+  protected readonly faBox = faBox;
+  protected readonly faBoxesStacked = faBoxesStacked;
+  protected readonly faPeopleGroup = faPeopleGroup;
 }
