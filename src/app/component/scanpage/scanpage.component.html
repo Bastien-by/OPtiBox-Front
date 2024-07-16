@@ -2,7 +2,7 @@
   <!-- Deux colonnes responsives, sur mobile, les colonnes passent en une seule colonne -->
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
     <div>
-      <h1 class="text-2xl font-bold py-3">Scanner Entrées-Sorties</h1>
+      <h1 class="text-2xl font-bold py-3"><fa-icon [icon]="faBarcode"></fa-icon> Scanner Entrées-Sorties</h1>
       <h2 class="text-xl">
         Scannez votre matricule, choisissez une action "Retirer un produit" ou "Déposer un produit" et sélectionnez le produit à retirer ou déposer.
       </h2>
@@ -26,12 +26,13 @@
   <div class="border-b-2 border-gray-200"></div>
 
   <div *ngIf="user.username" class="mt-4">
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <button [ngClass]="history.type == 'withdraw' ? 'bg-blue-500 hover:bg-blue-700 text-white font-bold rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 p-5 text-2xl' : 'bg-gray-300 text-gray-700 font-bold rounded focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 p-5 text-2xl'" (click)="setType('withdraw')">Retirer un produit</button>
-      <button [ngClass]="history.type == 'deposit' ? 'bg-blue-500 hover:bg-blue-700 text-white font-bold rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 p-5 text-2xl' : 'bg-gray-300 text-gray-700 font-bold rounded focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 p-5 text-2xl'" (click)="setType('deposit')">Déposer un produit</button>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+      <button [ngClass]="history.type == 'withdraw' ? 'bg-blue-500 hover:bg-blue-700 text-white font-bold rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 p-5 text-2xl' : 'bg-gray-300 text-gray-700 font-bold rounded focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 p-5 text-2xl'" (click)="setType('withdraw')"><fa-icon [icon]="faArrowRightFromBracket"></fa-icon> Retrait</button>
+      <button [ngClass]="history.type == 'deposit' ? 'bg-blue-500 hover:bg-blue-700 text-white font-bold rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 p-5 text-2xl' : 'bg-gray-300 text-gray-700 font-bold rounded focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 p-5 text-2xl'" (click)="setType('deposit')"><fa-icon [icon]="faArrowRightToBracket"></fa-icon> Dépôt</button>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <!-- Retrait -->
       <div *ngIf="history.type == 'withdraw'" class="bg-white shadow-md rounded-lg p-6">
         <h1 class="text-2xl font-bold mb-4">Retirer un produit</h1>
         <label class="block text-gray-700 font-bold mb-2">Choisir un produit disponible</label>
@@ -39,9 +40,19 @@
           <option value="0" disabled selected>Choisir un produit disponible</option>
           <option *ngFor="let item of availableStocks" [value]="item.id">{{ item.product.title }}</option>
         </select>
-        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 mt-4" (click)="addScan('withdraw')">Retirer le produit</button>
-      </div>
+        <!-- Input pour scanner le produit -->
+        <div class="mt-4">
+          <label class="block text-gray-700 font-bold mb-2">Scanner le produit</label>
+          <input class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="stock.id" (change)="detectStock()" type="text" placeholder="Code produit">
+        </div>
 
+        <div class="fixed inset-x-0 bottom-0 flex justify-center pb-4">
+          <button *ngIf="review.id" class="bg-green-600 hover:bg-green-800 text-white font-bold py-5 px-5 rounded text-xl" (click)="addScan('withdraw')">
+            Retirer le produit
+          </button>
+        </div>
+      </div>
+      <!-- Dépôt -->
       <div *ngIf="history.type == 'deposit'" class="bg-white shadow-md rounded-lg p-6">
         <h1 class="text-2xl font-bold mb-4">Retourner un produit</h1>
         <label class="block text-gray-700 font-bold mb-2">Choisir un produit emprunté</label>
@@ -49,11 +60,20 @@
           <option value="0" disabled selected>Choisir un produit emprunté</option>
           <option *ngFor="let item of loanedStocks" [value]="item.id">{{ item.product.title }}</option>
         </select>
-        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 mt-4" (click)="addScan('deposit')">Rendre le produit</button>
+        <!-- Input pour scanner le produit -->
+        <div class="mt-4">
+          <label class="block text-gray-700 font-bold mb-2">Scanner le produit</label>
+          <input class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="stock.id" (change)="detectStock()" type="text" placeholder="Code produit">
+        </div>
+        <div class="fixed inset-x-0 bottom-0 flex justify-center pb-4">
+          <button *ngIf="review.id" class="bg-green-600 hover:bg-green-800 text-white font-bold py-5 px-5 rounded text-xl" (click)="addScan('deposit')">
+            Retourner le produit
+          </button>
+        </div>
       </div>
-
+      <!-- Caractéristiques du produit -->
       <div class="bg-white shadow-md rounded-lg p-6">
-        <div class="p-6">
+        <div *ngIf="review.id" class="p-6">
           <div class="flex justify-between items-center mb-4">
             <div>
               <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Aperçu du produit</div>
@@ -65,7 +85,7 @@
             </div>
             <div>
               <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Dernier contrôle effectué</div>
-              <p class="text-lg leading-tight text-gray-500">none</p>
+              <p class="text-lg leading-tight text-gray-500">N/A</p>
             </div>
             <div>
               <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Date de création</div>
@@ -85,7 +105,7 @@
                   </div>
                   <div class="mt-4">
                     <div class="text-gray-500">Marque</div>
-                    <div class="text-black">none</div>
+                    <div class="text-black">N/A</div>
                   </div>
                   <div class="mt-4">
                     <div class="text-gray-500">Taille</div>
@@ -103,13 +123,18 @@
                   </div>
                   <div class="mt-4">
                     <div class="text-gray-500">ID ALITRACER</div>
-                    <div class="text-black">none</div>
+                    <div class="text-black">N/A</div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+        <!-- if review review is empty -->
+        <div *ngIf="!review.id" class="text-center self-center">
+          <p class="text-lg font-bold">Veuillez scanner ou sélectionner un produit pour afficher ses caractéristiques</p>
+        </div>
+
       </div>
     </div>
   </div>
