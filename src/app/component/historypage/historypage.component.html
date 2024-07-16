@@ -86,7 +86,7 @@
             <img [src]="history.stock.product.picture" alt="product image" class="h-10 w-10 rounded-full">
           </td>
           <td class="px-6 py-4 whitespace-nowrap">{{ history.stock.product.title }}</td>
-          <td class="px-6 py-4 whitespace-nowrap">{{ history.status ? 'OK' : 'NOK' }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">{{ history.status == 0 ? 'NOK' : history.status == 1 ? 'OK' : history.status == 2 ? 'HS' : 'Inconnu' }}</td>
           <td class="px-6 py-4 whitespace-nowrap">{{ history.date | date: 'dd/MM/yyyy HH:mm' }}</td>
           <td class="px-6 py-4 whitespace-nowrap">{{ history.user.username }}</td>
           <td class="px-6 py-4 whitespace-nowrap"><p-tag [value]="history.stock.product.type"></p-tag></td>

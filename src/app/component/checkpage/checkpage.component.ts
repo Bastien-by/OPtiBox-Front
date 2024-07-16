@@ -8,6 +8,9 @@ import {ButtonModule} from "primeng/button";
 import {DialogModule} from "primeng/dialog";
 import {ToastModule} from "primeng/toast";
 import {MessageService} from "primeng/api";
+import {faListCheck} from "@fortawesome/free-solid-svg-icons";
+import {FaIconComponent} from "@fortawesome/angular-fontawesome";
+import {StockService} from "../../services/stock.service";
 
 @Component({
   selector: 'app-checkpage',
@@ -20,7 +23,8 @@ import {MessageService} from "primeng/api";
     TagModule,
     ButtonModule,
     DialogModule,
-    ToastModule
+    ToastModule,
+    FaIconComponent
   ],
   templateUrl: './checkpage.component.html',
   providers: [MessageService],
@@ -43,6 +47,20 @@ export class CheckpageComponent implements OnInit{
     comment: '',
   };
 
+  review: any = {
+    product: {
+      title: '',
+      type: '',
+      size: '',
+      cmu: '',
+      location: '',
+      picture: '',
+    },
+    available: null,
+    status: null,
+    creationDate: null,
+  }
+
   stock: any = {
     id: '',
   }
@@ -61,7 +79,7 @@ export class CheckpageComponent implements OnInit{
 
   responsiveOptions: any[] | undefined;
 
-  constructor(protected checkService: CheckService, private messageService: MessageService) {}
+  constructor(protected checkService: CheckService, private messageService: MessageService, private stockService: StockService) {}
 
   ngOnInit(){
     this.responsiveOptions = [
@@ -110,9 +128,15 @@ export class CheckpageComponent implements OnInit{
     }
   }
 
+  async detectStock() {
+    this.review = this.stockService.getStockById(this.stock.id);
+    console.log(this.review);
+  }
 
-  async setStatus(status: boolean){
+
+  async setStatus(status: number){
     this.check.status = status;
+    console.log(this.check);
     // vérifier si l'utilisateur est connecté
     if(this.user.username === ''){
       this.showErrorToast();
@@ -168,4 +192,5 @@ export class CheckpageComponent implements OnInit{
   }
 
 
+  protected readonly faListCheck = faListCheck;
 }
