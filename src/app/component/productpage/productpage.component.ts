@@ -8,6 +8,9 @@ import {ButtonModule} from "primeng/button";
 import {DialogModule} from "primeng/dialog";
 import {ToastModule} from "primeng/toast";
 import {MessageService} from "primeng/api";
+import {faBox} from "@fortawesome/free-solid-svg-icons";
+import {FaIconComponent} from "@fortawesome/angular-fontawesome";
+import {StockService} from "../../services/stock.service";
 
 @Component({
   selector: 'app-productpage',
@@ -20,7 +23,8 @@ import {MessageService} from "primeng/api";
     TagModule,
     ButtonModule,
     DialogModule,
-    ToastModule
+    ToastModule,
+    FaIconComponent
   ],
   templateUrl: './productpage.component.html',
   providers: [MessageService],
@@ -47,10 +51,13 @@ export class ProductpageComponent implements OnInit {
 
   dialog1Visible: boolean = false;
   dialog2Visible: boolean = false;
+  dialogCreateVisible: boolean = false;
+
+  countStock: number = 0;
 
   responsiveOptions: any[] | undefined;
 
-  constructor(protected productService: ProductService, private messageService: MessageService) {}
+  constructor(protected productService: ProductService, private messageService: MessageService, private stockService: StockService) {}
 
   ngOnInit(){
     this.responsiveOptions = [
@@ -114,8 +121,30 @@ export class ProductpageComponent implements OnInit {
       location: '',
       picture: null,
     }
+
+    this.hideDialog();
   }
 
+  updateProduct() {
+    // check if the product has a title, type, size, cmu and location
+    if(this.selectedProduct.title === '' || this.selectedProduct.type === '' || this.selectedProduct.size === '' || this.selectedProduct.cmu === '' || this.selectedProduct.location === ''){
+      this.showMissingFieldsToast();
+      return;
+    }
+
+    this.productService.updateProduct(this.selectedProduct);
+    this.showUpdateToast();
+
+    this.hideDialog();
+
+  }
+
+  triggerDeleteProduct() {
+    this.stockService.getStockByProductId(this.selectedProduct.id).then((response: any) => {
+      console.log(response);
+      this.countStock = response;
+    });
+  }
 
   showDialog(product: any, dialogNumber: number) {
     if(dialogNumber === 1){
@@ -127,14 +156,16 @@ export class ProductpageComponent implements OnInit {
     this.selectedProduct = {...product};
   }
 
+  showCreateDialog() {
+    this.dialogCreateVisible = true;
+  }
+
   hideDialog() {
     this.dialog1Visible = false;
     this.dialog2Visible = false;
+    this.dialogCreateVisible = false;
   }
 
-  handleTrigger(id: number){
-    this.productService.removeProduct(id);
-  }
 
   showAddToast(){
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Un produit a été ajouté' });
@@ -156,4 +187,5 @@ export class ProductpageComponent implements OnInit {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Veuillez choisir une image valide (<20MB)' });
   }
 
+  protected readonly faBox = faBox;
 }

@@ -60,4 +60,8 @@ export class StockService {
   getStockById(id: number){
     return this.stockArray.find(stock => stock.id == id);
   }
+
+  getStockByProductId(id: number) {
+    return this.httpClient.get('api/stocks/getStockByProductId/' + id).toPromise();
+  }
 }

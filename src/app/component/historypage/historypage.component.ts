@@ -5,7 +5,12 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {CarouselModule} from "primeng/carousel";
 import {TagModule} from "primeng/tag";
 import {MessageService} from "primeng/api";
-import {faArrowRightFromBracket, faArrowRightToBracket, faListCheck} from "@fortawesome/free-solid-svg-icons";
+import {
+  faArrowRightFromBracket,
+  faArrowRightToBracket,
+  faClockRotateLeft,
+  faListCheck
+} from "@fortawesome/free-solid-svg-icons";
 import {FaIconComponent} from "@fortawesome/angular-fontawesome";
 
 @Component({
@@ -73,4 +78,5 @@ export class HistorypageComponent implements OnInit{
   protected readonly faArrowRightFromBracket = faArrowRightFromBracket;
   protected readonly faArrowRightToBracket = faArrowRightToBracket;
   protected readonly faListCheck = faListCheck;
+  protected readonly faClockRotateLeft = faClockRotateLeft;
 }
