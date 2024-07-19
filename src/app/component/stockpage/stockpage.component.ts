@@ -9,6 +9,8 @@ import {DialogModule} from "primeng/dialog";
 import {ToastModule} from "primeng/toast";
 import {MessageService} from "primeng/api";
 import { ProductService } from '../../services/product.service';
+import {faBoxesStacked} from "@fortawesome/free-solid-svg-icons";
+import {FaIconComponent} from "@fortawesome/angular-fontawesome";
 
 @Component({
   selector: 'app-stockpage',
@@ -21,7 +23,8 @@ import { ProductService } from '../../services/product.service';
     TagModule,
     ButtonModule,
     DialogModule,
-    ToastModule
+    ToastModule,
+    FaIconComponent
   ],
   templateUrl: './stockpage.component.html',
   providers: [MessageService],
@@ -111,4 +114,5 @@ export class StockpageComponent implements OnInit{
     this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Un stock a été supprimé' });
   }
 
+  protected readonly faBoxesStacked = faBoxesStacked;
 }

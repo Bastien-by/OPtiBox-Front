@@ -1,15 +1,15 @@
 <div class="flex flex-col gap-3 p-5">
   <div>
-    <h1 class="text-2xl font-bold py-3"><fa-icon [icon]="faBox"></fa-icon> Produits</h1>
+    <h1 class="text-2xl font-bold py-3"><fa-icon [icon]="faBox"></fa-icon> Gestion de produits</h1>
     <h2 class="text-xl">
-      Consultez la liste de produits, modifiez leur informations ou créez-en de nouveaux. {{ countStock }}
+      Consultez la liste de produits, modifiez leur informations ou créez-en de nouveaux.
     </h2>
-  </div>
-  <div>
-    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" (click)="showCreateDialog()">Créer un produit</button>
   </div>
   <!-- line separator -->
   <div class="border-b-2 border-gray-200"></div>
+  <div>
+    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" (click)="showCreateDialog()">Créer un produit</button>
+  </div>
 
   <div class="rounded overflow-auto p-5 gap-3">
     <!-- if productService.getAllProducts() is empty, display a message -->
