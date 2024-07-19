@@ -66,6 +66,8 @@ export class UserpageComponent implements OnInit{
         numScroll: 1
       }
     ];
+
+    this.userService.refreshUsers();
   }
 
   addUser() {
