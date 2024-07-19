@@ -8,6 +8,13 @@ import {ButtonModule} from "primeng/button";
 import {DialogModule} from "primeng/dialog";
 import {ToastModule} from "primeng/toast";
 import {MessageService} from "primeng/api";
+import {StockService} from "../../services/stock.service";
+import {
+  faArrowRightFromBracket,
+  faArrowRightToBracket,
+  faBarcode
+} from "@fortawesome/free-solid-svg-icons";
+import {FaIconComponent} from "@fortawesome/angular-fontawesome";
 
 @Component({
   selector: 'app-scanpage',
@@ -20,7 +27,8 @@ import {MessageService} from "primeng/api";
     TagModule,
     ButtonModule,
     DialogModule,
-    ToastModule
+    ToastModule,
+    FaIconComponent
   ],
   templateUrl: './scanpage.component.html',
   providers: [MessageService],
@@ -32,6 +40,20 @@ export class ScanpageComponent implements OnInit{
   loanedStocks: any[] = [];
 
   stock: any = {
+    product: {
+      title: '',
+      type: '',
+      size: '',
+      cmu: '',
+      location: '',
+      picture: '',
+    },
+    available: null,
+    status: null,
+    creationDate: null,
+  }
+
+  review: any = {
     product: {
       title: '',
       type: '',
@@ -68,9 +90,14 @@ export class ScanpageComponent implements OnInit{
     type: 'withdraw',
   }
 
+
+
+  dialog1Visible: boolean = false;
+  dialog2Visible: boolean = false;
+
   responsiveOptions: any[] | undefined;
 
-  constructor(protected scanService: ScanService, private messageService: MessageService) {}
+  constructor(protected scanService: ScanService, private messageService: MessageService, private stockService: StockService) {}
 
   ngOnInit(){
     this.responsiveOptions = [
@@ -123,7 +150,13 @@ export class ScanpageComponent implements OnInit{
 
 
   setType(type: string){
+    this.resetSelectedStock();
     this.history.type = type;
+  }
+
+  async detectStock() {
+    this.review = this.stockService.getStockById(this.stock.id);
+    console.log(this.review);
   }
 
   async addScan(type: string) {
@@ -162,6 +195,48 @@ export class ScanpageComponent implements OnInit{
     this.loanedStocks = this.scanService.getLoanedStocks();
   }
 
+  resetSelectedStock(){
+    this.stock = {
+      product: {
+        title: '',
+        type: '',
+        size: '',
+        cmu: '',
+        location: '',
+        picture: '',
+      },
+      available: null,
+      status: null,
+      creationDate: null,
+    }
+
+    this.history = {
+      stock: {
+        id : '',
+      },
+      user: {
+        id: '',
+      },
+      date: '',
+      type: 'withdraw',
+    }
+
+    this.review = {
+      product: {
+        title: '',
+        type: '',
+        size: '',
+        cmu: '',
+        location: '',
+        picture: '',
+      },
+      available: null,
+      status: null,
+      creationDate: null,
+    }
+
+  }
+
 
   disconnect(){
     this.user = {
@@ -183,4 +258,7 @@ export class ScanpageComponent implements OnInit{
   }
 
 
+  protected readonly faBarcode = faBarcode;
+  protected readonly faArrowRightToBracket = faArrowRightToBracket;
+  protected readonly faArrowRightFromBracket = faArrowRightFromBracket;
 }

@@ -62,6 +62,7 @@ export class CheckService {
 
 
   async createCheck(check: any){
+    console.log(check);
     this.httpClient.post('api/checks', check).subscribe(() => {
     })
   }
