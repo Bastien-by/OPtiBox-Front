@@ -13,6 +13,7 @@
         <input class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="check.badge" type="text" placeholder="Badge utilisateur">
         <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" (click)="detectBadge()">S'identifier</button>
       </div>
+      <label class="block text-gray-700 font-lighter mb-2">Scannez votre carte</label>
 
       <div *ngIf="user.username" class="mt-4">
         <p class="text-green-500 text-lg font-bold">Bonjour, {{ user.username }}</p>
