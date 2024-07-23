@@ -18,7 +18,7 @@ export const appConfig: ApplicationConfig = {
 export function initializeKeycloak(keycloakService: KeycloakService) {
   return () => keycloakService.init({
     config: {
-      url: 'http://192.168.169.128:8081',
+      url: 'http://127.0.0.2:8081',
       realm: 'moyens_levage',
       clientId: 'angular-web-client',
     },

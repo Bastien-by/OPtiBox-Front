@@ -8,6 +8,8 @@ import {ButtonModule} from "primeng/button";
 import {DialogModule} from "primeng/dialog";
 import {ToastModule} from "primeng/toast";
 import {MessageService} from "primeng/api";
+import {faHouse, faKey, faUser} from "@fortawesome/free-solid-svg-icons";
+import {FaIconComponent} from "@fortawesome/angular-fontawesome";
 
 @Component({
   selector: 'app-userpage',
@@ -20,7 +22,8 @@ import {MessageService} from "primeng/api";
     TagModule,
     ButtonModule,
     DialogModule,
-    ToastModule
+    ToastModule,
+    FaIconComponent
   ],
   templateUrl: './userpage.component.html',
   providers: [MessageService],
@@ -119,4 +122,7 @@ export class UserpageComponent implements OnInit{
     this.messageService.add({severity: 'error', summary: 'Error', detail: 'Veuillez remplir tous les champs'});
   }
 
+  protected readonly faHouse = faHouse;
+  protected readonly faKey = faKey;
+  protected readonly faUser = faUser;
 }
