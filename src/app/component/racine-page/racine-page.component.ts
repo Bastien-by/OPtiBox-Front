@@ -14,6 +14,7 @@ import {
   faPeopleGroup
 } from "@fortawesome/free-solid-svg-icons";
 import {FaIconComponent} from "@fortawesome/angular-fontawesome";
+import {StockService} from "../../services/stock.service";
 
 @Component({
   selector: 'app-racine-page',
@@ -25,12 +26,33 @@ import {FaIconComponent} from "@fortawesome/angular-fontawesome";
 })
 export class RacinePageComponent implements OnInit {
   userProfile: KeycloakProfile | undefined;
-  constructor(private keycloakService: KeycloakService, private messageService: MessageService, private router: Router) {}
+  nbStocksOK: number = 0;
+  nbStocksNOK: number = 0;
+  nbStocksHS: number = 0;
+  constructor(private keycloakService: KeycloakService, private messageService: MessageService, private stockService: StockService, private router: Router) {}
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void>{
     if (this.isLoggedIn()) {
       this.loadUserProfile();
     }
+
+    await this.stockService.refreshStocks();
+    this.updateStockCounts();
+  }
+
+  updateStockCounts() {
+    this.nbStocksOK = 0;
+    this.nbStocksNOK = 0;
+    this.nbStocksHS = 0;
+    this.stockService.getAllStocks().forEach(stock => {
+      if (stock.status === 1) {
+        this.nbStocksOK++;
+      } else if (stock.status === 0) {
+        this.nbStocksNOK++;
+      } else if (stock.status === 2) {
+        this.nbStocksHS++;
+      }
+    });
   }
 
   isLoggedIn(): boolean {

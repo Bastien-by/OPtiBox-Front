@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import {HttpClient} from "@angular/common/http";
+import {firstValueFrom} from "rxjs";
 
 @Injectable({
   providedIn: 'root'
@@ -11,10 +12,8 @@ export class StockService {
     this.refreshStocks();
   }
 
-  refreshStocks(){
-    this.httpClient.get('api/stocks').subscribe((stocks: any) => {
-      this.stockArray = stocks;
-    })
+  async refreshStocks(){
+    this.stockArray = await firstValueFrom(this.httpClient.get<any>('api/stocks'));
   }
   getAllStocks() {
     return this.stockArray;
