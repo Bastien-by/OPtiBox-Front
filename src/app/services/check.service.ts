@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import {HttpClient} from "@angular/common/http";
+import {firstValueFrom} from "rxjs";
 
 @Injectable({
   providedIn: 'root'
@@ -8,6 +9,7 @@ export class CheckService {
 
   private stocksArray: any[] = [];
   private usersArray: any[] = [];
+  private checksArray: any[] = [];
   private check: any = {};
 
   constructor(private httpClient: HttpClient) {
@@ -65,6 +67,19 @@ export class CheckService {
     console.log(check);
     this.httpClient.post('api/checks', check).subscribe(() => {
     })
+  }
+
+  async getChecks() {
+    this.checksArray = await firstValueFrom(this.httpClient.get<any>('api/checks'));
+    return this.checksArray;
+  }
+
+  getLastCheck() {
+    // if there are no checks, return an empty object
+    if (this.checksArray.length === 0) {
+      return {};
+    }
+    return this.checksArray[this.checksArray.length - 1];
   }
 
 }
