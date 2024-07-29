@@ -35,7 +35,7 @@
             <img [src]="history.stock.product.picture ? history.stock.product.picture : 'assets/images/default_image.jpg'" alt="product image" class="h-10 w-10 rounded-full">
           </td>
           <td class="px-6 py-4 whitespace-nowrap">{{ history.stock.product.title }}</td>
-          <td class="px-6 py-4 whitespace-nowrap">{{ history.type }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">retrait</td>
           <td class="px-6 py-4 whitespace-nowrap">{{ history.date | date: 'dd/MM/yyyy HH:mm' }}</td>
           <td class="px-6 py-4 whitespace-nowrap">{{ history.user.username }}</td>
           <td class="px-6 py-4 whitespace-nowrap"><p-tag [value]="history.stock.product.type"></p-tag></td>
@@ -71,7 +71,7 @@
             <img [src]="history.stock.product.picture ? history.stock.product.picture : 'assets/images/default_image.jpg'" alt="product image" class="h-10 w-10 rounded-full">
           </td>
           <td class="px-6 py-4 whitespace-nowrap">{{ history.stock.product.title }}</td>
-          <td class="px-6 py-4 whitespace-nowrap">{{ history.type }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">dépôt</td>
           <td class="px-6 py-4 whitespace-nowrap">{{ history.date | date: 'dd/MM/yyyy HH:mm' }}</td>
           <td class="px-6 py-4 whitespace-nowrap">{{ history.user.username }}</td>
           <td class="px-6 py-4 whitespace-nowrap"><p-tag [value]="history.stock.product.type"></p-tag></td>

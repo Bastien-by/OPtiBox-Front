@@ -2,7 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {Router, RouterModule} from "@angular/router";
 import {KeycloakProfile} from "keycloak-js";
 import {KeycloakService} from "keycloak-angular";
-import {NgClass} from "@angular/common";
+import {DatePipe, NgClass, NgIf} from "@angular/common";
 import {MessageService} from "primeng/api";
 import {ToastModule} from "primeng/toast";
 import {
@@ -15,11 +15,12 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import {FaIconComponent} from "@fortawesome/angular-fontawesome";
 import {StockService} from "../../services/stock.service";
+import {CheckService} from "../../services/check.service";
 
 @Component({
   selector: 'app-racine-page',
   standalone: true,
-  imports: [RouterModule, NgClass, ToastModule, FaIconComponent],
+  imports: [RouterModule, NgClass, ToastModule, FaIconComponent, DatePipe, NgIf],
   templateUrl: './racine-page.component.html',
   providers: [MessageService],
   styleUrl: './racine-page.component.css'
@@ -29,7 +30,11 @@ export class RacinePageComponent implements OnInit {
   nbStocksOK: number = 0;
   nbStocksNOK: number = 0;
   nbStocksHS: number = 0;
-  constructor(private keycloakService: KeycloakService, private messageService: MessageService, private stockService: StockService, private router: Router) {}
+  lastCheck: any = {
+    date: null,
+    status: null,
+  };
+  constructor(private keycloakService: KeycloakService, private messageService: MessageService, private stockService: StockService,  private checkService: CheckService, private router: Router) {}
 
   async ngOnInit(): Promise<void>{
     if (this.isLoggedIn()) {
@@ -38,6 +43,9 @@ export class RacinePageComponent implements OnInit {
 
     await this.stockService.refreshStocks();
     this.updateStockCounts();
+
+    await this.checkService.getChecks();
+    this.lastCheck = this.checkService.getLastCheck();
   }
 
   updateStockCounts() {
