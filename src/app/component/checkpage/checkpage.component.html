@@ -52,7 +52,7 @@
             </div>
             <div>
               <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Statut</div>
-              <p class="text-lg leading-tight font-medium text-green-500">{{ review.status == 1 ? 'OK' : 'NOK' }}</p>
+              <p class="text-lg leading-tight font-medium" [class]="getStatusClass(review.status)">{{ review.status == 0 ? 'NOK' : review.status == 1 ? 'OK' : 'HS' }}</p>
             </div>
             <div>
               <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Dernier contrôle effectué</div>

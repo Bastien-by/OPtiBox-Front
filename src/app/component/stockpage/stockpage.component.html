@@ -13,7 +13,7 @@
       <option value="" disabled selected>Choisir un produit</option>
       <option *ngFor="let product of productService.getAllProducts()" [value]="product.id">{{ product.title }}</option>
     </select>
-    <button class="bg-blue-500 text-white rounded shadow px-3 py-2" (click)="[stockService.addStock(stock),showAddToast()]">Ajouter</button>
+    <button class="bg-blue-500 text-white rounded shadow px-3 py-2" [disabled]="!stock.product.id" (click)="[stockService.addStock(stock),showAddToast()]">Ajouter</button>
   </div>
   <div class="rounded overflow-auto shadow-lg bg-gray-100 border p-5 gap-3">
     <!-- if stockService.getAllStocks() is empty, display a message -->

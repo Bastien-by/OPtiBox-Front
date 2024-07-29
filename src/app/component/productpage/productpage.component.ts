@@ -109,7 +109,7 @@ export class ProductpageComponent implements OnInit {
 
   addProduct() {
     // check if the product has a title, type, size, cmu and location
-    if(this.product.title === '' || this.product.type === '' || this.product.size === '' || this.product.cmu === '' || this.product.location === ''){
+    if(this.product.title.trim().length === 0 || this.product.type.trim().length === 0 || this.product.size.trim().length === 0 || this.product.cmu.trim().length === 0 || this.product.location.trim().length === 0){
       this.showMissingFieldsToast();
       return;
     }
@@ -132,7 +132,7 @@ export class ProductpageComponent implements OnInit {
 
   updateProduct() {
     // check if the product has a title, type, size, cmu and location
-    if(this.selectedProduct.title === '' || this.selectedProduct.type === '' || this.selectedProduct.size === '' || this.selectedProduct.cmu === '' || this.selectedProduct.location === ''){
+    if(this.selectedProduct.title.trim().length === 0 || this.selectedProduct.type.trim().length === 0 || this.selectedProduct.size.trim().length === 0 || this.selectedProduct.cmu.trim().length === 0 || this.selectedProduct.location.trim().length === 0){
       this.showMissingFieldsToast();
       return;
     }

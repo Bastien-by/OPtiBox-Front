@@ -38,6 +38,7 @@ export class CheckpageComponent implements OnInit{
     id: '',
     date: '',
     status: '',
+    badge: '',
     user: {
       id: '',
     },
@@ -107,6 +108,11 @@ export class CheckpageComponent implements OnInit{
     this.users = this.checkService.getUsers();
     let badgeExist = false;
 
+    if (this.check.badge.trim().length === 0) {
+      this.showEmptyFormToast();
+      return;
+    }
+
     this.users.forEach((user: any) => {
       if(user.token === this.check.badge){
         this.user = user;
@@ -166,6 +172,19 @@ export class CheckpageComponent implements OnInit{
     this.check.date = '';
   }
 
+  getStatusClass(status: number): string {
+    switch (this.review.status) {
+      case 0:
+        return 'text-orange-400';
+      case 1:
+        return 'text-green-500';
+      case 2:
+        return 'text-red-600';
+      default:
+        return '';
+    }
+  }
+
   async updateStocks() {
     await this.checkService.refreshStocks();
     this.stocksArray = this.checkService.getStocks();
@@ -191,6 +210,9 @@ export class CheckpageComponent implements OnInit{
     this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Badge non reconnu' });
   }
 
+  showEmptyFormToast(){
+    this.messageService.add({ severity: 'warn', summary: 'Error', detail: 'Le champ ne peut pas être vide' });
+  }
 
   protected readonly faListCheck = faListCheck;
 }

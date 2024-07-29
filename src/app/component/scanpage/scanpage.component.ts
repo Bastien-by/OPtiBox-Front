@@ -135,6 +135,12 @@ export class ScanpageComponent implements OnInit{
         badgeExist = true;
       }
     });
+
+    if(this.scan.badge.trim().length === 0){
+      this.showEmptyFormToast();
+      return
+    }
+
     if(!badgeExist){
       this.showErrorToast();
       return;
@@ -257,6 +263,9 @@ export class ScanpageComponent implements OnInit{
     this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Badge non reconnu' });
   }
 
+  showEmptyFormToast(){
+    this.messageService.add({ severity: 'warn', summary: 'Error', detail: 'Le champ ne peut pas être vide' });
+  }
 
   protected readonly faBarcode = faBarcode;
   protected readonly faArrowRightToBracket = faArrowRightToBracket;

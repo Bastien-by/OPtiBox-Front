@@ -20,6 +20,8 @@ export class StockService {
   }
 
   addStock(stockSent: any){
+
+
     let stock = {
       product: stockSent.product,
       available: true,

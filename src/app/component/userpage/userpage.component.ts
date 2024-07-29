@@ -74,7 +74,7 @@ export class UserpageComponent implements OnInit{
   }
 
   addUser() {
-    if(this.user.username === '' || this.user.password === '' || this.user.token === '' || this.user.role === ''){
+    if(this.user.username.trim().length === 0 || this.user.password.trim().length === 0 || this.user.token.trim().length === 0 || this.user.role.trim().length === 0){
       this.showMissingFieldsToast();
       return;
     }
