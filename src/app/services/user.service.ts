@@ -16,32 +16,32 @@ export class UserService {
     this.userArray = this.userArray.map(user => {
       if (user.id === userId) {
         user.info = userInfo;
+        this.refreshUser(user);
       }
       return user;
     });
 
     // Apply the same refreshUsers logic for the user info
-    this.refreshUsers();
+
   }
 
-  refreshUsers(){
+  refreshUser(user: any) {
+    this.httpClient.get(`api/users/info/${user.id}`, { responseType: 'text' }).subscribe((info: any) => {
+      user.info = info.split('|');
+      user.info[0] = user.info[0].replace('deposit', 'Dépôt');
+      user.info[0] = user.info[0].replace('withdraw', 'Retrait');
+      user.info[0] = user.info[0].replace('check', 'Contrôle');
+    });
+  }
+
+  refreshUsers() {
     this.httpClient.get('api/users').subscribe((users: any) => {
       this.userArray = users;
 
-      const requests = this.userArray.map(user =>
-        this.httpClient.get(`api/users/info/${user.id}`, { responseType: 'text' })
-      );
+      const requests = this.userArray.map(user => this.refreshUser(user));
 
-      forkJoin(requests).subscribe(responses => {
-        this.userArray = this.userArray.map((user, index) => {
-          user.info = responses[index].split('|');
-
-          user.info[0] = user.info[0].replace('deposit', 'Dépôt');
-          user.info[0] = user.info[0].replace('withdraw', 'Retrait');
-          user.info[0] = user.info[0].replace('check', 'Contrôle');
-
-          return user;
-        });
+      forkJoin(requests).subscribe(() => {
+        // All users have been refreshed
       });
     });
   }

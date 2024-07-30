@@ -90,6 +90,25 @@ export class UserpageComponent implements OnInit{
     }
   }
 
+  updateUser() {
+    if(this.selectedUser.username.trim().length === 0 || this.selectedUser.token.trim().length === 0 || this.selectedUser.role.trim().length === 0){
+      this.showMissingFieldsToast();
+      return;
+    }
+
+    this.userService.updateUser(this.selectedUser);
+    this.showUpdateToast();
+
+    this.selectedUser = {
+      username: '',
+      password: '',
+      token: '',
+      role: '',
+    }
+
+    this.hideDialog();
+  }
+
 
   showDialog(user: any, dialogNumber: number) {
     if(dialogNumber === 1){
