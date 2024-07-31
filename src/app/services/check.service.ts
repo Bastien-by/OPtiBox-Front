@@ -17,7 +17,22 @@ export class CheckService {
     this.refreshUsers();
   }
 
-
+  // Send the corresponding Color Class representing a status
+  getStatusClass(review: any): string {
+    switch (review.status) {
+      case 0:
+        //NOK
+        return 'text-orange-400';
+      case 1:
+        //OK
+        return 'text-green-500';
+      case 2:
+        //HS
+        return 'text-red-600';
+      default:
+        return '';
+    }
+  }
 
   refreshData() {
     return Promise.all([

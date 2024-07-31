@@ -160,6 +160,7 @@ export class CheckpageComponent implements OnInit{
       this.showAddToast();
       await this.checkService.refreshData(); // Attendre que les données soient rafraîchies
       this.updateStocks();
+      this.review.status = status;
     } catch (error) {
       console.error('Error adding check:', error);
     }
@@ -172,17 +173,8 @@ export class CheckpageComponent implements OnInit{
     this.check.date = '';
   }
 
-  getStatusClass(status: number): string {
-    switch (this.review.status) {
-      case 0:
-        return 'text-orange-400';
-      case 1:
-        return 'text-green-500';
-      case 2:
-        return 'text-red-600';
-      default:
-        return '';
-    }
+  getStatusClass(): string {
+    return this.checkService.getStatusClass(this.review);
   }
 
   async updateStocks() {

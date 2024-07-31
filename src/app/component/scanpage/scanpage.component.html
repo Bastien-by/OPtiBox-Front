@@ -27,8 +27,8 @@
 
   <div *ngIf="user.username" class="mt-4">
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
-      <button [ngClass]="history.type == 'withdraw' ? 'bg-blue-500 hover:bg-blue-700 text-white font-bold rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 p-5 text-2xl' : 'bg-gray-300 text-gray-700 font-bold rounded focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 p-5 text-2xl'" (click)="setType('withdraw')"><fa-icon [icon]="faArrowRightFromBracket"></fa-icon> Retrait</button>
-      <button [ngClass]="history.type == 'deposit' ? 'bg-blue-500 hover:bg-blue-700 text-white font-bold rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 p-5 text-2xl' : 'bg-gray-300 text-gray-700 font-bold rounded focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 p-5 text-2xl'" (click)="setType('deposit')"><fa-icon [icon]="faArrowRightToBracket"></fa-icon> Dépôt</button>
+      <button [ngClass]="history.type == 'withdraw' ? 'bg-blue-500 hover:bg-blue-700 text-white font-bold rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 p-5 text-2xl' : 'bg-gray-300 text-gray-700 font-bold rounded focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 p-5 text-2xl'" (click)="setType('withdraw')" [disabled]="!isButtonEnabled"><fa-icon [icon]="faArrowRightFromBracket"></fa-icon> Retrait</button>
+      <button [ngClass]="history.type == 'deposit' ? 'bg-blue-500 hover:bg-blue-700 text-white font-bold rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 p-5 text-2xl' : 'bg-gray-300 text-gray-700 font-bold rounded focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 p-5 text-2xl'" (click)="setType('deposit')" [disabled]="!isButtonEnabled"><fa-icon [icon]="faArrowRightToBracket"></fa-icon> Dépôt</button>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -37,7 +37,7 @@
         <h1 class="text-2xl font-bold mb-4">Retirer un produit</h1>
         <label class="block text-gray-700 font-bold mb-2">Choisir un produit disponible</label>
         <select id="selectWithdraw" class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="stock.id" (change)="detectStock()">
-          <option value="0" disabled selected>Choisir un produit disponible</option>
+          <option value="" disabled selected>Choisir un produit disponible</option>
           <option *ngFor="let item of availableStocks" [value]="item.id">{{ item.product.title }}</option>
         </select>
         <!-- Input pour scanner le produit -->
@@ -47,7 +47,7 @@
         </div>
 
         <div class="fixed inset-x-0 bottom-0 flex justify-center pb-4">
-          <button *ngIf="review.id" class="bg-green-600 hover:bg-green-800 text-white font-bold py-5 px-5 rounded text-xl" (click)="addScan('withdraw')">
+          <button *ngIf="review.id && isStockSelected" [disabled]="!isButtonEnabled" [ngClass]="{'bg-gray-400 text-gray-700': !isButtonEnabled, 'bg-green-600 hover:bg-green-800 text-white': isButtonEnabled}" class="font-bold py-5 px-5 rounded text-xl" (click)="addScan('withdraw')">
             Retirer le produit
           </button>
         </div>
@@ -57,7 +57,7 @@
         <h1 class="text-2xl font-bold mb-4">Retourner un produit</h1>
         <label class="block text-gray-700 font-bold mb-2">Choisir un produit emprunté</label>
         <select id="selectDeposit" class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="stock.id" (change)="detectStock()">
-          <option value="0" disabled selected>Choisir un produit emprunté</option>
+          <option value="" disabled selected>Choisir un produit emprunté</option>
           <option *ngFor="let item of loanedStocks" [value]="item.id">{{ item.product.title }}</option>
         </select>
         <!-- Input pour scanner le produit -->
@@ -66,14 +66,14 @@
           <input class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="stock.id" (change)="detectStock()" type="text" placeholder="Code produit">
         </div>
         <div class="fixed inset-x-0 bottom-0 flex justify-center pb-4">
-          <button *ngIf="review.id" class="bg-green-600 hover:bg-green-800 text-white font-bold py-5 px-5 rounded text-xl" (click)="addScan('deposit')">
+          <button *ngIf="review.id && isStockSelected" [disabled]="!isButtonEnabled" [ngClass]="{'bg-gray-400 text-gray-700': !isButtonEnabled, 'bg-green-600 hover:bg-green-800 text-white': isButtonEnabled}" class="font-bold py-5 px-5 rounded text-xl" (click)="addScan('deposit')">
             Retourner le produit
           </button>
         </div>
       </div>
       <!-- Caractéristiques du produit -->
       <div class="bg-white shadow-md rounded-lg p-6">
-        <div *ngIf="review.id" class="p-6">
+        <div *ngIf="review.id && isStockSelected" class="p-6">
           <div class="flex justify-between items-center mb-4">
             <div>
               <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Aperçu du produit</div>
@@ -81,7 +81,7 @@
             </div>
             <div>
               <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Statut</div>
-              <p class="text-lg leading-tight font-medium text-green-500">{{ review.status == 1 ? 'OK' : 'NOK' }}</p>
+              <p class="text-lg leading-tight font-medium" [class]="getStatusClass()">{{ review.status == 0 ? 'NOK' : review.status == 1 ? 'OK' : 'HS' }}</p>
             </div>
             <div>
               <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Dernier contrôle effectué</div>
@@ -131,7 +131,7 @@
           </div>
         </div>
         <!-- if review review is empty -->
-        <div *ngIf="!review.id" class="text-center self-center">
+        <div *ngIf="!isStockSelected" class="text-center self-center">
           <p class="text-lg font-bold">Veuillez scanner ou sélectionner un produit pour afficher ses caractéristiques</p>
         </div>
 

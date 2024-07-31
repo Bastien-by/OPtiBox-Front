@@ -52,7 +52,7 @@
             </div>
             <div>
               <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Statut</div>
-              <p class="text-lg leading-tight font-medium" [class]="getStatusClass(review.status)">{{ review.status == 0 ? 'NOK' : review.status == 1 ? 'OK' : 'HS' }}</p>
+              <p class="text-lg leading-tight font-medium" [class]="getStatusClass()">{{ review.status == 0 ? 'NOK' : review.status == 1 ? 'OK' : 'HS' }}</p>
             </div>
             <div>
               <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Dernier contrôle effectué</div>
@@ -126,4 +126,12 @@
     </div>
   </div>
   <p-toast></p-toast>
+</div>
+
+<!-- Hidden divs for tailwindcss color classes
+(smh sometimes color classes don't get recognized if they are set from JS - see getStatusClass() -->
+<div>
+  <div class="hidden text-orange-400"></div>
+  <div class="hidden text-green-500"></div>
+  <div class="hidden text-red-600"></div>
 </div>

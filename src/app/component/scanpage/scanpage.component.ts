@@ -9,6 +9,7 @@ import {DialogModule} from "primeng/dialog";
 import {ToastModule} from "primeng/toast";
 import {MessageService} from "primeng/api";
 import {StockService} from "../../services/stock.service";
+import {CheckService} from "../../services/check.service";
 import {
   faArrowRightFromBracket,
   faArrowRightToBracket,
@@ -97,7 +98,10 @@ export class ScanpageComponent implements OnInit{
 
   responsiveOptions: any[] | undefined;
 
-  constructor(protected scanService: ScanService, private messageService: MessageService, private stockService: StockService) {}
+  isStockSelected: boolean = false;
+  isButtonEnabled: boolean = true;
+
+  constructor(protected scanService: ScanService, private messageService: MessageService, private stockService: StockService, private checkService: CheckService) {}
 
   ngOnInit(){
     this.responsiveOptions = [
@@ -162,6 +166,7 @@ export class ScanpageComponent implements OnInit{
 
   async detectStock() {
     this.review = this.stockService.getStockById(this.stock.id);
+    this.isStockSelected = true;
     console.log(this.review);
   }
 
@@ -171,6 +176,8 @@ export class ScanpageComponent implements OnInit{
       this.showErrorToast();
       return;
     }
+
+    this.isButtonEnabled = false;
 
     // get date
     let date = new Date();
@@ -191,6 +198,8 @@ export class ScanpageComponent implements OnInit{
 
     this.stock.id = '';
     this.history.stock.id = '';
+    this.isStockSelected = false;
+    this.isButtonEnabled = true;
   }
 
 
@@ -243,6 +252,9 @@ export class ScanpageComponent implements OnInit{
 
   }
 
+  getStatusClass(): string {
+    return this.checkService.getStatusClass(this.review);
+  }
 
   disconnect(){
     this.user = {
