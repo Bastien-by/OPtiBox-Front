@@ -1,0 +1,11 @@
+services:
+  frontend:
+    build: .
+    ports:
+      - "4200:4200"
+    networks:
+      - optibox-shared-network
+
+networks:
+  optibox-shared-network:
+    external: true
