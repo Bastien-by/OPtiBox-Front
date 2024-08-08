@@ -1,6 +1,9 @@
+name: optibox-frontend
+
 services:
-  frontend:
+  angular-app:
     build: .
+    container_name: angular-app
     ports:
       - "4200:4200"
     networks:
