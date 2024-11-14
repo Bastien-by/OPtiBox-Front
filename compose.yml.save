@@ -2,11 +2,11 @@ name: optibox-frontend
 
 services:
   keycloak:
-    image: keycloak/keycloak:latest
+    image: docker.io/keycloak/keycloak:latest
     container_name: optibox-keycloak
     environment:
-       KC_BOOTSTRAP_ADMIN_USERNAME: "${KC_BOOTSTRAP_ADMIN_USERNAME}"
-       KC_BOOTSTRAP_ADMIN_PASSWORD: "${KC_BOOTSTRAP_ADMIN_PASSWORD}"
+      KEYCLOAK_ADMIN: "${KEYCLOAK_USERNAME}"
+      KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_PASSWORD}"
     ports:
       - "${KEYCLOAK_PORT}:8080"
     volumes:
