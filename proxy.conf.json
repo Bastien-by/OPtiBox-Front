@@ -1,9 +1,11 @@
 {
   "/api": {
-    "target": "http://spring-app:8000",
+    "target": "http://spring-app:8001",
     "secure": false,
     "pathRewrite": {
       "^/api": ""
     }
   }
 }
+
+

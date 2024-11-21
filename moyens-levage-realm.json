@@ -630,18 +630,20 @@
       "clientId": "angular-web-client",
       "name": "",
       "description": "",
-      "rootUrl": "http://localhost:4200",
-      "adminUrl": "http://localhost:4200",
+      "rootUrl": "",
+      "adminUrl": "",
       "baseUrl": "",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "http://localhost:4200/*"
+        "http://localhost:4200/*",
+        "http://sx04nellt0200.ad.ponet:4200/*"
       ],
       "webOrigins": [
-        "*"
+        "*",
+        "http://sx04nellt0200:4200"
       ],
       "notBefore": 0,
       "bearerOnly": false,
