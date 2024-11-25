@@ -7,7 +7,6 @@ services:
     environment:
        KC_BOOTSTRAP_ADMIN_USERNAME: "${KC_BOOTSTRAP_ADMIN_USERNAME}"
        KC_BOOTSTRAP_ADMIN_PASSWORD: "${KC_BOOTSTRAP_ADMIN_PASSWORD}"
-       KEYCLOAK_URL: "${KEYCLOAK_URL}"
     ports:
       - "${KEYCLOAK_PORT}:8080"
     volumes:
