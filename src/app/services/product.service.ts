@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import {HttpClient} from "@angular/common/http";
+import { map, Observable, forkJoin } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -57,11 +58,45 @@ export class ProductService {
 
   }
 
-  removeProduct(id: number){
-    this.productArray = this.productArray.filter(product => product.id !== id);
-    this.httpClient.delete('api/products/' + id).subscribe(() => {
-      this.refreshProducts();
+  removeProduct(id: number): void {
+    this.getStockIdByProductId(id).subscribe(stocks => {
+      if (stocks.length === 0) {
+        // Si aucun stock n'est associé, supprimer directement le produit
+        this.deleteProduct(id);
+      } else {
+        // Sinon, supprimer les stocks associés avant de supprimer le produit
+        const deleteRequests = stocks.map(stock => this.httpClient.delete(`api/stocks/${stock.id}`));
+        
+        forkJoin(deleteRequests).subscribe({
+          next: () => {
+            this.deleteProduct(id);
+          },
+          error: (err) => {
+            console.error('Erreur lors de la suppression des stocks :', err);
+          }
+        });
+      }
     });
-
   }
+  
+  deleteProduct(id: number): void {
+    this.productArray = this.productArray.filter(product => product.id !== id);
+    this.httpClient.delete(`api/products/${id}`).subscribe(() => {
+      this.refreshProducts();
+    }, error => {
+      console.error('Erreur lors de la suppression du produit :', error);
+    });
+  }
+  
+  
+
+  getStockIdByProductId(productId: number): Observable<any[]> {
+    return this.httpClient.get<any[]>("api/stocks").pipe(
+      map((stocks: any[]) => stocks.filter(stock => stock.product.id === productId))
+    );
+  }
+
+  /*getStockByProductId(id: number) {
+    return this.httpClient.get<number[]>('/api/stocks/{id}')
+  }*/
 }

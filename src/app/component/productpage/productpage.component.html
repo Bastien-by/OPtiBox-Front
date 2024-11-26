@@ -57,10 +57,10 @@
             </div>
             <div>
               <div class="mt-5 align-items-center justify-content-center gap-2 p-5">
-                <div class="bg-blue-500 rounded-full p-button p-3 m-2" (click)="showDialog(product, 1)">
+                <div class="bg-blue-500 hover:bg-blue-700 rounded-full p-button p-3 m-2" (click)="showDialog(product, 1)">
                   <i class="pi pi-pencil"></i>
                 </div>
-                <div class="bg-red-800 rounded-full p-button p-3 m-2" (click)="[showDialog(product, 2), triggerDeleteProduct()]">
+                <div class="bg-red-500 hover:bg-red-700 rounded-full p-button p-3 m-2" (click)="[showDialog(product, 2), triggerDeleteProduct()]">
                   <i class="pi pi-trash"></i>
                 </div>
               </div>
@@ -112,7 +112,7 @@
       <h1 class="text-2xl font-bold py-3">Produit n° {{ selectedProduct.id }}</h1>
       <p>Voulez-vous définitivement supprimer ce produit ?</p>
       <p *ngIf="countStock > 0">{{ countStock }} élement(s) de stock trouvé(s). Par conséquent cette action supprimera également le ou les éléments de stock associés.</p>
-      <button class="bg-red-800 text-white rounded shadow p-3" (click)="[productService.removeProduct(selectedProduct.id), hideDialog(), showDeleteToast()]">Supprimer</button>
+      <button class="bg-red-500 hover:bg-red-700 text-white rounded shadow p-3" (click)="[productService.removeProduct(selectedProduct.id), hideDialog(), showDeleteToast()]">Supprimer</button>
     </div>
   </p-dialog>
 

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {HttpClient} from "@angular/common/http";
-import {firstValueFrom} from "rxjs";
+import {firstValueFrom, Observable} from "rxjs";
 
 @Injectable({
   providedIn: 'root'
@@ -58,6 +58,8 @@ export class StockService {
 
   }
 
+  
+
   getStockById(id: number){
     return this.stockArray.find(stock => stock.id == id);
   }
@@ -65,4 +67,6 @@ export class StockService {
   getStockByProductId(id: number) {
     return this.httpClient.get('api/stocks/getStockByProductId/' + id).toPromise();
   }
+
+  
 }
