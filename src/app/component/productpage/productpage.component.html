@@ -112,7 +112,7 @@
       <h1 class="text-2xl font-bold py-3">Produit n° {{ selectedProduct.id }}</h1>
       <p>Voulez-vous définitivement supprimer ce produit ?</p>
       <p *ngIf="countStock > 0">{{ countStock }} élement(s) de stock trouvé(s). Par conséquent cette action supprimera également le ou les éléments de stock associés.</p>
-      <button class="bg-red-500 hover:bg-red-700 text-white rounded shadow p-3" (click)="[productService.removeProduct(selectedProduct.id), hideDialog(), showDeleteToast()]">Supprimer</button>
+      <button class="bg-red-500 hover:bg-red-700 text-white rounded shadow p-3" (click)="[productService.removeCheck(selectedProduct.id), hideDialog(), showDeleteToast()]">Supprimer</button>
     </div>
   </p-dialog>
 
