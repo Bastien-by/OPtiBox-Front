@@ -11,7 +11,7 @@ import {MessageService} from "primeng/api";
 import {faBox} from "@fortawesome/free-solid-svg-icons";
 import {FaIconComponent} from "@fortawesome/angular-fontawesome";
 import {StockService} from "../../services/stock.service";
-import { CheckService } from '../../services/check.service';
+
 
 @Component({
   selector: 'app-productpage',

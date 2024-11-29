@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {HttpClient} from "@angular/common/http";
-import {firstValueFrom, Observable} from "rxjs";
+import {firstValueFrom, forkJoin, map, Observable, switchMap} from "rxjs";
 
 @Injectable({
   providedIn: 'root'
@@ -50,6 +50,30 @@ export class StockService {
 
   }
 
+  /**/
+
+  removeCheck(id: number): void {
+    this.getCheckIdByStockId(id).subscribe(checks => {
+      if (checks.length === 0) {
+        // Si aucun check n'est associé, supprimer directement le stock
+        this.removeStock(id);
+      } else {
+        console.log('ID des stocks associés au produit:', checks.map(check => check.id));
+        // Sinon, supprimer les checks associés avant de supprimer le stock
+        const deleteChecksRequests = checks.map(check => this.httpClient.delete(`api/checks/${check.id}`));
+        
+        forkJoin(deleteChecksRequests).subscribe({
+          next: () => {
+            this.removeStock(id);
+          },
+          error: (err) => {
+            console.error('Erreur lors de la suppression des Checks :', err);
+          }
+        });
+      }
+    });
+  }
+
   removeStock(id: number){
     this.stockArray = this.stockArray.filter(stock => stock.id !== id);
     this.httpClient.delete('api/stocks/' + id).subscribe(() => {
@@ -58,14 +82,23 @@ export class StockService {
 
   }
 
-  
-
   getStockById(id: number){
     return this.stockArray.find(stock => stock.id == id);
   }
 
   getStockByProductId(id: number) {
     return this.httpClient.get('api/stocks/getStockByProductId/' + id).toPromise();
+  }
+  getStockIdByProductId(productId: number): Observable<any[]> {
+    return this.httpClient.get<any[]>("api/stocks").pipe(
+      map((stocks: any[]) => stocks.filter(stock => stock.product.id === productId))
+    );
+  }
+
+  getCheckIdByStockId(stockId: number): Observable<any[]> {
+    return this.httpClient.get<any[]>("api/checks").pipe(
+      map((checks: any[]) => checks.filter(check => check.stock.id == stockId))
+    );
   }
 
   

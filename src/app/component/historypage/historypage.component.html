@@ -113,6 +113,16 @@
           <td class="px-6 py-4 whitespace-nowrap">{{ history.user.username }}</td>
           <td class="px-6 py-4 whitespace-nowrap"><p-tag [value]="history.stock.product.type"></p-tag></td>
           <td class="px-6 py-4 whitespace-nowrap">{{ history.comment }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="flex justify-center items-center space-x-2">
+              <div class="bg-blue-500 hover:bg-blue-700 rounded-full w-10 h-10 flex items-center justify-center cursor-pointer">
+                <i class="pi pi-pencil text-white"></i>
+              </div>
+              <div class="bg-red-500 hover:bg-red-700 rounded-full w-10 h-10 flex items-center justify-center cursor-pointer">
+                <i class="pi pi-trash text-white"></i>
+              </div>
+            </div>
+          </td>
         </tr>
       </ng-container>
       </tbody>

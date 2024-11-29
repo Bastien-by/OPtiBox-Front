@@ -11,6 +11,8 @@ import {MessageService} from "primeng/api";
 import { ProductService } from '../../services/product.service';
 import {faBoxesStacked} from "@fortawesome/free-solid-svg-icons";
 import {FaIconComponent} from "@fortawesome/angular-fontawesome";
+import { CheckService } from '../../services/check.service';
+
 
 @Component({
   selector: 'app-stockpage',
@@ -52,6 +54,8 @@ export class StockpageComponent implements OnInit{
     creationDate: null,
   }
 
+  countCheck: number = 0;
+
 
   dialog1Visible: boolean = false;
   dialog2Visible: boolean = false;
@@ -59,8 +63,9 @@ export class StockpageComponent implements OnInit{
   responsiveOptions: any[] | undefined;
 
   listOfProducts: any[] = [];
+ 
 
-  constructor(protected stockService: StockService, private messageService: MessageService, protected productService: ProductService) {}
+  constructor(protected stockService: StockService, private messageService: MessageService, protected productService: ProductService, protected checkService: CheckService) {}
 
   ngOnInit(){
     this.responsiveOptions = [
@@ -84,6 +89,12 @@ export class StockpageComponent implements OnInit{
     //get product service to get all products
     this.listOfProducts = this.productService.getAllProducts();
     this.stockService.refreshStocks();
+  }
+  triggerDeleteStock() {
+    this.checkService.getCheckByStockId(this.selectedStock.id).then((response: any) => {
+      console.log(response);
+      this.countCheck = response;
+    });
   }
 
 

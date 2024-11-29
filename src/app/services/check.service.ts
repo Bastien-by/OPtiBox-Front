@@ -97,4 +97,8 @@ export class CheckService {
     return this.checksArray[this.checksArray.length - 1];
   }
 
+  getCheckByStockId(id: number) {
+    return this.httpClient.get('api/checks/getCheckByStockId/' + id).toPromise();
+  }
+
 }
