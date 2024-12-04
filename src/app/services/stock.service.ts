@@ -52,22 +52,31 @@ export class StockService {
 
   /**/
 
-  removeCheck(id: number): void {
-    this.getCheckIdByStockId(id).subscribe(checks => {
-      if (checks.length === 0) {
-        // Si aucun check n'est associé, supprimer directement le stock
-        this.removeStock(id);
+  removeChecksAndHistories(productId: number): void {
+    forkJoin({
+      checks: this.getCheckIdByStockId(productId),
+      histories: this.getHistoryIdByStockId(productId)
+    }).subscribe(({ checks, histories }) => {
+      const hasChecks = checks.length > 0;
+      const hasHistories = histories.length > 0;
+  
+      if (!hasChecks && !hasHistories) {
+        // Aucun check ni history associé, suppression directe du stock
+        this.removeStock(productId);
       } else {
-        console.log('ID des stocks associés au produit:', checks.map(check => check.id));
-        // Sinon, supprimer les checks associés avant de supprimer le stock
+        console.log('ID des checks associés:', checks.map(check => check.id));
+        console.log('ID des histories associés:', histories.map(history => history.id));
+  
+        // Suppression des checks et histories
         const deleteChecksRequests = checks.map(check => this.httpClient.delete(`api/checks/${check.id}`));
+        const deleteHistoriesRequests = histories.map(history => this.httpClient.delete(`api/history/${history.id}`));
         
-        forkJoin(deleteChecksRequests).subscribe({
+        forkJoin([...deleteChecksRequests, ...deleteHistoriesRequests]).subscribe({
           next: () => {
-            this.removeStock(id);
+            this.removeStock(productId);
           },
           error: (err) => {
-            console.error('Erreur lors de la suppression des Checks :', err);
+            console.error('Erreur lors de la suppression des Checks ou Histories :', err);
           }
         });
       }
@@ -97,6 +106,12 @@ export class StockService {
 
   getCheckIdByStockId(stockId: number): Observable<any[]> {
     return this.httpClient.get<any[]>("api/checks").pipe(
+      map((checks: any[]) => checks.filter(check => check.stock.id == stockId))
+    );
+  }
+
+  getHistoryIdByStockId(stockId: number): Observable<any[]> {
+    return this.httpClient.get<any[]>("api/history").pipe(
       map((checks: any[]) => checks.filter(check => check.stock.id == stockId))
     );
   }

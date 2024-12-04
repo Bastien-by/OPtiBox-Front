@@ -136,7 +136,7 @@ export class ProductpageComponent implements OnInit {
 
   updateProduct() {
     // check if the product has a title, type, size, cmu, location and brand
-    if(this.selectedProduct.title.trim().length === 0 || this.selectedProduct.type.trim().length === 0 || this.selectedProduct.size.trim().length === 0 || this.selectedProduct.cmu.trim().length === 0 || this.selectedProduct.location.trim().length === 0 || this.product.brand.trim().length === 0){
+    if(this.selectedProduct.title.trim().length === 0 || this.selectedProduct.type.trim().length === 0 || this.selectedProduct.size.trim().length === 0 || this.selectedProduct.cmu.trim().length === 0 || this.selectedProduct.location.trim().length === 0 || this.selectedProduct.brand.trim().length === 0){
       this.showMissingFieldsToast();
       return;
     }

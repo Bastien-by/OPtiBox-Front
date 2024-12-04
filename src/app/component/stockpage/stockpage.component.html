@@ -82,7 +82,8 @@
       <h1 class="text-2xl font-bold py-3">Stock n° {{ selectedStock.id }}</h1>
       <p>Voulez-vous définitivement supprimer ce stock ?</p>
       <p *ngIf="countCheck > 0">{{ countCheck }} contrôle(s) trouvé(s). Par conséquent cette action supprimera également le ou les contrôles associés.</p>
-      <button class="bg-red-500 hover:bg-red-700 text-white rounded shadow p-3" (click)="[stockService.removeCheck(selectedStock.id), hideDialog(), showDeleteToast()]">Supprimer</button>
+      <p *ngIf="countHistory > 0">{{ countHistory }} dépot(s)/retrait(s) trouvé(s). Par conséquent cette action supprimera également le ou les dépots/retraits associés.</p>
+      <button class="bg-red-500 hover:bg-red-700 text-white rounded shadow p-3" (click)="[stockService.removeChecksAndHistories(selectedStock.id), hideDialog(), showDeleteToast()]">Supprimer</button>
     </div>
   </p-dialog>
 

@@ -37,4 +37,8 @@ export class HistoryService {
   getAllCheckHistory() {
     return this.checkHistoryArray;
   }
+
+  getHistoryByStockId(id: number) {
+    return this.httpClient.get('api/history/getHistoryByStockId/' + id).toPromise();
+  }
 }

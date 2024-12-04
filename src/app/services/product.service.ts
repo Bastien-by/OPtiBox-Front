@@ -59,27 +59,37 @@ export class ProductService {
   }
 
 
-  removeCheck(id: number): void {
-    this.getCheckIdByProductId(id).subscribe(checks => {
-      if (checks.length === 0) {
-        // Si aucun check n'est associé, supprimer directement le stock
-        this.removeStock(id);
+  removeChecksAndHistories(productId: number): void {
+    forkJoin({
+      checks: this.getCheckIdByProductId(productId),
+      histories: this.getHistoryIdByProductId(productId)
+    }).subscribe(({ checks, histories }) => {
+      const hasChecks = checks.length > 0;
+      const hasHistories = histories.length > 0;
+  
+      if (!hasChecks && !hasHistories) {
+        // Aucun check ni history associé, suppression directe du stock
+        this.removeStock(productId);
       } else {
-        console.log('ID des stocks associés au produit:', checks.map(check => check.id));
-        // Sinon, supprimer les checks associés avant de supprimer le stock
+        console.log('ID des checks associés:', checks.map(check => check.id));
+        console.log('ID des histories associés:', histories.map(history => history.id));
+  
+        // Suppression des checks et histories
         const deleteChecksRequests = checks.map(check => this.httpClient.delete(`api/checks/${check.id}`));
+        const deleteHistoriesRequests = histories.map(history => this.httpClient.delete(`api/history/${history.id}`));
         
-        forkJoin(deleteChecksRequests).subscribe({
+        forkJoin([...deleteChecksRequests, ...deleteHistoriesRequests]).subscribe({
           next: () => {
-            this.removeStock(id);
+            this.removeStock(productId);
           },
           error: (err) => {
-            console.error('Erreur lors de la suppression des Checks :', err);
+            console.error('Erreur lors de la suppression des Checks ou Histories :', err);
           }
         });
       }
     });
   }
+  
 
   removeStock(id: number): void {
     this.getStockIdByProductId(id).subscribe(stocks => {
@@ -130,6 +140,18 @@ export class ProductService {
       })
     );
   }
+
+  getHistoryIdByProductId(productId: number): Observable<any[]> {
+    return this.getStockIdByProductId(productId).pipe(  // Appel pour obtenir les stocks associés au produit
+      switchMap(stocks => {
+        const stockIds = stocks.map(stock => stock.id);  // Extraction des IDs des stocks
+        return this.httpClient.get<any[]>('api/history').pipe(  // Appel à l'API des histories
+          map((histories: any[]) => histories.filter(history => stockIds.includes(history.stock.id)))  // Filtrage des histories en fonction des IDs de stock
+        );
+      })
+    );
+  }
+  
   
 
   /*getStockByProductId(id: number) {

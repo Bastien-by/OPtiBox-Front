@@ -12,6 +12,7 @@ import { ProductService } from '../../services/product.service';
 import {faBoxesStacked} from "@fortawesome/free-solid-svg-icons";
 import {FaIconComponent} from "@fortawesome/angular-fontawesome";
 import { CheckService } from '../../services/check.service';
+import { HistoryService } from '../../services/history.service';
 
 
 @Component({
@@ -55,6 +56,7 @@ export class StockpageComponent implements OnInit{
   }
 
   countCheck: number = 0;
+  countHistory: number = 0;
 
 
   dialog1Visible: boolean = false;
@@ -65,7 +67,7 @@ export class StockpageComponent implements OnInit{
   listOfProducts: any[] = [];
  
 
-  constructor(protected stockService: StockService, private messageService: MessageService, protected productService: ProductService, protected checkService: CheckService) {}
+  constructor(protected stockService: StockService, private messageService: MessageService, protected productService: ProductService, protected checkService: CheckService, protected historyService: HistoryService) {}
 
   ngOnInit(){
     this.responsiveOptions = [
@@ -95,6 +97,10 @@ export class StockpageComponent implements OnInit{
       console.log(response);
       this.countCheck = response;
     });
+    this.historyService.getHistoryByStockId(this.selectedStock.id).then((response: any) => {
+      console.log(response);
+      this.countHistory = response;
+    })
   }
 
 
