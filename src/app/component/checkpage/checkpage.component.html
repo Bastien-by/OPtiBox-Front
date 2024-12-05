@@ -26,9 +26,9 @@
   <div class="border-b-2 border-gray-200"></div>
 
   <div *ngIf="user.username" class="mt-4">
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-      <div class="bg-white shadow-md rounded-lg p-6">
+      <div class="lg:col-span-1 bg-white shadow-md rounded-lg p-6">
         <h1 class="text-2xl font-bold mb-4">Sélectionner un produit</h1>
         <label class="block text-gray-700 font-bold mb-2">Choisir un produit</label>
         <select id="selectWithdraw" class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="stock.id" (change)="detectStock()">
@@ -43,7 +43,7 @@
       </div>
 
       <!-- Caractéristiques du produit -->
-      <div class="bg-white shadow-md rounded-lg p-6">
+      <div class="lg:col-span-2 bg-white shadow-md rounded-lg p-6">
         <div *ngIf="review.id" class="p-6">
           <div class="flex justify-between items-center mb-4">
             <div>
@@ -56,7 +56,7 @@
             </div>
             <div>
               <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Dernier contrôle effectué</div>
-              <p class="text-lg leading-tight text-gray-500">N/A</p>
+              <p class="text-lg leading-tight text-gray-500">{{ review.lastCheckDate }}</p>
             </div>
             <div>
               <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Date de création</div>
@@ -119,9 +119,9 @@
         </div>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-6 px-6 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-xl" (click)="setStatus(1)">OK</button>
-        <button class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-6 px-6 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-xl" (click)="setStatus(0)">NOK</button>
-        <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-6 px-6 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-xl" (click)="setStatus(2)">HS</button>
+        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-6 px-6 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-xl" (click)="setStatus(1, review.id)">OK</button>
+        <button class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-6 px-6 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-xl" (click)="setStatus(0, review.id)">NOK</button>
+        <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-6 px-6 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-xl" (click)="setStatus(2, review.id)">HS</button>
       </div>
     </div>
   </div>

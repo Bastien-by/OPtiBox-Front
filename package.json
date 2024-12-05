@@ -25,6 +25,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.4.2",
     "file-saver": "^2.0.5",
     "jspdf": "^2.5.2",
+    "jspdf-autotable": "^3.8.4",
     "keycloak-angular": "^15.3.0",
     "keycloak-js": "^24.0.5",
     "primeicons": "^7.0.0",

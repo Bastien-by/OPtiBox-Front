@@ -10,6 +10,11 @@
   <div>
     <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" (click)="showCreateDialog()">Créer un produit</button>
   </div>
+  <!--<div class="flex items-center gap-2">
+      <input type="text" placeholder="Rechercher un produit" class="border p-2 rounded" />
+      <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Filtrer</button>
+    </div>
+  </div>-->
 
   <div class="rounded overflow-auto p-5 gap-3">
     <!-- if productService.getAllProducts() is empty, display a message -->
@@ -51,17 +56,15 @@
                       <div class="text-gray-500">Taille</div>
                       <div class="text-black">{{ product.size }}</div>
                     </div>
+                    <div class="mt-5 align-items-center justify-content-center gap-2 p-5">
+                      <div class="bg-blue-500 hover:bg-blue-800 rounded-full p-button p-3 m-2" (click)="showDialog(product, 1)">
+                        <i class="pi pi-pencil"></i>
+                      </div>
+                      <div class="bg-red-500 hover:bg-red-800 rounded-full p-button p-3 m-2" (click)="[showDialog(product, 2), triggerDeleteProduct()]">
+                        <i class="pi pi-trash"></i>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </div>
-            <div>
-              <div class="mt-5 align-items-center justify-content-center gap-2 p-5">
-                <div class="bg-blue-500 hover:bg-blue-700 rounded-full p-button p-3 m-2" (click)="showDialog(product, 1)">
-                  <i class="pi pi-pencil"></i>
-                </div>
-                <div class="bg-red-500 hover:bg-red-700 rounded-full p-button p-3 m-2" (click)="[showDialog(product, 2), triggerDeleteProduct()]">
-                  <i class="pi pi-trash"></i>
                 </div>
               </div>
             </div>

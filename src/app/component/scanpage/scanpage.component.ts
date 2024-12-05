@@ -168,6 +168,7 @@ export class ScanpageComponent implements OnInit{
     this.review = this.stockService.getStockById(this.stock.id);
     this.isStockSelected = true;
     console.log(this.review);
+    this.getLatestDate();
   }
 
   async addScan(type: string) {
@@ -248,8 +249,27 @@ export class ScanpageComponent implements OnInit{
       available: null,
       status: null,
       creationDate: null,
+      lastCheckDate: null,
     }
 
+  }
+
+  getLatestDate(){
+    this.stockService.getCheckIdByStockId(this.stock.id).subscribe({
+      next: (checks) => {
+        if (checks.length > 0) {
+          const latestCheck = checks.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+          // Assigner la dernière date de check à review.lastCheckDate
+          this.review.lastCheckDate = new Date(latestCheck.date).toLocaleString();
+          console.log('Dernière date de check:', this.review.lastCheckDate);
+        } else {
+          this.review.lastCheckDate = 'Aucune donnée disponible';
+        }
+      },
+      error: (err) => {
+        console.error('Erreur lors de la récupération des checks:', err);
+      }
+    });
   }
 
   getStatusClass(): string {

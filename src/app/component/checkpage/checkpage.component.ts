@@ -60,6 +60,7 @@ export class CheckpageComponent implements OnInit{
     available: null,
     status: null,
     creationDate: null,
+    lastCheckDate: null,
   }
 
   stock: any = {
@@ -137,12 +138,13 @@ export class CheckpageComponent implements OnInit{
   async detectStock() {
     this.review = this.stockService.getStockById(this.stock.id);
     console.log(this.review);
+    this.getLatestDate();
   }
 
 
-  async setStatus(status: number){
+  async setStatus(status: number, stockId: number){
     this.check.status = status;
-    console.log(this.check);
+    console.log("Stock ID : " + stockId);   
     // vérifier si l'utilisateur est connecté
     if(this.user.username === ''){
       this.showErrorToast();
@@ -164,13 +166,21 @@ export class CheckpageComponent implements OnInit{
     } catch (error) {
       console.error('Error adding check:', error);
     }
-
-    this.check.id = '';
-    this.check.stock.id = '';
-    this.check.user.id = '';
-    this.check.comment = '';
-    this.check.status = '';
-    this.check.date = '';
+    this.resetForm();
+    this.getLatestDate(); 
+  }
+  resetForm() {
+    this.stock.id = null; // Réinitialise le champ de sélection
+    this.review = {}; // Réinitialise les données du produit affiché
+    this.check = {     // Réinitialise l'objet `check`
+      id: '',
+      stock: { id: '' },
+      user: { id: '' },
+      status: '',
+      date: '',
+      comment: '',
+    };
+    this.stocksArray = [];
   }
 
   getStatusClass(): string {
@@ -180,6 +190,24 @@ export class CheckpageComponent implements OnInit{
   async updateStocks() {
     await this.checkService.refreshStocks();
     this.stocksArray = this.checkService.getStocks();
+  }
+
+  getLatestDate(){
+    this.stockService.getCheckIdByStockId(this.stock.id).subscribe({
+      next: (checks) => {
+        if (checks.length > 0) {
+          const latestCheck = checks.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+          // Assigner la dernière date de check à review.lastCheckDate
+          this.review.lastCheckDate = new Date(latestCheck.date).toLocaleString();
+          console.log('Dernière date de check:', this.review.lastCheckDate);
+        } else {
+          this.review.lastCheckDate = 'Aucune donnée disponible';
+        }
+      },
+      error: (err) => {
+        console.error('Erreur lors de la récupération des checks:', err);
+      }
+    });
   }
 
 

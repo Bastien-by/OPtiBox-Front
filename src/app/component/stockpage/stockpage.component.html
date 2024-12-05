@@ -23,6 +23,7 @@
     <table class="min-w-full divide-y divide-gray-200">
       <thead class="bg-gray-50">
       <tr>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Titre</th>
         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Taille</th>
         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CMU</th>
@@ -37,7 +38,9 @@
       <tbody class="bg-white divide-y divide-gray-200">
       <ng-container *ngFor="let stock of stockService.getAllStocks()">
         <tr>
-          <td class="px-6 py-4 whitespace-nowrap">{{ stock.product.title }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <img [src]="stock.product.picture ? stock.product.picture : 'assets/images/default_image.jpg'" alt="product image" class="h-10 w-10 rounded-full">
+          </td>          <td class="px-6 py-4 whitespace-nowrap">{{ stock.product.title }}</td>
           <td class="px-6 py-4 whitespace-nowrap">{{ stock.product.size }}</td>
           <td class="px-6 py-4 whitespace-nowrap">{{ stock.product.cmu }}</td>
           <td class="px-6 py-4 whitespace-nowrap">{{ stock.product.location }}</td>
@@ -62,12 +65,13 @@
 
 
   </div>
-  <p-dialog header="Modification de stock" [(visible)]="dialog1Visible" [style]="{ width: '50vw' }" >
+  <p-dialog header="Modification de stock" [(visible)]="dialog1Visible" [style]="{ width: '35vw' }" >
     <div class="flex flex-col gap-3 p-5">
       <h1 class="text-2xl font-bold py-3">Stock n° {{ selectedStock.id }}</h1>
-      <label class="text-gray-700" for="availability">{{ selectedStock.available ? 'Disponible' : 'Indisponible' }}</label>
-      <input id="availability" class="" type="checkbox" [(ngModel)]="selectedStock.available" placeholder="Disponible">
-      <label class="text-gray-700" for="status">Statut</label>
+      <label class="text-gray-700 flex items-center gap-2" for="availability">
+        <input id="availability" type="checkbox" [(ngModel)]="selectedStock.available">
+        {{ selectedStock.available ? 'Disponible' : 'Indisponible' }}
+      </label>      
       <select id="status" class="border border-gray-300 p-2" [(ngModel)]="selectedStock.status">
         <option value="0">NOK</option>
         <option value="1">OK</option>
@@ -81,8 +85,8 @@
     <div class="flex flex-col gap-3 p-5">
       <h1 class="text-2xl font-bold py-3">Stock n° {{ selectedStock.id }}</h1>
       <p>Voulez-vous définitivement supprimer ce stock ?</p>
-      <p *ngIf="countCheck > 0">{{ countCheck }} contrôle(s) trouvé(s). Par conséquent cette action supprimera également le ou les contrôles associés.</p>
-      <p *ngIf="countHistory > 0">{{ countHistory }} dépot(s)/retrait(s) trouvé(s). Par conséquent cette action supprimera également le ou les dépots/retraits associés.</p>
+      <p *ngIf="countCheck > 0">{{ countCheck }} contrôle(s) trouvé(s). Par conséquent cette action supprimera également l'historique associé.</p>
+      <p *ngIf="countHistory > 0">{{ countHistory }} dépot(s)/retrait(s) trouvé(s). Par conséquent cette action supprimera également l'historique associé.</p>
       <button class="bg-red-500 hover:bg-red-700 text-white rounded shadow p-3" (click)="[stockService.removeChecksAndHistories(selectedStock.id), hideDialog(), showDeleteToast()]">Supprimer</button>
     </div>
   </p-dialog>

@@ -69,7 +69,7 @@ export class NavbarComponent implements OnInit {
     // clear cache
     this.keycloakService.getKeycloakInstance().clearToken();
     // Déconnexion de l'utilisateur
-    this.keycloakService.logout('http://localhost:4200');
+    this.keycloakService.logout('http://sx04nellt0200.ad.ponet:4201/');
   }
 
   protected readonly faHouse = faHouse;

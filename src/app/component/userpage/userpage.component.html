@@ -53,20 +53,20 @@
     </div>
   </div>
 
-  <p-dialog header="Modification de l'utilisateur" [(visible)]="dialog1Visible" [style]="{ width: '50vw' }">
+  <p-dialog header="Modification de l'utilisateur" [(visible)]="dialog1Visible" [style]="{ width: '35vw' }">
     <div class="flex flex-col gap-3 p-5">
       <h1 class="text-2xl font-bold py-3">Utilisateur n° {{ selectedUser.id }}</h1>
       <input class="border border-gray-300 p-2 rounded" type="text" [(ngModel)]="selectedUser.username" placeholder="Nom de l'utilisateur">
       <input class="border border-gray-300 p-2 rounded" type="text" [(ngModel)]="selectedUser.token" placeholder="token">
       <select class="border border-gray-300 p-2 rounded bg-white" [(ngModel)]="selectedUser.role">
-        <option value="BASIC">Basique</option>
-        <option value="CONTROLEUR">Contrôleur</option>
+        <option value="BASIC">Basic</option>
+        <option value="CONTROLEUR">Admin</option>
       </select>
       <button class="bg-blue-500 text-white rounded shadow p-3" (click)="updateUser()">Modifier</button>
     </div>
   </p-dialog>
 
-  <p-dialog header="Supprimer un utilisateur" [(visible)]="dialog2Visible" [style]="{ width: '50vw' }">
+  <p-dialog header="Supprimer un utilisateur" [(visible)]="dialog2Visible" [style]="{ width: '35vw' }">
     <div class="flex flex-col gap-3 p-5">
       <h1 class="text-2xl font-bold py-3">Utilisateur n° {{ selectedUser.id }}</h1>
       <p>Voulez-vous définitivement supprimer cet utilisateur ?</p>
