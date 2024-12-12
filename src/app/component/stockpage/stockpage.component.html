@@ -24,6 +24,7 @@
       <thead class="bg-gray-50">
       <tr>
         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Titre</th>
         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Taille</th>
         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CMU</th>
@@ -39,8 +40,12 @@
       <ng-container *ngFor="let stock of stockService.getAllStocks()">
         <tr>
           <td class="px-6 py-4 whitespace-nowrap">
-            <img [src]="stock.product.picture ? stock.product.picture : 'assets/images/default_image.jpg'" alt="product image" class="h-10 w-10 rounded-full">
-          </td>          <td class="px-6 py-4 whitespace-nowrap">{{ stock.product.title }}</td>
+            <img [src]="stock.product.picture ? stock.product.picture : 'assets/images/default_image.jpg'" alt="product image" class="h-15 w-15 rounded-full">
+          </td>          
+          <td class="px-6 py-4 whitespace-nowrap">
+            <qrcode [qrdata]= "convertToString(stock.id)" size="100"></qrcode>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">{{ stock.product.title }}</td>
           <td class="px-6 py-4 whitespace-nowrap">{{ stock.product.size }}</td>
           <td class="px-6 py-4 whitespace-nowrap">{{ stock.product.cmu }}</td>
           <td class="px-6 py-4 whitespace-nowrap">{{ stock.product.location }}</td>

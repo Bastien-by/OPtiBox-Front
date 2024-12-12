@@ -13,6 +13,7 @@ import {faBoxesStacked} from "@fortawesome/free-solid-svg-icons";
 import {FaIconComponent} from "@fortawesome/angular-fontawesome";
 import { CheckService } from '../../services/check.service';
 import { HistoryService } from '../../services/history.service';
+import { QRCodeModule } from 'angularx-qrcode';
 
 
 @Component({
@@ -27,7 +28,8 @@ import { HistoryService } from '../../services/history.service';
     ButtonModule,
     DialogModule,
     ToastModule,
-    FaIconComponent
+    FaIconComponent,
+    QRCodeModule,
   ],
   templateUrl: './stockpage.component.html',
   providers: [MessageService],
@@ -101,6 +103,10 @@ export class StockpageComponent implements OnInit{
       console.log(response);
       this.countHistory = response;
     })
+  }
+
+  convertToString(stock_id: number): string {
+    return stock_id.toString();
   }
 
 
