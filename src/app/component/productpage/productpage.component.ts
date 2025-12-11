@@ -40,6 +40,7 @@ export class ProductpageComponent implements OnInit {
     location: '',
     brand: '',
     picture: null,
+    alitracer: '',
   }
 
   selectedProduct: any = {
@@ -50,6 +51,7 @@ export class ProductpageComponent implements OnInit {
     location: '',
     brand: '',
     picture: '',
+    alitracer: '',
   }
 
   dialog1Visible: boolean = false;
@@ -129,6 +131,7 @@ export class ProductpageComponent implements OnInit {
       location: '',
       brand: '',
       picture: null,
+      alitracer: '',
     }
 
     this.hideDialog();
