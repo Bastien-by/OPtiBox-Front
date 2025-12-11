@@ -19,14 +19,13 @@ export class StockService {
     return this.stockArray;
   }
 
-  addStock(stockSent: any){
-
-
-    let stock = {
+  addStock(stockSent: any, lockerNumber: number) {
+    const stock = {
       product: stockSent.product,
       available: true,
       status: 1,
       creationDate: new Date(),
+      lockerNumber: lockerNumber
     };
     this.httpClient.post('api/stocks', stock).subscribe(() => {
       this.refreshStocks();
@@ -59,18 +58,18 @@ export class StockService {
     }).subscribe(({ checks, histories }) => {
       const hasChecks = checks.length > 0;
       const hasHistories = histories.length > 0;
-  
+
       if (!hasChecks && !hasHistories) {
         // Aucun check ni history associé, suppression directe du stock
         this.removeStock(productId);
       } else {
         console.log('ID des checks associés:', checks.map(check => check.id));
         console.log('ID des histories associés:', histories.map(history => history.id));
-  
+
         // Suppression des checks et histories
         const deleteChecksRequests = checks.map(check => this.httpClient.delete(`api/checks/${check.id}`));
         const deleteHistoriesRequests = histories.map(history => this.httpClient.delete(`api/history/${history.id}`));
-        
+
         forkJoin([...deleteChecksRequests, ...deleteHistoriesRequests]).subscribe({
           next: () => {
             this.removeStock(productId);
@@ -116,5 +115,5 @@ export class StockService {
     );
   }
 
-  
+
 }

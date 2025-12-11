@@ -158,6 +158,7 @@ export class CheckpageComponent implements OnInit{
     this.check.stock.id = this.stock.id;
 
     try {
+      // Appeler la fonction pour créer le check
       await this.checkService.createCheck(this.check);
       this.showAddToast();
       await this.checkService.refreshData(); // Attendre que les données soient rafraîchies
@@ -169,11 +170,13 @@ export class CheckpageComponent implements OnInit{
     this.resetForm();
     this.getLatestDate(); 
   }
+
+  
   resetForm() {
     this.stock.id = null; // Réinitialise le champ de sélection
     this.review = {}; // Réinitialise les données du produit affiché
     this.check = {     // Réinitialise l'objet `check`
-      id: '',
+      id: null,
       stock: { id: '' },
       user: { id: '' },
       status: '',

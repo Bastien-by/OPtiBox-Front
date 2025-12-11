@@ -78,11 +78,11 @@ export class CheckService {
   }
 
 
-  async createCheck(check: any){
+  createCheck(check: any): Promise<any> {
     console.log(check);
-    this.httpClient.post('api/checks', check).subscribe(() => {
-    })
+    return this.httpClient.post('api/checks', check).toPromise(); // ou firstValueFrom
   }
+  
 
   async getChecks() {
     this.checksArray = await firstValueFrom(this.httpClient.get<any>('api/checks'));

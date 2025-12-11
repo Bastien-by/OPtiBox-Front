@@ -38,6 +38,7 @@ import { QRCodeModule } from 'angularx-qrcode';
 export class StockpageComponent implements OnInit{
   stock: any = {
     product: {
+      id: null,
       title: '',
       type: '',
       size: '',
@@ -57,6 +58,11 @@ export class StockpageComponent implements OnInit{
     creationDate: null,
   }
 
+  // ↓ NOUVEAUX pour le dialog création
+  dialogCreateVisible: boolean = false;
+  newLockerNumber: number | null = null;
+  selectedProductForCreate: any = null;
+
   countCheck: number = 0;
   countHistory: number = 0;
 
@@ -67,7 +73,7 @@ export class StockpageComponent implements OnInit{
   responsiveOptions: any[] | undefined;
 
   listOfProducts: any[] = [];
- 
+
 
   constructor(protected stockService: StockService, private messageService: MessageService, protected productService: ProductService, protected checkService: CheckService, protected historyService: HistoryService) {}
 
@@ -94,6 +100,63 @@ export class StockpageComponent implements OnInit{
     this.listOfProducts = this.productService.getAllProducts();
     this.stockService.refreshStocks();
   }
+
+  // ↓ NOUVELLE méthode : ouvre le dialog création
+  openCreateDialog() {
+    if (!this.stock.product || !this.stock.product.id) {
+      return;
+    }
+    this.selectedProductForCreate = this.productService.getAllProducts()
+      .find((p: any) => p.id == this.stock.product.id);
+
+    this.newLockerNumber = null;
+    this.dialogCreateVisible = true;
+  }
+
+  createStock() {
+    // 1. Validation de base sur la plage
+    if (this.newLockerNumber == null || this.newLockerNumber < 1 || this.newLockerNumber > 27) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Erreur',
+        detail: 'Le numéro de casier doit être compris entre 1 et 27'
+      });
+      return;
+    }
+
+    // 2. Vérifier si le casier est déjà utilisé
+    const allStocks = this.stockService.getAllStocks();
+    const lockerAlreadyUsed = allStocks.some(
+      (s: any) => s.lockerNumber === this.newLockerNumber
+    );
+
+    if (lockerAlreadyUsed) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Casier déjà utilisé',
+        detail: `Le casier ${this.newLockerNumber} est déjà affecté à un autre stock`
+      });
+      return;
+    }
+
+    // 3. Création du stock si tout est OK
+    const stockToSend = {
+      product: this.selectedProductForCreate,
+      available: true,
+      status: 1,
+      creationDate: new Date()
+    };
+
+    this.stockService.addStock(stockToSend, this.newLockerNumber);
+    this.dialogCreateVisible = false;
+    this.showAddToast();
+
+    // Reset du select
+    this.stock.product.id = null;
+  }
+
+
+
   triggerDeleteStock() {
     this.checkService.getCheckByStockId(this.selectedStock.id).then((response: any) => {
       console.log(response);

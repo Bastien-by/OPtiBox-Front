@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import {HttpClient} from "@angular/common/http";
+import { firstValueFrom } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -15,6 +16,18 @@ export class ScanService {
     this.refreshAvailableStocks();
     this.refreshLoanedStocks();
     this.refreshUsers();
+  }
+
+  // ↓ NOUVELLE méthode pour ouvrir un casier
+  async openLocker(lockerNumber: number): Promise<any> {
+    try {
+      return await firstValueFrom(
+        this.httpClient.post(`api/locker/open/${lockerNumber}`, {})
+      );
+    } catch (error) {
+      console.error('Erreur ouverture casier:', error);
+      throw error;
+    }
   }
 
 
@@ -88,3 +101,5 @@ export class ScanService {
   }
 
 }
+
+

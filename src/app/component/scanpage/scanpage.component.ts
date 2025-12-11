@@ -190,6 +190,18 @@ export class ScanpageComponent implements OnInit{
 
     try {
       await this.scanService.createHistory(this.history);
+
+      // 4. Récupérer le numéro de casier du stock scanné
+      const lockerNumber = this.review.lockerNumber; // ou this.stock.lockerNumber selon ta structure
+
+      if (lockerNumber) {
+        // 5. Ouvrir le casier via l'API
+        await this.scanService.openLocker(lockerNumber);
+        console.log(`Casier ${lockerNumber} ouvert avec succès`);
+      } else {
+        console.warn('Aucun numéro de casier trouvé pour ce stock');
+      }
+
       this.showAddToast();
       await this.scanService.refreshData(); // Attendre que les données soient rafraîchies
       this.updateAvailableStocks();
@@ -282,6 +294,7 @@ export class ScanpageComponent implements OnInit{
       token: '',
     }
   }
+
 
   showAddToast(){
     this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Vous avez sorti un élement du stock' });
