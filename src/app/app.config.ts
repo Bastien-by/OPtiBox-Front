@@ -18,7 +18,7 @@ export const appConfig: ApplicationConfig = {
 export function initializeKeycloak(keycloakService: KeycloakService) {
   return () => keycloakService.init({
     config: {
-      url: 'http://sx04nellt0200.ad.ponet:8081',
+      url: 'https://sx04nellt0200.ad.ponet:8443',
       realm: 'moyens_levage',
       clientId: 'angular-web-client',
     },

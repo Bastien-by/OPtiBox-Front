@@ -34,17 +34,20 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <!-- Retrait -->
       <div *ngIf="history.type == 'withdraw'" class="bg-white shadow-md rounded-lg p-6">
-        <h1 class="text-2xl font-bold mb-4">Retirer un produit</h1>
-        <label class="block text-gray-700 font-bold mb-2">Choisir un produit disponible</label>
-        <select id="selectWithdraw" class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="stock.id" (change)="detectStock()">
-          <option value="" disabled selected>Choisir un produit disponible</option>
-          <option *ngFor="let item of availableStocks" [value]="item.id">{{ item.product.title }}</option>
-        </select>
-        <!-- Input pour scanner le produit -->
+<!--        <h1 class="text-2xl font-bold mb-4">Retirer un produit</h1>-->
+<!--        <label class="block text-gray-700 font-bold mb-2">Choisir un produit disponible</label>-->
+<!--        <select id="selectWithdraw" class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="stock.alitracer" (change)="detectStock()">-->
+<!--          <option value="" disabled selected>Choisir un produit disponible</option>-->
+<!--          <option *ngFor="let item of availableStocks" [value]="item.id">{{ item.product.title }}</option>-->
+<!--        </select>-->
+        <!--Input pour scanner le produit-->
         <div class="mt-4">
           <label class="block text-gray-700 font-bold mb-2">Scanner le produit</label>
-          <input class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="stock.id" (change)="detectStock()" type="text" placeholder="Code produit">
+          <input class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="stock.alitracer" (change)="detectStock()" type="text" placeholder="Code produit">
         </div>
+
+
+
 
         <div class="fixed inset-x-0 bottom-0 flex justify-center pb-4">
           <button *ngIf="review.id && isStockSelected" [disabled]="!isButtonEnabled" [ngClass]="{'bg-gray-400 text-gray-700': !isButtonEnabled, 'bg-green-600 hover:bg-green-800 text-white': isButtonEnabled}" class="font-bold py-5 px-5 rounded text-xl" (click)="addScan('withdraw')">
@@ -54,17 +57,21 @@
       </div>
       <!-- Dépôt -->
       <div *ngIf="history.type == 'deposit'" class="bg-white shadow-md rounded-lg p-6">
-        <h1 class="text-2xl font-bold mb-4">Retourner un produit</h1>
-        <label class="block text-gray-700 font-bold mb-2">Choisir un produit emprunté</label>
-        <select id="selectDeposit" class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="stock.id" (change)="detectStock()">
-          <option value="" disabled selected>Choisir un produit emprunté</option>
-          <option *ngFor="let item of loanedStocks" [value]="item.id">{{ item.product.title }}</option>
-        </select>
+<!--        <h1 class="text-2xl font-bold mb-4">Retourner un produit</h1>-->
+<!--        <label class="block text-gray-700 font-bold mb-2">Choisir un produit emprunté</label>-->
+<!--        <select id="selectDeposit" class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="stock.alitracer" (change)="detectStock()">-->
+<!--          <option value="" disabled selected>Choisir un produit emprunté</option>-->
+<!--          <option *ngFor="let item of loanedStocks" [value]="item.id">{{ item.product.title }}</option>-->
+<!--        </select>-->
         <!-- Input pour scanner le produit -->
         <div class="mt-4">
           <label class="block text-gray-700 font-bold mb-2">Scanner le produit</label>
-          <input class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="stock.id" (change)="detectStock()" type="text" placeholder="Code produit">
+          <input class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="stock.alitracer" (change)="detectStock()" type="text" placeholder="Code produit">
         </div>
+
+
+
+
         <div class="fixed inset-x-0 bottom-0 flex justify-center pb-4">
           <button *ngIf="review.id && isStockSelected" [disabled]="!isButtonEnabled" [ngClass]="{'bg-gray-400 text-gray-700': !isButtonEnabled, 'bg-green-600 hover:bg-green-800 text-white': isButtonEnabled}" class="font-bold py-5 px-5 rounded text-xl" (click)="addScan('deposit')">
             Retourner le produit
@@ -123,7 +130,7 @@
                   </div>
                   <div class="mt-4">
                     <div class="text-gray-500">ID ALITRACER</div>
-                    <div class="text-black">N/A</div>
+                    <div class="text-black">{{ review.product.alitracer }}</div>
                   </div>
                 </div>
               </div>

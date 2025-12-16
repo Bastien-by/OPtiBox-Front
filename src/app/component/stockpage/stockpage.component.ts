@@ -15,7 +15,6 @@ import { CheckService } from '../../services/check.service';
 import { HistoryService } from '../../services/history.service';
 import { QRCodeModule } from 'angularx-qrcode';
 
-
 @Component({
   selector: 'app-stockpage',
   standalone: true,

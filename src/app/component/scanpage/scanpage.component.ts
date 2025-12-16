@@ -17,6 +17,9 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import {FaIconComponent} from "@fortawesome/angular-fontawesome";
 
+import { Html5Qrcode } from 'html5-qrcode';
+
+
 @Component({
   selector: 'app-scanpage',
   standalone: true,
@@ -29,7 +32,7 @@ import {FaIconComponent} from "@fortawesome/angular-fontawesome";
     ButtonModule,
     DialogModule,
     ToastModule,
-    FaIconComponent
+    FaIconComponent,
   ],
   templateUrl: './scanpage.component.html',
   providers: [MessageService],
@@ -48,6 +51,7 @@ export class ScanpageComponent implements OnInit{
       cmu: '',
       location: '',
       picture: '',
+      alitracer: '',
     },
     available: null,
     status: null,
@@ -165,11 +169,30 @@ export class ScanpageComponent implements OnInit{
   }
 
   async detectStock() {
-    this.review = this.stockService.getStockById(this.stock.id);
-    this.isStockSelected = true;
-    console.log(this.review);
-    this.getLatestDate();
+    if (!this.stock.alitracer) {
+      return;
+    }
+
+    // Cherche le stock par alitracer
+    this.review = this.stockService.getStockByAlitracer(this.stock.alitracer);
+
+    if (this.review) {
+      this.isStockSelected = true;
+      this.stock.id = this.review.id;  // Rempli l'ID du stock trouvé
+      console.log('Stock trouvé:', this.review);
+      this.getLatestDate();
+    } else {
+      this.isStockSelected = false;
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Stock non trouvé',
+        detail: `Aucun stock trouvé avec l'ID Alitracer: ${this.stock.alitracer}`
+      });
+      console.log('Aucun stock trouvé avec cet ID Alitracer');
+    }
+
   }
+
 
   async addScan(type: string) {
     // vérifier si l'utilisateur est connecté
@@ -232,6 +255,7 @@ export class ScanpageComponent implements OnInit{
         cmu: '',
         location: '',
         picture: '',
+        alitracer: '',
       },
       available: null,
       status: null,

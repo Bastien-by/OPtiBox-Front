@@ -94,6 +94,11 @@ export class StockService {
     return this.stockArray.find(stock => stock.id == id);
   }
 
+  getStockByAlitracer(alitracer: string) {
+    return this.stockArray.find(stock => stock.product.alitracer === alitracer);
+  }
+
+
   getStockByProductId(id: number) {
     return this.httpClient.get('api/stocks/getStockByProductId/' + id).toPromise();
   }
