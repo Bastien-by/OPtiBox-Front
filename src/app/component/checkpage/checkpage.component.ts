@@ -1,4 +1,5 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, OnDestroy } from '@angular/core';
+import { Html5Qrcode } from 'html5-qrcode';
 import {CheckService} from "../../services/check.service";
 import {NgForOf} from "@angular/common";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
@@ -30,9 +31,13 @@ import {StockService} from "../../services/stock.service";
   providers: [MessageService],
   styleUrl: './checkpage.component.css'
 })
-export class CheckpageComponent implements OnInit{
+export class CheckpageComponent implements OnInit, OnDestroy {
 
   stocksArray: any[] = [];
+
+  badgeScannerVisible = false;
+  private html5QrCodeBadge?: Html5Qrcode;
+  private badgeScannerInitialized = false;
 
   check: any = {
     id: '',
@@ -105,6 +110,66 @@ export class CheckpageComponent implements OnInit{
     this.stocksArray = this.checkService.getStocks();
   }
 
+  ngOnDestroy(): void {
+    this.stopBadgeScanner();
+  }
+
+  /* ---------- SCAN BADGE ---------- */
+
+  async toggleBadgeScanner() {
+    if (this.badgeScannerVisible) {
+      this.badgeScannerVisible = false;
+      await this.stopBadgeScanner();
+    } else {
+      this.badgeScannerVisible = true;
+      setTimeout(() => this.startBadgeScanner(), 0);
+    }
+  }
+
+  private async startBadgeScanner() {
+    if (this.badgeScannerInitialized) {
+      return;
+    }
+
+    const elementId = 'qr-reader-badge';
+    this.html5QrCodeBadge = new Html5Qrcode(elementId);
+
+    try {
+      await this.html5QrCodeBadge.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        (decodedText: string) => {
+          this.check.badge = decodedText;
+          this.detectBadge();
+          this.badgeScannerVisible = false;
+          this.stopBadgeScanner();
+        },
+        () => {
+          // erreurs de scan non bloquantes
+        }
+      );
+      this.badgeScannerInitialized = true;
+    } catch (err) {
+      console.error('Erreur lors du démarrage du scanner badge', err);
+      this.badgeScannerVisible = false;
+    }
+  }
+
+  private async stopBadgeScanner() {
+    if (this.html5QrCodeBadge && this.badgeScannerInitialized) {
+      try {
+        await this.html5QrCodeBadge.stop();
+        await this.html5QrCodeBadge.clear();
+      } catch (err) {
+        console.error('Erreur à l’arrêt du scanner badge', err);
+      }
+    }
+    this.html5QrCodeBadge = undefined;
+    this.badgeScannerInitialized = false;
+  }
+
+  /* ---------- detectBadge reste identique ---------- */
+
   async detectBadge() {
     this.users = this.checkService.getUsers();
     let badgeExist = false;
@@ -115,14 +180,15 @@ export class CheckpageComponent implements OnInit{
     }
 
     this.users.forEach((user: any) => {
-      if(user.token === this.check.badge){
+      if (user.token === this.check.badge) {
         this.user = user;
         console.log(this.user);
         this.showFindToast();
         badgeExist = true;
       }
     });
-    if(!badgeExist){
+
+    if (!badgeExist) {
       this.showErrorToast();
       return;
     }
@@ -144,7 +210,7 @@ export class CheckpageComponent implements OnInit{
 
   async setStatus(status: number, stockId: number){
     this.check.status = status;
-    console.log("Stock ID : " + stockId);   
+    console.log("Stock ID : " + stockId);
     // vérifier si l'utilisateur est connecté
     if(this.user.username === ''){
       this.showErrorToast();
@@ -168,10 +234,10 @@ export class CheckpageComponent implements OnInit{
       console.error('Error adding check:', error);
     }
     this.resetForm();
-    this.getLatestDate(); 
+    this.getLatestDate();
   }
 
-  
+
   resetForm() {
     this.stock.id = null; // Réinitialise le champ de sélection
     this.review = {}; // Réinitialise les données du produit affiché

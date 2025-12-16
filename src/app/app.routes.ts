@@ -5,6 +5,7 @@ import {StockpageComponent} from "./component/stockpage/stockpage.component";
 import {UserpageComponent} from "./component/userpage/userpage.component";
 import {ScanpageComponent} from "./component/scanpage/scanpage.component";
 import {HistorypageComponent} from "./component/historypage/historypage.component";
+import {ProcedurepageComponent} from "./component/procedurepage/procedurepage.component";
 import {CheckpageComponent} from "./component/checkpage/checkpage.component";
 import { AuthGuard } from './auth.guard';
 
@@ -20,6 +21,9 @@ export const routes: Routes = [
   },
   {
     path: "history", component: HistorypageComponent
+  },
+  {
+    path: "procedure", component: ProcedurepageComponent
   },
   {
     path: "product", component: ProductpageComponent,

@@ -9,17 +9,48 @@
     </div>
     <div class="bg-white shadow-md rounded-lg p-6">
       <label class="block text-gray-700 font-bold mb-2">Utilisateur</label>
-      <div class="flex items-center gap-4">
-        <input class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="check.badge" type="password" placeholder="Badge utilisateur">
-        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" (click)="detectBadge()">S'identifier</button>
+
+      <div class="flex items-center gap-4 mb-2">
+        <input
+          class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md"
+          [(ngModel)]="check.badge"
+          type="password"
+          placeholder="Badge utilisateur">
+        <button
+          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          (click)="detectBadge()">
+          S'identifier
+        </button>
       </div>
-      <label class="block text-gray-700 font-lighter mb-2">Scannez votre carte</label>
+
+      <!-- Bouton caméra pour scanner le badge -->
+      <div class="flex gap-3 mb-2">
+        <button
+          type="button"
+          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          (click)="toggleBadgeScanner()">
+          <fa-icon [icon]="faListCheck" class="mr-2"></fa-icon>
+          {{ badgeScannerVisible ? 'Arrêter le scan badge' : 'Scanner le badge avec la caméra' }}
+        </button>
+      </div>
+
+      <!-- Zone de scan du badge -->
+      <div *ngIf="badgeScannerVisible" class="mt-2 border rounded overflow-hidden">
+        <div id="qr-reader-badge" class="w-full"></div>
+      </div>
+
+      <label class="block text-gray-700 font-lighter mb-2 mt-2">Scannez votre carte</label>
 
       <div *ngIf="user.username" class="mt-4">
         <p class="text-green-500 text-lg font-bold">Bonjour, {{ user.username }}</p>
-        <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 mt-2" (click)="disconnect()">Se déconnecter</button>
+        <button
+          class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 mt-2"
+          (click)="disconnect()">
+          Se déconnecter
+        </button>
       </div>
     </div>
+
   </div>
 
   <!-- line separator -->

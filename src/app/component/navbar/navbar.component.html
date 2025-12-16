@@ -22,6 +22,10 @@
               <span class="hidden lg:inline">Historique</span>
               <fa-icon [icon]="faClockRotateLeft" class="lg:hidden"></fa-icon>
             </a>
+            <a routerLink="procedure" routerLinkActive="bg-gray-200" class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+              <span class="hidden lg:inline">Procédures</span>
+              <fa-icon [icon]="faList" class="lg:hidden"></fa-icon>
+            </a>
             <a *ngIf="isLoggedIn() && isAdmin()" routerLink="product" routerLinkActive="bg-gray-200" class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
               <span class="hidden lg:inline">Produits</span>
               <fa-icon [icon]="faBox" class="lg:hidden"></fa-icon>

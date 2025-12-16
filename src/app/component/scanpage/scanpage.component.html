@@ -9,17 +9,51 @@
     </div>
     <div class="bg-white shadow-md rounded-lg p-6">
       <label class="block text-gray-700 font-bold mb-2">Utilisateur</label>
-      <div class="flex items-center gap-4">
-        <input class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="scan.badge" type="password" placeholder="Badge utilisateur">
-        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" (click)="detectBadge()">S'identifier</button>
+
+      <div class="flex items-center gap-4 mb-2">
+        <input
+          class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md"
+          [(ngModel)]="scan.badge"
+          type="password"
+          placeholder="Badge utilisateur">
+        <button
+          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          (click)="detectBadge()">
+          S'identifier
+        </button>
       </div>
-      <label class="block text-gray-700 font-lighter mb-2">Scannez votre carte</label>
+
+      <!-- Bouton caméra pour scanner le badge -->
+      <div class="flex gap-3 mb-2">
+        <button
+          type="button"
+          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          (click)="toggleBadgeScanner()">
+          <fa-icon [icon]="faBarcode" class="mr-2"></fa-icon>
+          {{ badgeScannerVisible ? 'Arrêter le scan badge' : 'Scanner le badge avec la caméra' }}
+        </button>
+      </div>
+
+      <!-- Zone de scan du badge -->
+      <div *ngIf="badgeScannerVisible" class="mt-2 border rounded overflow-hidden">
+        <div id="qr-reader-badge" class="w-full"></div>
+      </div>
+
+      <label class="block text-gray-700 font-lighter mb-2 mt-2">Scannez votre carte</label>
 
       <div *ngIf="user.username" class="mt-4">
-        <p class="text-green-500 text-lg font-bold">Vous êtes identifié en tant que {{ user.username }}</p>
-        <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 mt-2" (click)="disconnect()">Se déconnecter</button>
+        <p class="text-green-500 text-lg font-bold">
+          Vous êtes identifié en tant que {{ user.username }}
+        </p>
+        <button
+          class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 mt-2"
+          (click)="disconnect()">
+          Se déconnecter
+        </button>
       </div>
     </div>
+
+  </div>
   </div>
 
   <!-- line separator -->
@@ -34,50 +68,96 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <!-- Retrait -->
       <div *ngIf="history.type == 'withdraw'" class="bg-white shadow-md rounded-lg p-6">
-<!--        <h1 class="text-2xl font-bold mb-4">Retirer un produit</h1>-->
-<!--        <label class="block text-gray-700 font-bold mb-2">Choisir un produit disponible</label>-->
-<!--        <select id="selectWithdraw" class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="stock.alitracer" (change)="detectStock()">-->
-<!--          <option value="" disabled selected>Choisir un produit disponible</option>-->
-<!--          <option *ngFor="let item of availableStocks" [value]="item.id">{{ item.product.title }}</option>-->
-<!--        </select>-->
-        <!--Input pour scanner le produit-->
-        <div class="mt-4">
+        <div class="mt-4 space-y-3">
           <label class="block text-gray-700 font-bold mb-2">Scanner le produit</label>
-          <input class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="stock.alitracer" (change)="detectStock()" type="text" placeholder="Code produit">
+
+          <!-- Bouton caméra -->
+          <div class="flex gap-3">
+            <button
+              type="button"
+              class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              (click)="toggleScanner()">
+              <fa-icon [icon]="faBarcode" class="mr-2"></fa-icon>
+              {{ scannerVisible ? 'Arrêter le scan' : 'Scanner avec la caméra' }}
+            </button>
+          </div>
+
+          <!-- Zone de scan caméra -->
+          <div *ngIf="scannerVisible" class="mt-4 border rounded overflow-hidden">
+            <div id="qr-reader" class="w-full"></div>
+          </div>
+
+          <!-- Champ code produit -->
+          <div class="mt-4">
+            <label class="block text-gray-700 font-bold mb-2">Code produit</label>
+            <input
+              class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md"
+              [(ngModel)]="stock.alitracer"
+              (change)="detectStock()"
+              type="text"
+              placeholder="Code produit (scan ou saisie manuelle)">
+          </div>
         </div>
 
-
-
-
         <div class="fixed inset-x-0 bottom-0 flex justify-center pb-4">
-          <button *ngIf="review.id && isStockSelected" [disabled]="!isButtonEnabled" [ngClass]="{'bg-gray-400 text-gray-700': !isButtonEnabled, 'bg-green-600 hover:bg-green-800 text-white': isButtonEnabled}" class="font-bold py-5 px-5 rounded text-xl" (click)="addScan('withdraw')">
+          <button *ngIf="review.id && isStockSelected"
+                  [disabled]="!isButtonEnabled"
+                  [ngClass]="{'bg-gray-400 text-gray-700': !isButtonEnabled, 'bg-green-600 hover:bg-green-800 text-white': isButtonEnabled}"
+                  class="font-bold py-5 px-5 rounded text-xl"
+                  (click)="addScan('withdraw')">
             Retirer le produit
           </button>
         </div>
       </div>
+
       <!-- Dépôt -->
       <div *ngIf="history.type == 'deposit'" class="bg-white shadow-md rounded-lg p-6">
-<!--        <h1 class="text-2xl font-bold mb-4">Retourner un produit</h1>-->
-<!--        <label class="block text-gray-700 font-bold mb-2">Choisir un produit emprunté</label>-->
-<!--        <select id="selectDeposit" class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="stock.alitracer" (change)="detectStock()">-->
-<!--          <option value="" disabled selected>Choisir un produit emprunté</option>-->
-<!--          <option *ngFor="let item of loanedStocks" [value]="item.id">{{ item.product.title }}</option>-->
-<!--        </select>-->
-        <!-- Input pour scanner le produit -->
-        <div class="mt-4">
+        <div class="mt-4 space-y-3">
           <label class="block text-gray-700 font-bold mb-2">Scanner le produit</label>
-          <input class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md" [(ngModel)]="stock.alitracer" (change)="detectStock()" type="text" placeholder="Code produit">
+
+          <!-- Bouton caméra -->
+          <div class="flex gap-3">
+            <button
+              type="button"
+              class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              (click)="toggleScanner()">
+              <fa-icon [icon]="faBarcode" class="mr-2"></fa-icon>
+              {{ scannerVisible ? 'Arrêter le scan' : 'Scanner avec la caméra' }}
+            </button>
+          </div>
+
+          <!-- Zone de scan caméra -->
+          <div *ngIf="scannerVisible" class="mt-4 border rounded overflow-hidden">
+            <div id="qr-reader" class="w-full"></div>
+          </div>
+
+          <!-- Champ code produit -->
+          <div class="mt-4">
+            <label class="block text-gray-700 font-bold mb-2">Code produit</label>
+            <input
+              class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md"
+              [(ngModel)]="stock.alitracer"
+              (change)="detectStock()"
+              type="text"
+              placeholder="Code produit (scan ou saisie manuelle)">
+          </div>
         </div>
 
-
-
-
         <div class="fixed inset-x-0 bottom-0 flex justify-center pb-4">
-          <button *ngIf="review.id && isStockSelected" [disabled]="!isButtonEnabled" [ngClass]="{'bg-gray-400 text-gray-700': !isButtonEnabled, 'bg-green-600 hover:bg-green-800 text-white': isButtonEnabled}" class="font-bold py-5 px-5 rounded text-xl" (click)="addScan('deposit')">
+          <button
+            *ngIf="review.id && isStockSelected"
+            [disabled]="!isButtonEnabled"
+            [ngClass]="{
+              'bg-gray-400 text-gray-700': !isButtonEnabled,
+              'bg-green-600 hover:bg-green-800 text-white': isButtonEnabled
+            }"
+            class="font-bold py-5 px-5 rounded text-xl"
+            (click)="addScan('deposit')">
             Retourner le produit
           </button>
         </div>
       </div>
+
       <!-- Caractéristiques du produit -->
       <div class="bg-white shadow-md rounded-lg p-6">
         <div *ngIf="review.id && isStockSelected" class="p-6">
@@ -149,4 +229,3 @@
 
 
   <p-toast></p-toast>
-</div>

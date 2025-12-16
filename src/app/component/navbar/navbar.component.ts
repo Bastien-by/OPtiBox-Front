@@ -9,6 +9,7 @@ import {faBarcode} from "@fortawesome/free-solid-svg-icons";
 import {faListCheck} from "@fortawesome/free-solid-svg-icons";
 import {faClockRotateLeft} from "@fortawesome/free-solid-svg-icons";
 import {faBox} from "@fortawesome/free-solid-svg-icons";
+import {faList} from "@fortawesome/free-solid-svg-icons";
 import {faBoxesStacked} from "@fortawesome/free-solid-svg-icons";
 import {faPeopleGroup} from "@fortawesome/free-solid-svg-icons";
 import {faSignOutAlt} from "@fortawesome/free-solid-svg-icons";
@@ -69,7 +70,7 @@ export class NavbarComponent implements OnInit {
     // clear cache
     this.keycloakService.getKeycloakInstance().clearToken();
     // Déconnexion de l'utilisateur
-    this.keycloakService.logout('http://sx04nellt0200.ad.ponet:4201/');
+    this.keycloakService.logout('https://sx04nellt0200.ad.ponet:4201/');
   }
 
   protected readonly faHouse = faHouse;
@@ -77,6 +78,7 @@ export class NavbarComponent implements OnInit {
   protected readonly faListCheck = faListCheck;
   protected readonly faClockRotateLeft = faClockRotateLeft;
   protected readonly faBox = faBox;
+  protected readonly faList = faList;
   protected readonly faBoxesStacked = faBoxesStacked;
   protected readonly faPeopleGroup = faPeopleGroup;
   protected readonly faSignOutAlt = faSignOutAlt;
