@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import {HttpClient} from "@angular/common/http";
-import {forkJoin} from "rxjs";
+import { forkJoin, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+
 
 @Injectable({
   providedIn: 'root'
@@ -91,5 +93,23 @@ export class UserService {
       this.refreshUsers();
     });
 
+  }
+
+  getUserByBadge(badgeToken: string): Observable<any | null> {
+    // Si le cache est vide, on recharge puis on filtre
+    if (!this.userArray || this.userArray.length === 0) {
+      return this.httpClient.get<any[]>('api/users').pipe(
+        map(users => {
+          this.userArray = users;
+          return users.find(u => u.token === badgeToken) ?? null;
+        })
+      );
+    }
+
+    const user = this.userArray.find(u => u.token === badgeToken) ?? null;
+    return new Observable(sub => {
+      sub.next(user);
+      sub.complete();
+    });
   }
 }

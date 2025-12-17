@@ -7,52 +7,107 @@
         </div>
         <div class="hidden sm:block sm:ml-6">
           <div class="flex space-x-4">
-            <a routerLink="racine" routerLinkActive="bg-gray-200" class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+            <a
+              routerLink="racine"
+              routerLinkActive="bg-gray-200"
+              class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
               <fa-icon [icon]="faHouse"></fa-icon>
             </a>
-            <a routerLink="scan" routerLinkActive="bg-gray-200" class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+            <a
+              *ngIf="isLoggedIn()"
+              routerLink="scan"
+              routerLinkActive="bg-gray-200"
+              class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
               <span class="hidden lg:inline">Scan</span>
               <fa-icon [icon]="faBarcode" class="lg:hidden"></fa-icon>
             </a>
-            <a routerLink="check" routerLinkActive="bg-gray-200" class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+            <a
+              *ngIf="isLoggedIn() && isAdmin() || isMaintenance()"
+              routerLink="check"
+              routerLinkActive="bg-gray-200"
+              class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
               <span class="hidden lg:inline">Contrôles</span>
               <fa-icon [icon]="faListCheck" class="lg:hidden"></fa-icon>
             </a>
-            <a routerLink="history" routerLinkActive="bg-gray-200" class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+            <a
+              routerLink="history"
+              routerLinkActive="bg-gray-200"
+              class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
               <span class="hidden lg:inline">Historique</span>
               <fa-icon [icon]="faClockRotateLeft" class="lg:hidden"></fa-icon>
             </a>
-            <a routerLink="procedure" routerLinkActive="bg-gray-200" class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+            <a
+              routerLink="procedure"
+              routerLinkActive="bg-gray-200"
+              class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
               <span class="hidden lg:inline">Procédures</span>
               <fa-icon [icon]="faList" class="lg:hidden"></fa-icon>
             </a>
-            <a *ngIf="isLoggedIn() && isAdmin()" routerLink="product" routerLinkActive="bg-gray-200" class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+            <a
+              *ngIf="isLoggedIn() && isAdmin()"
+              routerLink="product"
+              routerLinkActive="bg-gray-200"
+              class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
               <span class="hidden lg:inline">Produits</span>
               <fa-icon [icon]="faBox" class="lg:hidden"></fa-icon>
             </a>
-            <a *ngIf="isLoggedIn() && isAdmin()" routerLink="stock" routerLinkActive="bg-gray-200" class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+            <a
+              *ngIf="isLoggedIn() && isAdmin()"
+              routerLink="stock"
+              routerLinkActive="bg-gray-200"
+              class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
               <span class="hidden lg:inline">Stock</span>
               <fa-icon [icon]="faBoxesStacked" class="lg:hidden"></fa-icon>
             </a>
-            <a *ngIf="isLoggedIn() && isAdmin()" routerLink="user" routerLinkActive="bg-gray-200" class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+            <a
+              *ngIf="isLoggedIn() && isAdmin()"
+              routerLink="user"
+              routerLinkActive="bg-gray-200"
+              class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
               <span class="hidden lg:inline">Utilisateurs</span>
               <fa-icon [icon]="faPeopleGroup" class="lg:hidden"></fa-icon>
             </a>
           </div>
         </div>
       </div>
+
       <div class="flex items-center">
-        <div *ngIf="isLoggedIn()" class="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium flex items-center">
+        <!-- Utilisateur connecté (OptiBox) -->
+        <div
+          *ngIf="isLoggedIn()"
+          class="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium flex items-center">
           <span class="hidden lg:inline max-w-[140px] truncate">{{ getUsername() }}</span>
           <fa-icon [icon]="faCircleUser" class="lg:hidden text-2xl align-middle"></fa-icon>
-          <button (click)="logout()" class="ml-4 text-white bg-red-600 hover:bg-red-700 px-3 py-2 rounded-md text-sm font-medium">
+          <button
+            (click)="logout()"
+            class="ml-4 text-white bg-red-600 hover:bg-red-700 px-3 py-2 rounded-md text-sm font-medium">
             <fa-icon [icon]="faSignOutAlt"></fa-icon>
           </button>
         </div>
-        <a *ngIf="!isLoggedIn()" href="/login" class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-          Se connecter
-        </a>
+
+        <!-- Scan badge + texte "Se connecter" quand pas loggé -->
+        <div *ngIf="!isLoggedIn()" class="flex items-center gap-3 px-3 py-2">
+          <span class="text-gray-600 text-sm font-medium">Se connecter</span>
+          <button
+            type="button"
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold px-3 py-2 rounded-md text-sm flex items-center"
+            (click)="toggleBadgeScanner()">
+            <fa-icon [icon]="faBarcode" class="mr-2"></fa-icon>
+            {{ badgeScannerVisible ? 'Arrêter le scan' : 'Scanner le badge' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Zone caméra pour badge, sous la navbar -->
+  <div *ngIf="badgeScannerVisible" class="bg-gray-100 border-t border-gray-300">
+    <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-3">
+      <div class="border rounded-lg overflow-hidden">
+        <div id="qr-reader-badge" class="w-full"></div>
       </div>
     </div>
   </div>
 </nav>
+
+<p-toast></p-toast>

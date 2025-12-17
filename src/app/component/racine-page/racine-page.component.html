@@ -6,35 +6,43 @@
         <h1 class="text-4xl font-bold text-gray-800 mt-2">Bienvenue sur <span class="text-blue-500">OptiBox</span> <span class="bg-green-100 text-green-600 text-sm m-2 px-2 py-1 rounded">Version Alpha 1.0</span></h1>
         <p class="text-xl text-gray-600 mt-2">Votre outil de gestion de stock et de contrôles internes</p>
         <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-          <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white"
-             [ngClass]="{'bg-blue-500 hover:bg-blue-600': isLoggedIn(), 'bg-gray-500': !isLoggedIn()}"
-             (click)="navigateOrShowToast('/scan', isLoggedIn())">
+          <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white bg-blue-500 hover:bg-blue-600
+            "[ngClass]="{ 'bg-blue-500 hover:bg-blue-600': isLoggedIn(), 'bg-gray-500': !isLoggedIn() }"
+            (click)="navigateOrShowToast('/scan', isLoggedIn())">
             <fa-icon [icon]="faBarcode"></fa-icon> Scanner un produit
           </a>
-          <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white"
-             [ngClass]="{'bg-blue-500 hover:bg-blue-600': isLoggedIn() && isAdmin(), 'bg-gray-500': !(isLoggedIn() && isAdmin())}"
-             (click)="navigateOrShowToast('/product', isLoggedIn() && isAdmin())">
+
+          <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white
+            "[ngClass]="{ 'bg-blue-500 hover:bg-blue-600': isLoggedIn(), 'bg-gray-500': !isLoggedIn() }"
+            (click)="navigateOrShowToast('/product', isLoggedIn())">
             <fa-icon [icon]="faBox"></fa-icon> Gestion des produits
           </a>
-          <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white"
-             [ngClass]="{'bg-blue-500 hover:bg-blue-600': isLoggedIn(), 'bg-gray-500': !isLoggedIn()}"
-             (click)="navigateOrShowToast('/check', isLoggedIn())">
+
+          <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white bg-blue-500 hover:bg-blue-600
+            "[ngClass]="{ 'bg-blue-500 hover:bg-blue-600': isAdmin() || isMaintenance(), 'bg-gray-500': !isLoggedIn()}"
+            (click)="navigateOrShowToast('/check', isAdmin() || isMaintenance())">
             <fa-icon [icon]="faListCheck"></fa-icon> Contrôler un produit
           </a>
-          <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white"
-             [ngClass]="{'bg-blue-500 hover:bg-blue-600': isLoggedIn() && isAdmin(), 'bg-gray-500': !(isLoggedIn() && isAdmin())}"
-             (click)="navigateOrShowToast('/stock', isLoggedIn() && isAdmin())">
+
+          <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white
+            "[ngClass]="{ 'bg-blue-500 hover:bg-blue-600': isLoggedIn(), 'bg-gray-500': !isLoggedIn() }"
+            (click)="navigateOrShowToast('/stock', isLoggedIn())">
             <fa-icon [icon]="faBoxesStacked"></fa-icon> Gestion de stock
           </a>
-          <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white"
-             [ngClass]="{'bg-blue-500 hover:bg-blue-600': isLoggedIn(), 'bg-gray-500': !isLoggedIn()}"
-             (click)="navigateOrShowToast('/history', isLoggedIn())">
+
+          <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white bg-blue-500 hover:bg-blue-600"
+             (click)="navigateOrShowToast('/history', true)">
             <fa-icon [icon]="faClockRotateLeft"></fa-icon> Historique
           </a>
-          <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white"
-             [ngClass]="{'bg-blue-500 hover:bg-blue-600': isLoggedIn() && isAdmin(), 'bg-gray-500': !(isLoggedIn() && isAdmin())}"
-             (click)="navigateOrShowToast('/user', isLoggedIn() && isAdmin())">
+
+          <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white
+            "[ngClass]="{'bg-blue-500 hover:bg-blue-600': isAdmin(), 'bg-gray-500': !isAdmin()}"
+            (click)="navigateOrShowToast('/user', isAdmin())">
             <fa-icon [icon]="faPeopleGroup"></fa-icon> Gestion des utilisateurs
+          </a>
+          <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white bg-blue-500 hover:bg-blue-600"
+            (click)="navigateOrShowToast('/procedure', true)">
+            <fa-icon [icon]="faList"></fa-icon> Procédures de Contrôles
           </a>
         </div>
       </div>

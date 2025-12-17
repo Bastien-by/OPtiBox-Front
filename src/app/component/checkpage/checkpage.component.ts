@@ -1,17 +1,20 @@
-import {Component, OnInit, OnDestroy } from '@angular/core';
-import { Html5Qrcode } from 'html5-qrcode';
-import {CheckService} from "../../services/check.service";
-import {NgForOf} from "@angular/common";
-import {FormsModule, ReactiveFormsModule} from "@angular/forms";
-import {CarouselModule} from "primeng/carousel";
-import {TagModule} from "primeng/tag";
-import {ButtonModule} from "primeng/button";
-import {DialogModule} from "primeng/dialog";
-import {ToastModule} from "primeng/toast";
-import {MessageService} from "primeng/api";
-import {faListCheck} from "@fortawesome/free-solid-svg-icons";
-import {FaIconComponent} from "@fortawesome/angular-fontawesome";
-import {StockService} from "../../services/stock.service";
+import { Component, OnInit } from '@angular/core';
+import { NgForOf } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+
+import { CarouselModule } from 'primeng/carousel';
+import { TagModule } from 'primeng/tag';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
+
+import { faListCheck } from '@fortawesome/free-solid-svg-icons';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+
+import { CheckService } from '../../services/check.service';
+import { StockService } from '../../services/stock.service';
+import { AuthAppService } from '../../services/auth-app.service';
 
 @Component({
   selector: 'app-checkpage',
@@ -29,28 +32,23 @@ import {StockService} from "../../services/stock.service";
   ],
   templateUrl: './checkpage.component.html',
   providers: [MessageService],
-  styleUrl: './checkpage.component.css'
+  styleUrls: ['./checkpage.component.css']
 })
-export class CheckpageComponent implements OnInit, OnDestroy {
+export class CheckpageComponent implements OnInit {
 
   stocksArray: any[] = [];
-
-  badgeScannerVisible = false;
-  private html5QrCodeBadge?: Html5Qrcode;
-  private badgeScannerInitialized = false;
 
   check: any = {
     id: '',
     date: '',
     status: '',
-    badge: '',
     user: {
-      id: '',
+      id: ''
     },
     stock: {
-      id: '',
+      id: ''
     },
-    comment: '',
+    comment: ''
   };
 
   review: any = {
@@ -60,194 +58,94 @@ export class CheckpageComponent implements OnInit, OnDestroy {
       size: '',
       cmu: '',
       location: '',
-      picture: '',
+      picture: ''
     },
     available: null,
     status: null,
     creationDate: null,
-    lastCheckDate: null,
-  }
+    lastCheckDate: null
+  };
 
   stock: any = {
     id: '',
-  }
-
-  scan: any = {
-    badge: '',
-  }
-
-  user: any = {
-    id: '',
-    username: '',
-    token: '',
-  }
-
-  users: any[] = [];
+    alitracer: ''
+  };
 
   responsiveOptions: any[] | undefined;
 
-  constructor(protected checkService: CheckService, private messageService: MessageService, private stockService: StockService) {}
+  constructor(
+    protected checkService: CheckService,
+    private messageService: MessageService,
+    private stockService: StockService,
+    private authApp: AuthAppService
+  ) {}
 
-  ngOnInit(){
+  ngOnInit(): void {
     this.responsiveOptions = [
-      {
-        breakpoint: '1400px',
-        numVisible: 3,
-        numScroll: 3
-      },
-      {
-        breakpoint: '1220px',
-        numVisible: 2,
-        numScroll: 2
-      },
-      {
-        breakpoint: '1100px',
-        numVisible: 1,
-        numScroll: 1
-      }
+      { breakpoint: '1400px', numVisible: 3, numScroll: 3 },
+      { breakpoint: '1220px', numVisible: 2, numScroll: 2 },
+      { breakpoint: '1100px', numVisible: 1, numScroll: 1 }
     ];
     this.checkService.refreshStocks();
     this.stocksArray = this.checkService.getStocks();
   }
-
-  ngOnDestroy(): void {
-    this.stopBadgeScanner();
+  isLoggedIn(): boolean {
+    return this.authApp.isLoggedIn();
   }
 
-  /* ---------- SCAN BADGE ---------- */
-
-  async toggleBadgeScanner() {
-    if (this.badgeScannerVisible) {
-      this.badgeScannerVisible = false;
-      await this.stopBadgeScanner();
+  async detectStock(): Promise<void> {
+    if (this.stock.id) {
+      this.review = this.stockService.getStockById(this.stock.id);
+    } else if (this.stock.alitracer) {
+      this.review = this.stockService.getStockByAlitracer(this.stock.alitracer);
     } else {
-      this.badgeScannerVisible = true;
-      setTimeout(() => this.startBadgeScanner(), 0);
-    }
-  }
-
-  private async startBadgeScanner() {
-    if (this.badgeScannerInitialized) {
       return;
     }
 
-    const elementId = 'qr-reader-badge';
-    this.html5QrCodeBadge = new Html5Qrcode(elementId);
-
-    try {
-      await this.html5QrCodeBadge.start(
-        { facingMode: 'environment' },
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        (decodedText: string) => {
-          this.check.badge = decodedText;
-          this.detectBadge();
-          this.badgeScannerVisible = false;
-          this.stopBadgeScanner();
-        },
-        () => {
-          // erreurs de scan non bloquantes
-        }
-      );
-      this.badgeScannerInitialized = true;
-    } catch (err) {
-      console.error('Erreur lors du démarrage du scanner badge', err);
-      this.badgeScannerVisible = false;
-    }
-  }
-
-  private async stopBadgeScanner() {
-    if (this.html5QrCodeBadge && this.badgeScannerInitialized) {
-      try {
-        await this.html5QrCodeBadge.stop();
-        await this.html5QrCodeBadge.clear();
-      } catch (err) {
-        console.error('Erreur à l’arrêt du scanner badge', err);
-      }
-    }
-    this.html5QrCodeBadge = undefined;
-    this.badgeScannerInitialized = false;
-  }
-
-  /* ---------- detectBadge reste identique ---------- */
-
-  async detectBadge() {
-    this.users = this.checkService.getUsers();
-    let badgeExist = false;
-
-    if (this.check.badge.trim().length === 0) {
-      this.showEmptyFormToast();
-      return;
-    }
-
-    this.users.forEach((user: any) => {
-      if (user.token === this.check.badge) {
-        this.user = user;
-        console.log(this.user);
-        this.showFindToast();
-        badgeExist = true;
-      }
-    });
-
-    if (!badgeExist) {
-      this.showErrorToast();
-      return;
-    }
-
-    try {
-      await this.checkService.refreshData();
-      this.updateStocks();
-    } catch (error) {
-      console.error('Error refreshing data:', error);
-    }
-  }
-
-  async detectStock() {
-    this.review = this.stockService.getStockById(this.stock.id);
     console.log(this.review);
     this.getLatestDate();
   }
 
-
-  async setStatus(status: number, stockId: number){
+  async setStatus(status: number, stockId: number): Promise<void> {
     this.check.status = status;
-    console.log("Stock ID : " + stockId);
-    // vérifier si l'utilisateur est connecté
-    if(this.user.username === ''){
-      this.showErrorToast();
+    console.log('Stock ID : ' + stockId);
+
+    const appUser = this.authApp.getCurrentUser();
+    if (!appUser) {
+      this.showErrorToast('Vous devez être connecté pour réaliser un contrôle');
       return;
     }
-    // get date
-    let date = new Date();
-    // serialize date as java Date
+
+    const date = new Date();
     this.check.date = date.toISOString();
-    this.check.user.id = this.user.id;
+    this.check.user.id = appUser.id;
     this.check.stock.id = this.stock.id;
 
     try {
-      // Appeler la fonction pour créer le check
       await this.checkService.createCheck(this.check);
       this.showAddToast();
-      await this.checkService.refreshData(); // Attendre que les données soient rafraîchies
+      await this.checkService.refreshData();
       this.updateStocks();
       this.review.status = status;
     } catch (error) {
       console.error('Error adding check:', error);
     }
+
     this.resetForm();
     this.getLatestDate();
   }
 
-
-  resetForm() {
-    this.stock.id = null; // Réinitialise le champ de sélection
-    this.review = {}; // Réinitialise les données du produit affiché
-    this.check = {     // Réinitialise l'objet `check`
+  resetForm(): void {
+    this.stock.id = null;
+    this.stock.alitracer = '';
+    this.review = {};
+    this.check = {
       id: null,
       stock: { id: '' },
       user: { id: '' },
       status: '',
       date: '',
-      comment: '',
+      comment: ''
     };
     this.stocksArray = [];
   }
@@ -256,51 +154,52 @@ export class CheckpageComponent implements OnInit, OnDestroy {
     return this.checkService.getStatusClass(this.review);
   }
 
-  async updateStocks() {
+  async updateStocks(): Promise<void> {
     await this.checkService.refreshStocks();
     this.stocksArray = this.checkService.getStocks();
   }
 
-  getLatestDate(){
+  getLatestDate(): void {
     this.stockService.getCheckIdByStockId(this.stock.id).subscribe({
-      next: (checks) => {
+      next: checks => {
         if (checks.length > 0) {
-          const latestCheck = checks.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
-          // Assigner la dernière date de check à review.lastCheckDate
+          const latestCheck = checks.sort(
+            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+          )[0];
           this.review.lastCheckDate = new Date(latestCheck.date).toLocaleString();
           console.log('Dernière date de check:', this.review.lastCheckDate);
         } else {
           this.review.lastCheckDate = 'Aucune donnée disponible';
         }
       },
-      error: (err) => {
+      error: err => {
         console.error('Erreur lors de la récupération des checks:', err);
       }
     });
   }
 
-
-  disconnect(){
-    this.user = {
-      username: '',
-      token: '',
-    }
+  showAddToast(): void {
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: 'Vous avez réalisé un contrôle sur un produit'
+    });
   }
 
-  showAddToast(){
-    this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Vous avez réalisé un contrôle sur un produit' });
+  showErrorToast(detail: string = 'Badge non reconnu'): void {
+    this.messageService.add({
+      severity: 'error',
+      summary: 'Error',
+      detail
+    });
   }
 
-  showFindToast(){
-    this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Badge reconnu. Bonjour ' + this.user.username });
-  }
-
-  showErrorToast(){
-    this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Badge non reconnu' });
-  }
-
-  showEmptyFormToast(){
-    this.messageService.add({ severity: 'warn', summary: 'Error', detail: 'Le champ ne peut pas être vide' });
+  showEmptyFormToast(): void {
+    this.messageService.add({
+      severity: 'warn',
+      summary: 'Error',
+      detail: 'Le champ ne peut pas être vide'
+    });
   }
 
   protected readonly faListCheck = faListCheck;

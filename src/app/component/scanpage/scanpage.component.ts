@@ -8,19 +8,17 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-
 import {
   faArrowRightFromBracket,
   faArrowRightToBracket,
   faBarcode
 } from '@fortawesome/free-solid-svg-icons';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
-
 import { Html5Qrcode } from 'html5-qrcode';
-
 import { ScanService } from '../../services/scan.service';
 import { StockService } from '../../services/stock.service';
 import { CheckService } from '../../services/check.service';
+import { AuthAppService } from '../../services/auth-app.service';
 
 @Component({
   selector: 'app-scanpage',
@@ -50,11 +48,6 @@ export class ScanpageComponent implements OnInit, OnDestroy {
   private html5QrCodeProduct?: Html5Qrcode;
   private productScannerInitialized = false;
 
-  // Scanner badge
-  badgeScannerVisible = false;
-  private html5QrCodeBadge?: Html5Qrcode;
-  private badgeScannerInitialized = false;
-
   stock: any = {
     product: {
       title: '',
@@ -77,24 +70,14 @@ export class ScanpageComponent implements OnInit, OnDestroy {
       size: '',
       cmu: '',
       location: '',
-      picture: ''
+      picture: '',
+      alitracer: ''
     },
     available: null,
     status: null,
     creationDate: null,
     lastCheckDate: null
   };
-
-  scan: any = {
-    badge: ''
-  };
-
-  user: any = {
-    username: '',
-    token: ''
-  };
-
-  users: any[] = [];
 
   history: any = {
     stock: {
@@ -119,7 +102,8 @@ export class ScanpageComponent implements OnInit, OnDestroy {
     protected scanService: ScanService,
     private messageService: MessageService,
     private stockService: StockService,
-    private checkService: CheckService
+    private checkService: CheckService,
+    private authApp: AuthAppService
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -137,7 +121,22 @@ export class ScanpageComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.stopProductScanner();
-    this.stopBadgeScanner();
+  }
+
+  isLoggedIn(): boolean {
+    return this.authApp.isLoggedIn();
+  }
+
+  isAdmin(): boolean {
+    return this.authApp.isAdmin();
+  }
+
+  isMaintenance(): boolean {
+    return this.authApp.isMaintenance();
+  }
+
+  isOperator(): boolean {
+    return this.authApp.isOperator();
   }
 
   /* -------- SCAN PRODUIT -------- */
@@ -194,91 +193,7 @@ export class ScanpageComponent implements OnInit, OnDestroy {
     this.productScannerInitialized = false;
   }
 
-  /* -------- SCAN BADGE -------- */
-
-  async toggleBadgeScanner(): Promise<void> {
-    if (this.badgeScannerVisible) {
-      this.badgeScannerVisible = false;
-      await this.stopBadgeScanner();
-    } else {
-      this.badgeScannerVisible = true;
-      setTimeout(() => this.startBadgeScanner(), 0);
-    }
-  }
-
-  private async startBadgeScanner(): Promise<void> {
-    if (this.badgeScannerInitialized) {
-      return;
-    }
-
-    const elementId = 'qr-reader-badge';
-    this.html5QrCodeBadge = new Html5Qrcode(elementId);
-
-    try {
-      await this.html5QrCodeBadge.start(
-        { facingMode: 'environment' },
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        (decodedText: string) => {
-          this.scan.badge = decodedText;
-          this.detectBadge();
-          this.badgeScannerVisible = false;
-          this.stopBadgeScanner();
-        },
-        () => {
-          // erreurs de scan non bloquantes
-        }
-      );
-      this.badgeScannerInitialized = true;
-    } catch (err) {
-      console.error('Erreur lors du démarrage du scanner badge', err);
-      this.badgeScannerVisible = false;
-    }
-  }
-
-  private async stopBadgeScanner(): Promise<void> {
-    if (this.html5QrCodeBadge && this.badgeScannerInitialized) {
-      try {
-        await this.html5QrCodeBadge.stop();
-        await this.html5QrCodeBadge.clear();
-      } catch (err) {
-        console.error('Erreur à l’arrêt du scanner badge', err);
-      }
-    }
-    this.html5QrCodeBadge = undefined;
-    this.badgeScannerInitialized = false;
-  }
-
-  /* -------- BADGE / UTILISATEUR -------- */
-
-  async detectBadge(): Promise<void> {
-    this.users = this.scanService.getUsers();
-    let badgeExist = false;
-
-    this.users.forEach((user: any) => {
-      if (user.token === this.scan.badge) {
-        this.user = user;
-        this.showFindToast();
-        badgeExist = true;
-      }
-    });
-
-    if (this.scan.badge.trim().length === 0) {
-      this.showEmptyFormToast();
-      return;
-    }
-
-    if (!badgeExist) {
-      this.showErrorToast();
-      return;
-    }
-
-    try {
-      await this.scanService.refreshData();
-      this.updateAvailableStocks();
-    } catch (error) {
-      console.error('Error refreshing data:', error);
-    }
-  }
+  /* -------- TYPE (retrait / dépôt) -------- */
 
   setType(type: string): void {
     this.resetSelectedStock();
@@ -331,8 +246,13 @@ export class ScanpageComponent implements OnInit, OnDestroy {
   }
 
   async addScan(type: string): Promise<void> {
-    if (this.user.username === '') {
-      this.showErrorToast();
+    const appUser = this.authApp.getCurrentUser();
+    if (!appUser) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Erreur',
+        detail: 'Vous devez être connecté pour effectuer un retrait ou un dépôt.'
+      });
       return;
     }
 
@@ -340,7 +260,7 @@ export class ScanpageComponent implements OnInit, OnDestroy {
 
     const date = new Date();
     this.history.date = date.toISOString();
-    this.history.user.id = this.user.id;
+    this.history.user.id = appUser.id;
     this.history.stock.id = this.stock.id;
     this.history.type = type;
 
@@ -410,7 +330,8 @@ export class ScanpageComponent implements OnInit, OnDestroy {
         size: '',
         cmu: '',
         location: '',
-        picture: ''
+        picture: '',
+        alitracer: ''
       },
       available: null,
       status: null,
@@ -441,44 +362,13 @@ export class ScanpageComponent implements OnInit, OnDestroy {
     return this.checkService.getStatusClass(this.review);
   }
 
-  disconnect(): void {
-    this.user = {
-      username: '',
-      token: ''
-    };
-  }
-
   /* -------- TOASTS -------- */
 
   showAddToast(): void {
     this.messageService.add({
       severity: 'success',
       summary: 'Success',
-      detail: 'Vous avez sorti un élement du stock'
-    });
-  }
-
-  showFindToast(): void {
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: 'Badge reconnu. Bonjour ' + this.user.username
-    });
-  }
-
-  showErrorToast(): void {
-    this.messageService.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Badge non reconnu'
-    });
-  }
-
-  showEmptyFormToast(): void {
-    this.messageService.add({
-      severity: 'warn',
-      summary: 'Error',
-      detail: 'Le champ ne peut pas être vide'
+      detail: 'L\'opération a été enregistrée'
     });
   }
 

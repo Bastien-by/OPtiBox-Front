@@ -1,78 +1,89 @@
 <div class="flex flex-col gap-6 p-6 sm:p-8 md:p-10">
-  <div class="">
-    <h1 class="text-2xl font-bold py-3"><fa-icon [icon]="faPeopleGroup"></fa-icon> Utilisateurs</h1>
-    <h2 class="text-xl">
-      Consultez la liste des utilisateurs, modifiez leur informations ou créez-en de nouveaux.
-    </h2>
+  <!-- Message si non connecté -->
+  <div *ngIf="!isAdmin()" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+    <p class="font-bold">Accès à la gestion des utilisateurs interdit</p>
+    <p>Vous devez être connecté en tant qu'Administrateur pour accéder à la gestions des utilisateurs.</p>
   </div>
-  <!-- line separator -->
-  <div class="border-b-2 border-gray-200"></div>
-  <div class="bg-white p-6 rounded shadow-md mb-6">
-    <h2 class="text-xl font-bold mb-4">Ajout d'un utilisateur</h2>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
-      <input class="border border-gray-300 p-2" type="text" [(ngModel)]="user.username" placeholder="Nom de l'utilisateur" maxlength="20">
-      <input class="border border-gray-300 p-2" type="password" [(ngModel)]="user.password" placeholder="Mot de passe" maxlength="50">
-      <input class="border border-gray-300 p-2" type="text" [(ngModel)]="user.token" placeholder="Token" maxlength="20">
-      <select class="border border-gray-300 p-2 rounded" [(ngModel)]="user.role">
-        <option value="ADMIN">Admin</option>
-        <option value="BASIC">Basic</option>
-      </select>
-      <button class="col-span-full sm:col-span-2 lg:col-span-1 bg-blue-500 text-white rounded shadow p-3" (click)="addUser()">Ajouter</button>
+
+  <!-- Contenu seulement si connecté -->
+  <div *ngIf="isLoggedIn()">
+    <div class="">
+      <h1 class="text-2xl font-bold py-3"><fa-icon [icon]="faPeopleGroup"></fa-icon> Utilisateurs</h1>
+      <h2 class="text-xl">
+        Consultez la liste des utilisateurs, modifiez leur informations ou créez-en de nouveaux.
+      </h2>
     </div>
-  </div>
+    <!-- line separator -->
+    <div class="border-b-2 border-gray-200"></div>
+    <div class="bg-white p-6 rounded shadow-md mb-6">
+      <h2 class="text-xl font-bold mb-4">Ajout d'un utilisateur</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+        <input class="border border-gray-300 p-2" type="text" [(ngModel)]="user.username" placeholder="Nom de l'utilisateur" maxlength="20">
+        <input class="border border-gray-300 p-2" type="password" [(ngModel)]="user.password" placeholder="Mot de passe" maxlength="50">
+        <input class="border border-gray-300 p-2" type="text" [(ngModel)]="user.token" placeholder="Token" maxlength="20">
+        <select class="border border-gray-300 p-2 rounded" [(ngModel)]="user.role">
+          <option value="ADMIN">Admin</option>
+          <option value="MAINTENANCE">Maintenance</option>
+          <option value="OPERATEUR">Opérateur</option>
+        </select>
+        <button class="col-span-full sm:col-span-2 lg:col-span-1 bg-blue-500 text-white rounded shadow p-3" (click)="addUser()">Ajouter</button>
+      </div>
+    </div>
 
-  <div *ngIf="userService.getAllUsers().length === 0" class="text-center text-gray-500">
-    <p>Aucun utilisateur n'a été ajouté</p>
-  </div>
-  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-    <div *ngFor="let user of userService.getAllUsers()" class="bg-white shadow-md rounded-lg p-4">
-      <div class="flex flex-col items-center">
+    <div *ngIf="userService.getAllUsers().length === 0" class="text-center text-gray-500">
+      <p>Aucun utilisateur n'a été ajouté</p>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div *ngFor="let user of userService.getAllUsers()" class="bg-white shadow-md rounded-lg p-4">
+        <div class="flex flex-col items-center">
 
-        <div class="text-xl font-bold"> <fa-icon [icon]="faUser"></fa-icon> {{ user.username }}</div>
-        <div class="text-gray-500">  <fa-icon [icon]="faKey"></fa-icon> {{ user.token }}</div>
-        <span class="mt-2 px-2 py-1 rounded {{ user.role === 'BASIC' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
-          {{ user.role === 'BASIC' ? 'Basique' : 'Contrôleur' }}
-        </span>
-        <div class="mt-4 text-gray-500">
-          <div class="flex flex-col items-center">
-            <p class="font-bold">Activité récente :</p>
-            <p *ngIf="!user.info" class="text-gray-500 text-center text-transparent">...</p>
-            <p *ngIf="user.info && user.info[0] != 'NA' " class="text-gray-500 text-center animate-fade"> {{ user.info[0] }} du produit <a class="italic text-gray-600"> {{ user.info[2] }} </a></p>
-            <p *ngIf="user.info?.[0] == 'NA' " class="text-gray-500 text-center animate-fade">Aucune activité</p>
+          <div class="text-xl font-bold"> <fa-icon [icon]="faUser"></fa-icon> {{ user.username }}</div>
+          <div class="text-gray-500">  <fa-icon [icon]="faKey"></fa-icon> {{ user.token }}</div>
+          <span class="mt-2 px-2 py-1 rounded {{ user.role === 'BASIC' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
+            {{ user.role === 'BASIC' ? 'Basique' : 'Contrôleur' }}
+          </span>
+          <div class="mt-4 text-gray-500">
+            <div class="flex flex-col items-center">
+              <p class="font-bold">Activité récente :</p>
+              <p *ngIf="!user.info" class="text-gray-500 text-center text-transparent">...</p>
+              <p *ngIf="user.info && user.info[0] != 'NA' " class="text-gray-500 text-center animate-fade"> {{ user.info[0] }} du produit <a class="italic text-gray-600"> {{ user.info[2] }} </a></p>
+              <p *ngIf="user.info?.[0] == 'NA' " class="text-gray-500 text-center animate-fade">Aucune activité</p>
+            </div>
           </div>
-        </div>
-        <div class="mt-4 flex gap-2">
-          <button class="bg-blue-500 hover:bg-blue-700 text-white rounded-full h-10 w-10 flex items-center justify-center" (click)="showDialog(user, 1)">
-            <i class="pi pi-pencil"></i>
-          </button>
-          <button class="bg-red-500 hover:bg-red-700 text-white rounded-full h-10 w-10 flex items-center justify-center" (click)="showDialog(user, 2)">
-            <i class="pi pi-trash"></i>
-          </button>
+          <div class="mt-4 flex gap-2">
+            <button class="bg-blue-500 hover:bg-blue-700 text-white rounded-full h-10 w-10 flex items-center justify-center" (click)="showDialog(user, 1)">
+              <i class="pi pi-pencil"></i>
+            </button>
+            <button class="bg-red-500 hover:bg-red-700 text-white rounded-full h-10 w-10 flex items-center justify-center" (click)="showDialog(user, 2)">
+              <i class="pi pi-trash"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>
+
+    <p-dialog header="Modification de l'utilisateur" [(visible)]="dialog1Visible" [style]="{ width: '35vw' }">
+      <div class="flex flex-col gap-3 p-5">
+        <h1 class="text-2xl font-bold py-3">Utilisateur n° {{ selectedUser.id }}</h1>
+        <input class="border border-gray-300 p-2 rounded" type="text" [(ngModel)]="selectedUser.username" placeholder="Nom de l'utilisateur">
+        <input class="border border-gray-300 p-2 rounded" type="text" [(ngModel)]="selectedUser.token" placeholder="token">
+        <select class="border border-gray-300 p-2 rounded bg-white" [(ngModel)]="selectedUser.role">
+          <option value="ADMIN">Admin</option>
+          <option value="MAINTENANCE">Maintenance</option>
+          <option value="OPERATEUR">Opérateur</option>
+        </select>
+        <button class="bg-blue-500 text-white rounded shadow p-3" (click)="updateUser()">Modifier</button>
+      </div>
+    </p-dialog>
+
+    <p-dialog header="Supprimer un utilisateur" [(visible)]="dialog2Visible" [style]="{ width: '35vw' }">
+      <div class="flex flex-col gap-3 p-5">
+        <h1 class="text-2xl font-bold py-3">Utilisateur n° {{ selectedUser.id }}</h1>
+        <p>Voulez-vous définitivement supprimer cet utilisateur ?</p>
+        <button class="bg-red-500 text-white rounded shadow p-3" (click)="[userService.removeUser(selectedUser.id), hideDialog(), showDeleteToast()]">Supprimer</button>
+      </div>
+    </p-dialog>
   </div>
-
-  <p-dialog header="Modification de l'utilisateur" [(visible)]="dialog1Visible" [style]="{ width: '35vw' }">
-    <div class="flex flex-col gap-3 p-5">
-      <h1 class="text-2xl font-bold py-3">Utilisateur n° {{ selectedUser.id }}</h1>
-      <input class="border border-gray-300 p-2 rounded" type="text" [(ngModel)]="selectedUser.username" placeholder="Nom de l'utilisateur">
-      <input class="border border-gray-300 p-2 rounded" type="text" [(ngModel)]="selectedUser.token" placeholder="token">
-      <select class="border border-gray-300 p-2 rounded bg-white" [(ngModel)]="selectedUser.role">
-        <option value="BASIC">Basic</option>
-        <option value="CONTROLEUR">Admin</option>
-      </select>
-      <button class="bg-blue-500 text-white rounded shadow p-3" (click)="updateUser()">Modifier</button>
-    </div>
-  </p-dialog>
-
-  <p-dialog header="Supprimer un utilisateur" [(visible)]="dialog2Visible" [style]="{ width: '35vw' }">
-    <div class="flex flex-col gap-3 p-5">
-      <h1 class="text-2xl font-bold py-3">Utilisateur n° {{ selectedUser.id }}</h1>
-      <p>Voulez-vous définitivement supprimer cet utilisateur ?</p>
-      <button class="bg-red-500 text-white rounded shadow p-3" (click)="[userService.removeUser(selectedUser.id), hideDialog(), showDeleteToast()]">Supprimer</button>
-    </div>
-  </p-dialog>
 
   <p-toast></p-toast>
 

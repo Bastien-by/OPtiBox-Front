@@ -11,6 +11,7 @@ import {MessageService} from "primeng/api";
 import {faBox} from "@fortawesome/free-solid-svg-icons";
 import {FaIconComponent} from "@fortawesome/angular-fontawesome";
 import {StockService} from "../../services/stock.service";
+import { AuthAppService } from '../../services/auth-app.service';
 
 
 @Component({
@@ -62,7 +63,7 @@ export class ProductpageComponent implements OnInit {
 
   responsiveOptions: any[] | undefined;
 
-  constructor(protected productService: ProductService, private messageService: MessageService, private stockService: StockService) {}
+  constructor(protected productService: ProductService, private messageService: MessageService, private stockService: StockService, private authApp: AuthAppService) {}
 
   ngOnInit(){
     this.responsiveOptions = [
@@ -87,6 +88,22 @@ export class ProductpageComponent implements OnInit {
         numScroll: 1
       }
     ];
+  }
+
+  isLoggedIn(): boolean {
+    return this.authApp.isLoggedIn();
+  }
+
+  isAdmin(): boolean {
+    return this.authApp.isAdmin();
+  }
+
+  isMaintenance(): boolean {
+    return this.authApp.isMaintenance();
+  }
+
+  isOperator(): boolean {
+    return this.authApp.isOperator();
   }
 
   onFileSelected(event: any, productToUpdate: any) {

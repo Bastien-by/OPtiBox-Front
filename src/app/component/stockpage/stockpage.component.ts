@@ -13,6 +13,7 @@ import {faBoxesStacked} from "@fortawesome/free-solid-svg-icons";
 import {FaIconComponent} from "@fortawesome/angular-fontawesome";
 import { CheckService } from '../../services/check.service';
 import { HistoryService } from '../../services/history.service';
+import { AuthAppService } from '../../services/auth-app.service';
 import { QRCodeModule } from 'angularx-qrcode';
 
 @Component({
@@ -74,7 +75,7 @@ export class StockpageComponent implements OnInit{
   listOfProducts: any[] = [];
 
 
-  constructor(protected stockService: StockService, private messageService: MessageService, protected productService: ProductService, protected checkService: CheckService, protected historyService: HistoryService) {}
+  constructor(protected stockService: StockService, private messageService: MessageService, protected productService: ProductService, protected checkService: CheckService, protected historyService: HistoryService, private authApp: AuthAppService) {}
 
   ngOnInit(){
     this.responsiveOptions = [
@@ -98,6 +99,22 @@ export class StockpageComponent implements OnInit{
     //get product service to get all products
     this.listOfProducts = this.productService.getAllProducts();
     this.stockService.refreshStocks();
+  }
+
+  isLoggedIn(): boolean {
+    return this.authApp.isLoggedIn();
+  }
+
+  isAdmin(): boolean {
+    return this.authApp.isAdmin();
+  }
+
+  isMaintenance(): boolean {
+    return this.authApp.isMaintenance();
+  }
+
+  isOperator(): boolean {
+    return this.authApp.isOperator();
   }
 
   // ↓ NOUVELLE méthode : ouvre le dialog création

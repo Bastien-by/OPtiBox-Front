@@ -1,231 +1,222 @@
 <div class="flex flex-col gap-6 p-6 sm:p-8 md:p-10">
-  <!-- Deux colonnes responsives, sur mobile, les colonnes passent en une seule colonne -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-    <div>
-      <h1 class="text-2xl font-bold py-3"><fa-icon [icon]="faBarcode"></fa-icon> Scanner Entrées-Sorties</h1>
-      <h2 class="text-xl">
-        Scannez votre matricule, choisissez une action "Retirer un produit" ou "Déposer un produit" et sélectionnez le produit à retirer ou déposer.
-      </h2>
-    </div>
-    <div class="bg-white shadow-md rounded-lg p-6">
-      <label class="block text-gray-700 font-bold mb-2">Utilisateur</label>
-
-      <div class="flex items-center gap-4 mb-2">
-        <input
-          class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md"
-          [(ngModel)]="scan.badge"
-          type="password"
-          placeholder="Badge utilisateur">
-        <button
-          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          (click)="detectBadge()">
-          S'identifier
-        </button>
-      </div>
-
-      <!-- Bouton caméra pour scanner le badge -->
-      <div class="flex gap-3 mb-2">
-        <button
-          type="button"
-          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          (click)="toggleBadgeScanner()">
-          <fa-icon [icon]="faBarcode" class="mr-2"></fa-icon>
-          {{ badgeScannerVisible ? 'Arrêter le scan badge' : 'Scanner le badge avec la caméra' }}
-        </button>
-      </div>
-
-      <!-- Zone de scan du badge -->
-      <div *ngIf="badgeScannerVisible" class="mt-2 border rounded overflow-hidden">
-        <div id="qr-reader-badge" class="w-full"></div>
-      </div>
-
-      <label class="block text-gray-700 font-lighter mb-2 mt-2">Scannez votre carte</label>
-
-      <div *ngIf="user.username" class="mt-4">
-        <p class="text-green-500 text-lg font-bold">
-          Vous êtes identifié en tant que {{ user.username }}
-        </p>
-        <button
-          class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 mt-2"
-          (click)="disconnect()">
-          Se déconnecter
-        </button>
-      </div>
-    </div>
-
-  </div>
+  <!-- Message si non connecté -->
+  <div *ngIf="!isLoggedIn()" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+    <p class="font-bold">Accès au scan interdit</p>
+    <p>Vous devez être connecté avec votre badge pour effectuer un retrait ou un dépôt.</p>
   </div>
 
-  <!-- line separator -->
-  <div class="border-b-2 border-gray-200"></div>
-
-  <div *ngIf="user.username" class="mt-4">
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
-      <button [ngClass]="history.type == 'withdraw' ? 'bg-blue-500 hover:bg-blue-700 text-white font-bold rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 p-5 text-2xl' : 'bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold rounded focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 p-5 text-2xl'" (click)="setType('withdraw')" [disabled]="!isButtonEnabled"><fa-icon [icon]="faArrowRightFromBracket"></fa-icon> Retrait</button>
-      <button [ngClass]="history.type == 'deposit' ? 'bg-blue-500 hover:bg-blue-700 text-white font-bold rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 p-5 text-2xl' : 'bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold rounded focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 p-5 text-2xl'" (click)="setType('deposit')" [disabled]="!isButtonEnabled"><fa-icon [icon]="faArrowRightToBracket"></fa-icon> Dépôt</button>
+  <!-- Contenu seulement si connecté -->
+  <div *ngIf="isLoggedIn()">
+    <!-- Deux colonnes responsives -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <h1 class="text-2xl font-bold py-3">
+          <fa-icon [icon]="faBarcode"></fa-icon> Scanner Entrées-Sorties
+        </h1>
+        <h2 class="text-xl">
+          Choisissez une action "Retirer un produit" ou "Déposer un produit" et scannez le produit concerné.
+        </h2>
+      </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <!-- Retrait -->
-      <div *ngIf="history.type == 'withdraw'" class="bg-white shadow-md rounded-lg p-6">
-        <div class="mt-4 space-y-3">
-          <label class="block text-gray-700 font-bold mb-2">Scanner le produit</label>
+    <!-- line separator -->
+    <div class="border-b-2 border-gray-200 mt-4"></div>
 
-          <!-- Bouton caméra -->
-          <div class="flex gap-3">
-            <button
-              type="button"
-              class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-              (click)="toggleScanner()">
-              <fa-icon [icon]="faBarcode" class="mr-2"></fa-icon>
-              {{ scannerVisible ? 'Arrêter le scan' : 'Scanner avec la caméra' }}
-            </button>
-          </div>
-
-          <!-- Zone de scan caméra -->
-          <div *ngIf="scannerVisible" class="mt-4 border rounded overflow-hidden">
-            <div id="qr-reader" class="w-full"></div>
-          </div>
-
-          <!-- Champ code produit -->
-          <div class="mt-4">
-            <label class="block text-gray-700 font-bold mb-2">Code produit</label>
-            <input
-              class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md"
-              [(ngModel)]="stock.alitracer"
-              (change)="detectStock()"
-              type="text"
-              placeholder="Code produit (scan ou saisie manuelle)">
-          </div>
-        </div>
-
-        <div class="fixed inset-x-0 bottom-0 flex justify-center pb-4">
-          <button *ngIf="review.id && isStockSelected"
-                  [disabled]="!isButtonEnabled"
-                  [ngClass]="{'bg-gray-400 text-gray-700': !isButtonEnabled, 'bg-green-600 hover:bg-green-800 text-white': isButtonEnabled}"
-                  class="font-bold py-5 px-5 rounded text-xl"
-                  (click)="addScan('withdraw')">
-            Retirer le produit
-          </button>
-        </div>
+    <div class="mt-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+        <button
+          [ngClass]="history.type == 'withdraw'
+            ? 'bg-blue-500 hover:bg-blue-700 text-white font-bold rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 p-5 text-2xl'
+            : 'bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold rounded focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 p-5 text-2xl'"
+          (click)="setType('withdraw')"
+          [disabled]="!isButtonEnabled">
+          <fa-icon [icon]="faArrowRightFromBracket"></fa-icon> Retrait
+        </button>
+        <button
+          [ngClass]="history.type == 'deposit'
+            ? 'bg-blue-500 hover:bg-blue-700 text-white font-bold rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 p-5 text-2xl'
+            : 'bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold rounded focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 p-5 text-2xl'"
+          (click)="setType('deposit')"
+          [disabled]="!isButtonEnabled">
+          <fa-icon [icon]="faArrowRightToBracket"></fa-icon> Dépôt
+        </button>
       </div>
 
-      <!-- Dépôt -->
-      <div *ngIf="history.type == 'deposit'" class="bg-white shadow-md rounded-lg p-6">
-        <div class="mt-4 space-y-3">
-          <label class="block text-gray-700 font-bold mb-2">Scanner le produit</label>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <!-- Retrait -->
+        <div *ngIf="history.type == 'withdraw'" class="bg-white shadow-md rounded-lg p-6">
+          <div class="mt-4 space-y-3">
+            <label class="block text-gray-700 font-bold mb-2">Scanner le produit</label>
 
-          <!-- Bouton caméra -->
-          <div class="flex gap-3">
+            <!-- Bouton caméra -->
+            <div class="flex gap-3">
+              <button
+                type="button"
+                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                (click)="toggleScanner()">
+                <fa-icon [icon]="faBarcode" class="mr-2"></fa-icon>
+                {{ scannerVisible ? 'Arrêter le scan' : 'Scanner avec la caméra' }}
+              </button>
+            </div>
+
+            <!-- Zone de scan caméra -->
+            <div *ngIf="scannerVisible" class="mt-4 border rounded overflow-hidden">
+              <div id="qr-reader" class="w-full"></div>
+            </div>
+
+            <!-- Champ code produit -->
+            <div class="mt-4">
+              <label class="block text-gray-700 font-bold mb-2">Code produit</label>
+              <input
+                class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md"
+                [(ngModel)]="stock.alitracer"
+                (change)="detectStock()"
+                type="text"
+                placeholder="Code produit (scan ou saisie manuelle)">
+            </div>
+          </div>
+
+          <div class="fixed inset-x-0 bottom-0 flex justify-center pb-4">
             <button
-              type="button"
-              class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-              (click)="toggleScanner()">
-              <fa-icon [icon]="faBarcode" class="mr-2"></fa-icon>
-              {{ scannerVisible ? 'Arrêter le scan' : 'Scanner avec la caméra' }}
+              *ngIf="review.id && isStockSelected"
+              [disabled]="!isButtonEnabled"
+              [ngClass]="{
+                'bg-gray-400 text-gray-700': !isButtonEnabled,
+                'bg-green-600 hover:bg-green-800 text-white': isButtonEnabled
+              }"
+              class="font-bold py-5 px-5 rounded text-xl"
+              (click)="addScan('withdraw')">
+              Retirer le produit
             </button>
           </div>
+        </div>
 
-          <!-- Zone de scan caméra -->
-          <div *ngIf="scannerVisible" class="mt-4 border rounded overflow-hidden">
-            <div id="qr-reader" class="w-full"></div>
+        <!-- Dépôt -->
+        <div *ngIf="history.type == 'deposit'" class="bg-white shadow-md rounded-lg p-6">
+          <div class="mt-4 space-y-3">
+            <label class="block text-gray-700 font-bold mb-2">Scanner le produit</label>
+
+            <!-- Bouton caméra -->
+            <div class="flex gap-3">
+              <button
+                type="button"
+                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                (click)="toggleScanner()">
+                <fa-icon [icon]="faBarcode" class="mr-2"></fa-icon>
+                {{ scannerVisible ? 'Arrêter le scan' : 'Scanner avec la caméra' }}
+              </button>
+            </div>
+
+            <!-- Zone de scan caméra -->
+            <div *ngIf="scannerVisible" class="mt-4 border rounded overflow-hidden">
+              <div id="qr-reader" class="w-full"></div>
+            </div>
+
+            <!-- Champ code produit -->
+            <div class="mt-4">
+              <label class="block text-gray-700 font-bold mb-2">Code produit</label>
+              <input
+                class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md"
+                [(ngModel)]="stock.alitracer"
+                (change)="detectStock()"
+                type="text"
+                placeholder="Code produit (scan ou saisie manuelle)">
+            </div>
           </div>
 
-          <!-- Champ code produit -->
-          <div class="mt-4">
-            <label class="block text-gray-700 font-bold mb-2">Code produit</label>
-            <input
-              class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md"
-              [(ngModel)]="stock.alitracer"
-              (change)="detectStock()"
-              type="text"
-              placeholder="Code produit (scan ou saisie manuelle)">
+          <div class="fixed inset-x-0 bottom-0 flex justify-center pb-4">
+            <button
+              *ngIf="review.id && isStockSelected"
+              [disabled]="!isButtonEnabled"
+              [ngClass]="{
+                'bg-gray-400 text-gray-700': !isButtonEnabled,
+                'bg-green-600 hover:bg-green-800 text-white': isButtonEnabled
+              }"
+              class="font-bold py-5 px-5 rounded text-xl"
+              (click)="addScan('deposit')">
+              Retourner le produit
+            </button>
           </div>
         </div>
 
-        <div class="fixed inset-x-0 bottom-0 flex justify-center pb-4">
-          <button
-            *ngIf="review.id && isStockSelected"
-            [disabled]="!isButtonEnabled"
-            [ngClass]="{
-              'bg-gray-400 text-gray-700': !isButtonEnabled,
-              'bg-green-600 hover:bg-green-800 text-white': isButtonEnabled
-            }"
-            class="font-bold py-5 px-5 rounded text-xl"
-            (click)="addScan('deposit')">
-            Retourner le produit
-          </button>
-        </div>
-      </div>
-
-      <!-- Caractéristiques du produit -->
-      <div class="bg-white shadow-md rounded-lg p-6">
-        <div *ngIf="review.id && isStockSelected" class="p-6">
-          <div class="flex justify-between items-center mb-4">
-            <div>
-              <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Aperçu du produit</div>
-              <p class="text-lg leading-tight font-medium text-black">{{ review.id }} - {{ review.product.title }}</p>
+        <!-- Caractéristiques du produit -->
+        <div class="bg-white shadow-md rounded-lg p-6">
+          <div *ngIf="review.id && isStockSelected" class="p-6">
+            <div class="flex justify-between items-center mb-4">
+              <div>
+                <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Aperçu du produit</div>
+                <p class="text-lg leading-tight font-medium text-black">
+                  {{ review.id }} - {{ review.product.title }}
+                </p>
+              </div>
+              <div>
+                <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Statut</div>
+                <p class="text-lg leading-tight font-medium" [class]="getStatusClass()">
+                  {{ review.status == 0 ? 'NOK' : review.status == 1 ? 'OK' : 'HS' }}
+                </p>
+              </div>
+              <div>
+                <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Dernier contrôle effectué</div>
+                <p class="text-lg leading-tight text-gray-500">{{ review.lastCheckDate }}</p>
+              </div>
+              <div>
+                <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Date de création</div>
+                <p class="text-lg leading-tight text-gray-500">
+                  {{ review.creationDate | date: 'dd/MM/yyyy' }}
+                </p>
+              </div>
             </div>
-            <div>
-              <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Statut</div>
-              <p class="text-lg leading-tight font-medium" [class]="getStatusClass()">{{ review.status == 0 ? 'NOK' : review.status == 1 ? 'OK' : 'HS' }}</p>
-            </div>
-            <div>
-              <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Dernier contrôle effectué</div>
-              <p class="text-lg leading-tight text-gray-500"> {{ review.lastCheckDate }}</p>
-            </div>
-            <div>
-              <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Date de création</div>
-              <p class="text-lg leading-tight text-gray-500">{{ review.creationDate| date:"dd/MM/yyyy" }}</p>
-            </div>
-          </div>
-          <div class="flex">
-            <div class="flex-shrink-0">
-              <img class="h-48 w-48 object-cover" src="{{ review.product.picture ? review.product.picture : 'assets/images/default_image.jpg' }}" alt="Product Image">
-            </div>
-            <div class="ml-6">
-              <div class="grid grid-cols-2 gap-x-12">
-                <div>
-                  <div class="mt-4">
-                    <div class="text-gray-500">Type</div>
-                    <div class="text-black">{{ review.product.type }}</div>
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <img
+                  class="h-48 w-48 object-cover"
+                  [src]="review.product.picture ? review.product.picture : 'assets/images/default_image.jpg'"
+                  alt="Product Image">
+              </div>
+              <div class="ml-6">
+                <div class="grid grid-cols-2 gap-x-12">
+                  <div>
+                    <div class="mt-4">
+                      <div class="text-gray-500">Type</div>
+                      <div class="text-black">{{ review.product.type }}</div>
+                    </div>
+                    <div class="mt-4">
+                      <div class="text-gray-500">Marque</div>
+                      <div class="text-black">{{ review.product.brand }}</div>
+                    </div>
+                    <div class="mt-4">
+                      <div class="text-gray-500">Taille</div>
+                      <div class="text-black">{{ review.product.size }}</div>
+                    </div>
                   </div>
-                  <div class="mt-4">
-                    <div class="text-gray-500">Marque</div>
-                    <div class="text-black">{{ review.product.brand }}</div>
-                  </div>
-                  <div class="mt-4">
-                    <div class="text-gray-500">Taille</div>
-                    <div class="text-black">{{ review.product.size }}</div>
-                  </div>
-                </div>
-                <div>
-                  <div class="mt-4">
-                    <div class="text-gray-500">Emplacement</div>
-                    <div class="text-black">{{ review.product.location }}</div>
-                  </div>
-                  <div class="mt-4">
-                    <div class="text-gray-500">Charge maximale d’utilisation</div>
-                    <div class="text-black">{{ review.product.cmu }}</div>
-                  </div>
-                  <div class="mt-4">
-                    <div class="text-gray-500">ID ALITRACER</div>
-                    <div class="text-black">{{ review.product.alitracer }}</div>
+                  <div>
+                    <div class="mt-4">
+                      <div class="text-gray-500">Emplacement</div>
+                      <div class="text-black">{{ review.product.location }}</div>
+                    </div>
+                    <div class="mt-4">
+                      <div class="text-gray-500">Charge maximale d’utilisation</div>
+                      <div class="text-black">{{ review.product.cmu }}</div>
+                    </div>
+                    <div class="mt-4">
+                      <div class="text-gray-500">ID ALITRACER</div>
+                      <div class="text-black">{{ review.product.alitracer }}</div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+          <!-- si aucun stock sélectionné -->
+          <div *ngIf="!isStockSelected" class="text-center self-center">
+            <p class="text-lg font-bold">
+              Veuillez scanner ou sélectionner un produit pour afficher ses caractéristiques
+            </p>
+          </div>
         </div>
-        <!-- if review review is empty -->
-        <div *ngIf="!isStockSelected" class="text-center self-center">
-          <p class="text-lg font-bold">Veuillez scanner ou sélectionner un produit pour afficher ses caractéristiques</p>
-        </div>
-
       </div>
     </div>
   </div>
 
-
-
   <p-toast></p-toast>
+</div>

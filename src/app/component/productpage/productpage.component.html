@@ -1,71 +1,79 @@
 <div class="flex flex-col gap-6 p-6 sm:p-8 md:p-10">
-  <div>
-    <h1 class="text-2xl font-bold py-3"><fa-icon [icon]="faBox"></fa-icon> Gestion de produits</h1>
-    <h2 class="text-xl">
-      Consultez la liste de produits, modifiez leur informations ou créez-en de nouveaux.
-    </h2>
+  <!-- Message si non connecté -->
+  <div *ngIf="!isLoggedIn()" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+    <p class="font-bold">Accès à la gestions des produits interdit</p>
+    <p>Vous devez être connecté avec votre badge pour gérer les produits</p>
   </div>
-  <!-- line separator -->
-  <div class="border-b-2 border-gray-200"></div>
-  <div>
-    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" (click)="showCreateDialog()">Créer un produit</button>
-  </div>
-  <!--<div class="flex items-center gap-2">
-      <input type="text" placeholder="Rechercher un produit" class="border p-2 rounded" />
-      <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Filtrer</button>
+  <!-- Contenu seulement si connecté -->
+  <div *ngIf="isLoggedIn()">
+    <div>
+      <h1 class="text-2xl font-bold py-3"><fa-icon [icon]="faBox"></fa-icon> Gestion de produits</h1>
+      <h2 class="text-xl">
+        Consultez la liste de produits, modifiez leur informations ou créez-en de nouveaux.
+      </h2>
     </div>
-  </div>-->
+    <!-- line separator -->
+    <div class="border-b-2 border-gray-200"></div>
+    <div>
+      <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" (click)="showCreateDialog()">Créer un produit</button>
+    </div>
+    <!--<div class="flex items-center gap-2">
+        <input type="text" placeholder="Rechercher un produit" class="border p-2 rounded" />
+        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Filtrer</button>
+      </div>
+    </div>-->
 
-  <div class="rounded overflow-auto p-5 gap-3">
-    <!-- if productService.getAllProducts() is empty, display a message -->
-    <div *ngIf="productService.getAllProducts().length === 0" class="text-center text-gray-500">
-      <p>Aucun produit n'a été ajouté</p>
-    </div>
-    <p-carousel [value]="productService.getAllProducts()" [numVisible]="3" [numScroll]="1" [responsiveOptions]="responsiveOptions">
-      <ng-template let-product pTemplate="item">
-        <div class="product-item">
-          <div class="product-item-content shadow-xl" >
-            <div class="flex justify-center">
-              <div class="flex-shrink-0">
-                <img class="h-48 w-48 object-cover" src="{{ product.picture ? product.picture : 'assets/images/default_image.jpg' }}" alt="Product Image">
-              </div>
-              <div class="ml-6">
-                <div class="grid grid-cols-2 gap-x-12">
-                  <div>
-                    <div class="mt-4">
-                      <div class="text-gray-500">Nom du produit</div>
-                      <div class="text-black">{{ product.title }}</div>
-                    </div>
-                    <div class="mt-4">
-                      <div class="text-gray-500">ID Alitracer</div>
-                      <div class="text-black">{{ product.alitracer }}</div>
-                    </div>
-                    <div class="mt-4">
-                      <div class="text-gray-500">Type</div>
-                      <div class="text-black">{{ product.type }}</div>
-                    </div>
-                    <div class="mt-4">
-                      <div class="text-gray-500">Marque</div>
-                      <div class="text-black">{{ product.brand }}</div>
-                    </div>
-                    <div class="mt-4">
-                      <div class="text-gray-500">Emplacement</div>
-                      <div class="text-black">{{ product.location }}</div>
-                    </div>
-                    <div class="mt-4">
-                      <div class="text-gray-500">Charge maximale d’utilisation</div>
-                      <div class="text-black">{{ product.cmu }}</div>
-                    </div>
-                    <div class="mt-4">
-                      <div class="text-gray-500">Taille</div>
-                      <div class="text-black">{{ product.size }}</div>
-                    </div>
-                    <div class="mt-5 align-items-center justify-content-center gap-2 p-5">
-                      <div class="bg-blue-500 hover:bg-blue-800 rounded-full p-button p-3 m-2" (click)="showDialog(product, 1)">
-                        <i class="pi pi-pencil"></i>
+    <div class="rounded overflow-auto p-5 gap-3">
+      <!-- if productService.getAllProducts() is empty, display a message -->
+      <div *ngIf="productService.getAllProducts().length === 0" class="text-center text-gray-500">
+        <p>Aucun produit n'a été ajouté</p>
+      </div>
+      <p-carousel [value]="productService.getAllProducts()" [numVisible]="3" [numScroll]="1" [responsiveOptions]="responsiveOptions">
+        <ng-template let-product pTemplate="item">
+          <div class="product-item">
+            <div class="product-item-content shadow-xl" >
+              <div class="flex justify-center">
+                <div class="flex-shrink-0">
+                  <img class="h-48 w-48 object-cover" src="{{ product.picture ? product.picture : 'assets/images/default_image.jpg' }}" alt="Product Image">
+                </div>
+                <div class="ml-6">
+                  <div class="grid grid-cols-2 gap-x-12">
+                    <div>
+                      <div class="mt-4">
+                        <div class="text-gray-500">Nom du produit</div>
+                        <div class="text-black">{{ product.title }}</div>
                       </div>
-                      <div class="bg-red-500 hover:bg-red-800 rounded-full p-button p-3 m-2" (click)="[showDialog(product, 2), triggerDeleteProduct()]">
-                        <i class="pi pi-trash"></i>
+                      <div class="mt-4">
+                        <div class="text-gray-500">ID Alitracer</div>
+                        <div class="text-black">{{ product.alitracer }}</div>
+                      </div>
+                      <div class="mt-4">
+                        <div class="text-gray-500">Type</div>
+                        <div class="text-black">{{ product.type }}</div>
+                      </div>
+                      <div class="mt-4">
+                        <div class="text-gray-500">Marque</div>
+                        <div class="text-black">{{ product.brand }}</div>
+                      </div>
+                      <div class="mt-4">
+                        <div class="text-gray-500">Emplacement</div>
+                        <div class="text-black">{{ product.location }}</div>
+                      </div>
+                      <div class="mt-4">
+                        <div class="text-gray-500">Charge maximale d’utilisation</div>
+                        <div class="text-black">{{ product.cmu }}</div>
+                      </div>
+                      <div class="mt-4">
+                        <div class="text-gray-500">Taille</div>
+                        <div class="text-black">{{ product.size }}</div>
+                      </div>
+                      <div class="mt-5 align-items-center justify-content-center gap-2 p-5">
+                        <div class="bg-blue-500 hover:bg-blue-800 rounded-full p-button p-3 m-2" (click)="showDialog(product, 1)">
+                          <i class="pi pi-pencil"></i>
+                        </div>
+                        <div class="bg-red-500 hover:bg-red-800 rounded-full p-button p-3 m-2" (click)="[showDialog(product, 2), triggerDeleteProduct()]">
+                          <i class="pi pi-trash"></i>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -73,100 +81,100 @@
               </div>
             </div>
           </div>
-        </div>
-      </ng-template>
-    </p-carousel>
-  </div>
-  <p-dialog header="Modification de produit" [(visible)]="dialog1Visible" [style]="{ width: '50vw' }" >
-    <div class="flex flex-col gap-3 p-5">
-      <h1 class="text-2xl font-bold py-3">Produit n° {{ selectedProduct.id }}</h1>
-      <div class="flex flex-row gap-3">
-        <label class="text-gray-700 w-40">Nom du produit *</label>
-        <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProduct.title" placeholder="Nom du produit">
-      </div>
-      <div class="flex flex-row gap-3">
-        <label class="text-gray-700 w-40">ID Alitracer *</label>
-        <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProduct.alitracer" placeholder="ID Alitracer">
-      </div>
-      <div class="flex flex-row gap-3">
-        <label class="text-gray-700 w-40">Type *</label>
-        <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProduct.type" placeholder="Type">
-      </div>
-      <div class="flex flex-row gap-3">
-        <label class="text-gray-700 w-40">Taille *</label>
-        <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProduct.size" placeholder="Taille">
-      </div>
-      <div class="flex flex-row gap-3">
-        <label class="text-gray-700 w-40">Cmu *</label>
-        <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProduct.cmu" placeholder="Cmu">
-      </div>
-      <div class="flex flex-row gap-3">
-        <label class="text-gray-700 w-40">Localisation *</label>
-        <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProduct.location" placeholder="Localisation">
-      </div>
-      <div class="flex flex-row gap-3">
-        <label class="text-gray-700 w-40">Marque *</label>
-        <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProduct.brand" placeholder="Marque">
-      </div>
-      <div class="flex flex-row gap-3">
-        <label class="text-gray-700 w-40">Image</label>
-        <input class="border border-gray-300 p-2 w-full" type="file" (change)="onFileSelected($event, selectedProduct)" accept="image/*" placeholder="Image">
-      </div>
-      <img *ngIf="selectedProduct.picture" src="{{ selectedProduct.picture }}" alt="Image du produit" class="product-image h-48 w-full object-contain mx-auto">
-      <img *ngIf="!selectedProduct.picture" src="assets/images/default_image.jpg" alt="Image du produit" class="product-image h-48 w-full object-contain mx-auto">
-      <button class="bg-blue-500 text-white rounded shadow p-3" (click)="updateProduct()">Modifier</button>
+        </ng-template>
+      </p-carousel>
     </div>
-  </p-dialog>
-
-  <p-dialog header="Supprimer un produit" [(visible)]="dialog2Visible" [style]="{ width: '50vw' }" >
-    <div class="flex flex-col gap-3 p-5">
-      <h1 class="text-2xl font-bold py-3">Produit n° {{ selectedProduct.id }}</h1>
-      <p>Voulez-vous définitivement supprimer ce produit ?</p>
-      <p *ngIf="countStock > 0">{{ countStock }} élement(s) de stock trouvé(s). Par conséquent cette action supprimera également le ou les éléments de stock associés.</p>
-      <button class="bg-red-500 hover:bg-red-700 text-white rounded shadow p-3" (click)="[productService.removeChecksAndHistories(selectedProduct.id), hideDialog(), showDeleteToast()]">Supprimer</button>
-    </div>
-  </p-dialog>
-
-  <p-dialog header="Créer un produit" [(visible)]="dialogCreateVisible" [style]="{ width: '50vw' }" >
-    <div class="flex flex-col gap-3 p-5">
-      <h2 class="text-xl">Veuillez renseigner les informations du produit</h2>
-      <p>Les champs suivis d'une étoile (*) sont obligatoires</p>
-      <div class="flex flex-row gap-3">
+    <p-dialog header="Modification de produit" [(visible)]="dialog1Visible" [style]="{ width: '50vw' }" >
+      <div class="flex flex-col gap-3 p-5">
+        <h1 class="text-2xl font-bold py-3">Produit n° {{ selectedProduct.id }}</h1>
+        <div class="flex flex-row gap-3">
           <label class="text-gray-700 w-40">Nom du produit *</label>
-          <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="product.title" placeholder="Nom du produit">
-      </div>
-      <div class="flex flex-row gap-3">
-        <label class="text-gray-700 w-40">ID Alitracer *</label>
-        <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProduct.alitracer" placeholder="ID Alitracer">
-      </div>
-      <div class="flex flex-row gap-3">
+          <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProduct.title" placeholder="Nom du produit">
+        </div>
+        <div class="flex flex-row gap-3">
+          <label class="text-gray-700 w-40">ID Alitracer *</label>
+          <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProduct.alitracer" placeholder="ID Alitracer">
+        </div>
+        <div class="flex flex-row gap-3">
           <label class="text-gray-700 w-40">Type *</label>
-          <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="product.type" placeholder="Type">
-      </div>
-      <div class="flex flex-row gap-3">
+          <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProduct.type" placeholder="Type">
+        </div>
+        <div class="flex flex-row gap-3">
           <label class="text-gray-700 w-40">Taille *</label>
-          <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="product.size" placeholder="Taille">
-      </div>
-      <div class="flex flex-row gap-3">
+          <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProduct.size" placeholder="Taille">
+        </div>
+        <div class="flex flex-row gap-3">
           <label class="text-gray-700 w-40">Cmu *</label>
-          <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="product.cmu" placeholder="Cmu">
-      </div>
-      <div class="flex flex-row gap-3">
+          <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProduct.cmu" placeholder="Cmu">
+        </div>
+        <div class="flex flex-row gap-3">
           <label class="text-gray-700 w-40">Localisation *</label>
-          <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="product.location" placeholder="Localisation">
-      </div>
-      <div class="flex flex-row gap-3">
-        <label class="text-gray-700 w-40">Marque *</label>
-        <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="product.brand" placeholder="Marque">
-      </div>
-      <div class="flex flex-row gap-3">
+          <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProduct.location" placeholder="Localisation">
+        </div>
+        <div class="flex flex-row gap-3">
+          <label class="text-gray-700 w-40">Marque *</label>
+          <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProduct.brand" placeholder="Marque">
+        </div>
+        <div class="flex flex-row gap-3">
           <label class="text-gray-700 w-40">Image</label>
-          <input class="border border-gray-300 p-2 w-full" type="file" (change)="onFileSelected($event, product)" accept="image/*" placeholder="Image">
+          <input class="border border-gray-300 p-2 w-full" type="file" (change)="onFileSelected($event, selectedProduct)" accept="image/*" placeholder="Image">
+        </div>
+        <img *ngIf="selectedProduct.picture" src="{{ selectedProduct.picture }}" alt="Image du produit" class="product-image h-48 w-full object-contain mx-auto">
+        <img *ngIf="!selectedProduct.picture" src="assets/images/default_image.jpg" alt="Image du produit" class="product-image h-48 w-full object-contain mx-auto">
+        <button class="bg-blue-500 text-white rounded shadow p-3" (click)="updateProduct()">Modifier</button>
       </div>
-      <button class="bg-blue-500 text-white rounded shadow p-3" (click)="addProduct()">Créer</button>
-    </div>
-  </p-dialog>
+    </p-dialog>
 
-  <p-toast></p-toast>
+    <p-dialog header="Supprimer un produit" [(visible)]="dialog2Visible" [style]="{ width: '50vw' }" >
+      <div class="flex flex-col gap-3 p-5">
+        <h1 class="text-2xl font-bold py-3">Produit n° {{ selectedProduct.id }}</h1>
+        <p>Voulez-vous définitivement supprimer ce produit ?</p>
+        <p *ngIf="countStock > 0">{{ countStock }} élement(s) de stock trouvé(s). Par conséquent cette action supprimera également le ou les éléments de stock associés.</p>
+        <button class="bg-red-500 hover:bg-red-700 text-white rounded shadow p-3" (click)="[productService.removeChecksAndHistories(selectedProduct.id), hideDialog(), showDeleteToast()]">Supprimer</button>
+      </div>
+    </p-dialog>
+
+    <p-dialog header="Créer un produit" [(visible)]="dialogCreateVisible" [style]="{ width: '50vw' }" >
+      <div class="flex flex-col gap-3 p-5">
+        <h2 class="text-xl">Veuillez renseigner les informations du produit</h2>
+        <p>Les champs suivis d'une étoile (*) sont obligatoires</p>
+        <div class="flex flex-row gap-3">
+            <label class="text-gray-700 w-40">Nom du produit *</label>
+            <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="product.title" placeholder="Nom du produit">
+        </div>
+        <div class="flex flex-row gap-3">
+          <label class="text-gray-700 w-40">ID Alitracer *</label>
+          <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProduct.alitracer" placeholder="ID Alitracer">
+        </div>
+        <div class="flex flex-row gap-3">
+            <label class="text-gray-700 w-40">Type *</label>
+            <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="product.type" placeholder="Type">
+        </div>
+        <div class="flex flex-row gap-3">
+            <label class="text-gray-700 w-40">Taille *</label>
+            <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="product.size" placeholder="Taille">
+        </div>
+        <div class="flex flex-row gap-3">
+            <label class="text-gray-700 w-40">Cmu *</label>
+            <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="product.cmu" placeholder="Cmu">
+        </div>
+        <div class="flex flex-row gap-3">
+            <label class="text-gray-700 w-40">Localisation *</label>
+            <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="product.location" placeholder="Localisation">
+        </div>
+        <div class="flex flex-row gap-3">
+          <label class="text-gray-700 w-40">Marque *</label>
+          <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="product.brand" placeholder="Marque">
+        </div>
+        <div class="flex flex-row gap-3">
+            <label class="text-gray-700 w-40">Image</label>
+            <input class="border border-gray-300 p-2 w-full" type="file" (change)="onFileSelected($event, product)" accept="image/*" placeholder="Image">
+        </div>
+        <button class="bg-blue-500 text-white rounded shadow p-3" (click)="addProduct()">Créer</button>
+      </div>
+    </p-dialog>
+    </div>
+
+    <p-toast></p-toast>
 
 </div>
