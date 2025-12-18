@@ -44,14 +44,6 @@
                         <div class="text-black">{{ product.title }}</div>
                       </div>
                       <div class="mt-4">
-                        <div class="text-gray-500">ID Alitracer</div>
-                        <div class="text-black">{{ product.alitracer }}</div>
-                      </div>
-                      <div class="mt-4">
-                        <div class="text-gray-500">Type</div>
-                        <div class="text-black">{{ product.type }}</div>
-                      </div>
-                      <div class="mt-4">
                         <div class="text-gray-500">Marque</div>
                         <div class="text-black">{{ product.brand }}</div>
                       </div>
@@ -89,15 +81,12 @@
         <h1 class="text-2xl font-bold py-3">Produit n° {{ selectedProduct.id }}</h1>
         <div class="flex flex-row gap-3">
           <label class="text-gray-700 w-40">Nom du produit *</label>
-          <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProduct.title" placeholder="Nom du produit">
-        </div>
-        <div class="flex flex-row gap-3">
-          <label class="text-gray-700 w-40">ID Alitracer *</label>
-          <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProduct.alitracer" placeholder="ID Alitracer">
-        </div>
-        <div class="flex flex-row gap-3">
-          <label class="text-gray-700 w-40">Type *</label>
-          <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProduct.type" placeholder="Type">
+          <select class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProduct.title" placeholder="Nom du produit">
+            <option value ="Anneau de Levage">anneau de levage</option>
+            <option value ="Élingues Textile">elingues textile</option>
+            <option value ="Élingues en Acier">elingues acier</option>
+            <option value ="Manilles">manilles</option>
+          </select>
         </div>
         <div class="flex flex-row gap-3">
           <label class="text-gray-700 w-40">Taille *</label>
@@ -140,15 +129,12 @@
         <p>Les champs suivis d'une étoile (*) sont obligatoires</p>
         <div class="flex flex-row gap-3">
             <label class="text-gray-700 w-40">Nom du produit *</label>
-            <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="product.title" placeholder="Nom du produit">
-        </div>
-        <div class="flex flex-row gap-3">
-          <label class="text-gray-700 w-40">ID Alitracer *</label>
-          <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProduct.alitracer" placeholder="ID Alitracer">
-        </div>
-        <div class="flex flex-row gap-3">
-            <label class="text-gray-700 w-40">Type *</label>
-            <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="product.type" placeholder="Type">
+            <select class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="product.title" placeholder="Nom du produit">
+              <option value ="Anneau de Levage">anneau de levage</option>
+              <option value ="Élingues Textile">elingues textile</option>
+              <option value ="Élingues en Acier">elingues acier</option>
+              <option value ="Manilles">manilles</option>
+            </select>
         </div>
         <div class="flex flex-row gap-3">
             <label class="text-gray-700 w-40">Taille *</label>

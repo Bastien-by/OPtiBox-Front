@@ -25,7 +25,7 @@ export class AuthAppService {
   currentUser$ = this.currentUserSubject.asObservable();
 
   /** Durée de session OptiBox en ms (ex: 5min) */
-  private sessionTTL = 5 * 60 * 1000;
+  private sessionTTL = 15 * 60 * 1000;
 
   private loadUserFromStorage(): AppUser | null {
     const raw = localStorage.getItem(STORAGE_KEY);

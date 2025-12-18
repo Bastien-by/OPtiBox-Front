@@ -40,13 +40,31 @@ import { AuthAppService } from '../../services/auth-app.service';
 })
 export class ScanpageComponent implements OnInit, OnDestroy {
 
+  /* -------- LISTES / CASIERS -------- */
+
   availableStocks: any[] = [];
   loanedStocks: any[] = [];
+  allStocks: any[] = [];
 
-  // Scanner produit
-  scannerVisible = false;
+  lockers: number[] = Array.from({ length: 24 }, (_, i) => i + 1);
+
+  /* Dialog sélection de stocks dans un casier */
+  lockerDialogVisible = false;
+  selectedLocker: number | null = null;
+  lockerStocks: any[] = []; // stocks du casier courant (avec flag selected)
+
+  /* Dialog de scan */
+  scanDialogVisible = false;
+  stocksToProcess: any[] = [];
+  currentStockIndex = 0;
+
+  /* Scanner produit (html5-qrcode) */
   private html5QrCodeProduct?: Html5Qrcode;
   private productScannerInitialized = false;
+
+  selectedAvailability: boolean | null = null;
+
+  /* Modèles métier existants */
 
   stock: any = {
     product: {
@@ -101,7 +119,7 @@ export class ScanpageComponent implements OnInit, OnDestroy {
   constructor(
     protected scanService: ScanService,
     private messageService: MessageService,
-    private stockService: StockService,
+    protected stockService: StockService,
     private checkService: CheckService,
     private authApp: AuthAppService
   ) {}
@@ -113,15 +131,22 @@ export class ScanpageComponent implements OnInit, OnDestroy {
       { breakpoint: '1100px', numVisible: 1, numScroll: 1 }
     ];
 
-    this.scanService.refreshAvailableStocks();
-    this.scanService.refreshLoanedStocks();
-    this.availableStocks = this.scanService.getAvailableStocks();
-    this.loanedStocks = this.scanService.getLoanedStocks();
+    await this.loadStocks();
   }
 
   ngOnDestroy(): void {
     this.stopProductScanner();
   }
+
+  private async loadStocks(): Promise<void> {
+    await this.scanService.refreshAvailableStocks();
+    await this.scanService.refreshLoanedStocks();
+    this.availableStocks = this.scanService.getAvailableStocks();
+    this.loanedStocks = this.scanService.getLoanedStocks();
+    this.allStocks = [...this.availableStocks, ...this.loanedStocks];
+  }
+
+  /* -------- AUTH -------- */
 
   isLoggedIn(): boolean {
     return this.authApp.isLoggedIn();
@@ -139,16 +164,213 @@ export class ScanpageComponent implements OnInit, OnDestroy {
     return this.authApp.isOperator();
   }
 
-  /* -------- SCAN PRODUIT -------- */
+  /* -------- CASIERS / STOCKS -------- */
+
+  getStocksByLocker(lockerNumber: number) {
+    return this.allStocks.filter(s => s.lockerNumber === lockerNumber);
+  }
+
+  /* Clic sur "Ouvrir" un casier :
+     étape 1 = afficher popup de sélection, pas encore ouvrir physiquement.
+  */
+  openLockerDialog(lockerNumber: number): void {
+    this.selectedLocker = lockerNumber;
+    this.lockerStocks = this.getStocksByLocker(lockerNumber).map(s => ({
+      ...s,
+      selected: false
+    }));
+    this.selectedAvailability = null;
+    this.lockerDialogVisible = true;
+  }
+
+  /* Après clic sur "Valider la sélection" dans le popup casier :
+     1) on ouvre physiquement le casier
+     2) on ouvre le popup de scan
+  */
+  async validateLockerSelection(): Promise<void> {
+    const selected = this.lockerStocks.filter(s => s.selected);
+
+    if (selected.length === 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sélection vide',
+        detail: 'Veuillez sélectionner au moins un stock.'
+      });
+      return;
+    }
+
+    if (!this.selectedLocker) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Erreur',
+        detail: 'Casier non défini.'
+      });
+      return;
+    }
+
+    this.lockerDialogVisible = false;
+
+    try {
+      // ouvrir physiquement le casier maintenant
+      await this.scanService.openLocker(this.selectedLocker);
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Casier ouvert',
+        detail: `Casier ${this.selectedLocker} ouvert, scannez les stocks sélectionnés.`
+      });
+    } catch (e) {
+      console.error('Erreur ouverture casier:', e);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Erreur',
+        detail: `Impossible d'ouvrir le casier ${this.selectedLocker}.`
+      });
+      return;
+    }
+
+    // lancer le workflow de scan pour les stocks cochés
+    this.startScanForSelectedStocks(selected);
+  }
+
+  onLockerStockToggle(stock: any): void {
+    const availability = stock.available; // true/false
+
+    // premier stock sélectionné : on fixe la règle
+    if (this.selectedAvailability === null && stock.selected) {
+      this.selectedAvailability = availability;
+      return;
+    }
+
+    // si on essaye de cocher un stock d'un autre type, on annule
+    if (stock.selected && this.selectedAvailability !== availability) {
+      stock.selected = false;
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sélection incompatible',
+        detail: this.selectedAvailability
+          ? 'Vous avez déjà sélectionné un stock Disponible, vous ne pouvez pas sélectionner un stock Emprunté.'
+          : 'Vous avez déjà sélectionné un stock Emprunté, vous ne pouvez pas sélectionner un stock Disponible.'
+      });
+    }
+
+    // si on décoche tout, on réinitialise la règle
+    const stillSelected = this.lockerStocks.some(s => s.selected);
+    if (!stillSelected) {
+      this.selectedAvailability = null;
+    }
+  }
+
+  /* -------- WORKFLOW DE SCAN MULTI-STOCKS -------- */
+
+  startScanForSelectedStocks(stocks: any[]): void {
+    this.stocksToProcess = stocks;
+    this.currentStockIndex = 0;
+
+    // ouvrir le dialog de scan
+    this.scanDialogVisible = true;
+
+    // laisser le dialog se rendre, puis lancer la caméra
+    setTimeout(() => {
+      this.askNextScan();
+    }, 0);
+  }
+
+  private async askNextScan(): Promise<void> {
+    if (this.currentStockIndex >= this.stocksToProcess.length) {
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Terminé',
+        detail: 'Tous les stocks sélectionnés ont été traités.'
+      });
+      await this.stopProductScanner();
+      this.scanDialogVisible = false;
+      return;
+    }
+
+    const current = this.stocksToProcess[this.currentStockIndex];
+
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Scan requis',
+      detail: `Scannez l'ID Alitracer du stock : ${current.alitracer}`
+    });
+
+    await this.startScannerForCurrentStock(current);
+  }
+
+  private async startScannerForCurrentStock(current: any): Promise<void> {
+    if (this.html5QrCodeProduct) {
+      await this.stopProductScanner();
+    }
+
+    const elementId = 'qr-reader';
+    this.html5QrCodeProduct = new Html5Qrcode(elementId);
+
+    try {
+      await this.html5QrCodeProduct.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        async (decodedText: string) => {
+          if (decodedText !== current.alitracer) {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'ID incorrect',
+              detail: `L'ID scanné (${decodedText}) ne correspond pas à ${current.alitracer}.`
+            });
+            return;
+          }
+
+          await this.stopProductScanner();
+
+          const type: 'withdraw' | 'deposit' = current.available ? 'withdraw' : 'deposit';
+          await this.onWithdrawOrDeposit(current, type);
+
+          this.currentStockIndex++;
+          this.askNextScan();
+        },
+        () => {
+          // erreurs de scan ignorées
+        }
+      );
+      this.productScannerInitialized = true;
+    } catch (err) {
+      console.error('Erreur lors du démarrage du scanner produit (workflow multi-stocks)', err);
+    }
+  }
+
+  private async stopProductScanner(): Promise<void> {
+    if (this.html5QrCodeProduct && this.productScannerInitialized) {
+      try {
+        await this.html5QrCodeProduct.stop();
+        await this.html5QrCodeProduct.clear();
+      } catch (err) {
+        console.error('Erreur à l’arrêt du scanner produit', err);
+      }
+    }
+    this.html5QrCodeProduct = undefined;
+    this.productScannerInitialized = false;
+  }
+
+  private async onWithdrawOrDeposit(stock: any, type: 'withdraw' | 'deposit') {
+    if (type === 'withdraw') {
+      await this.onWithdraw(stock);
+    } else {
+      await this.onDeposit(stock);
+    }
+  }
+
+  /* -------- ANCIEN SCAN PRODUIT DIRECT (optionnel) -------- */
 
   async toggleScanner(): Promise<void> {
-    if (this.scannerVisible) {
-      this.scannerVisible = false;
+    if (this.productScannerInitialized) {
       await this.stopProductScanner();
-    } else {
-      this.scannerVisible = true;
-      setTimeout(() => this.startProductScanner(), 0);
+      this.scanDialogVisible = false;
+      return;
     }
+
+    this.scanDialogVisible = true;
+
+    setTimeout(() => this.startProductScanner(), 0);
   }
 
   private async startProductScanner(): Promise<void> {
@@ -166,8 +388,8 @@ export class ScanpageComponent implements OnInit, OnDestroy {
         (decodedText: string) => {
           this.stock.alitracer = decodedText;
           this.detectStock();
-          this.scannerVisible = false;
           this.stopProductScanner();
+          this.scanDialogVisible = false;
         },
         () => {
           // erreurs de scan non bloquantes
@@ -176,21 +398,8 @@ export class ScanpageComponent implements OnInit, OnDestroy {
       this.productScannerInitialized = true;
     } catch (err) {
       console.error('Erreur lors du démarrage du scanner produit', err);
-      this.scannerVisible = false;
+      this.scanDialogVisible = false;
     }
-  }
-
-  private async stopProductScanner(): Promise<void> {
-    if (this.html5QrCodeProduct && this.productScannerInitialized) {
-      try {
-        await this.html5QrCodeProduct.stop();
-        await this.html5QrCodeProduct.clear();
-      } catch (err) {
-        console.error('Erreur à l’arrêt du scanner produit', err);
-      }
-    }
-    this.html5QrCodeProduct = undefined;
-    this.productScannerInitialized = false;
   }
 
   /* -------- TYPE (retrait / dépôt) -------- */
@@ -219,7 +428,6 @@ export class ScanpageComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Règles métiers
     if (this.history.type === 'withdraw' && this.review.available === false) {
       this.isStockSelected = false;
       this.messageService.add({
@@ -243,6 +451,24 @@ export class ScanpageComponent implements OnInit, OnDestroy {
     this.isStockSelected = true;
     this.stock.id = this.review.id;
     this.getLatestDate();
+  }
+
+  onWithdraw(stock: any): void {
+    this.history.type = 'withdraw';
+    this.stock.id = stock.id;
+    this.review = stock;
+    this.isStockSelected = true;
+    this.getLatestDate();
+    this.addScan('withdraw');
+  }
+
+  onDeposit(stock: any): void {
+    this.history.type = 'deposit';
+    this.stock.id = stock.id;
+    this.review = stock;
+    this.isStockSelected = true;
+    this.getLatestDate();
+    this.addScan('deposit');
   }
 
   async addScan(type: string): Promise<void> {
@@ -290,10 +516,7 @@ export class ScanpageComponent implements OnInit, OnDestroy {
   }
 
   async updateAvailableStocks(): Promise<void> {
-    await this.scanService.refreshAvailableStocks();
-    await this.scanService.refreshLoanedStocks();
-    this.availableStocks = this.scanService.getAvailableStocks();
-    this.loanedStocks = this.scanService.getLoanedStocks();
+    await this.loadStocks();
   }
 
   resetSelectedStock(): void {

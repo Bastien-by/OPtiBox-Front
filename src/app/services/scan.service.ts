@@ -95,10 +95,10 @@ export class ScanService {
   }
 
 
-  async createHistory(history: any){
-    this.httpClient.post('api/history', history).subscribe(() => {
-    })
+  async createHistory(history: any): Promise<void> {
+    await firstValueFrom(this.httpClient.post('api/history', history));
   }
+
 
 }
 

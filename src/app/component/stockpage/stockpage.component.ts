@@ -40,7 +40,6 @@ export class StockpageComponent implements OnInit{
     product: {
       id: null,
       title: '',
-      type: '',
       size: '',
       cmu: '',
       location: '',
@@ -60,6 +59,8 @@ export class StockpageComponent implements OnInit{
 
   // ↓ NOUVEAUX pour le dialog création
   dialogCreateVisible: boolean = false;
+  alitracer: string = '';
+  reference: string = '';
   newLockerNumber: number | null = null;
   selectedProductForCreate: any = null;
 
@@ -99,6 +100,9 @@ export class StockpageComponent implements OnInit{
     //get product service to get all products
     this.listOfProducts = this.productService.getAllProducts();
     this.stockService.refreshStocks();
+
+
+    console.log('STOCKS = ', this.stockService.getAllStocks());
   }
 
   isLoggedIn(): boolean {
@@ -126,38 +130,25 @@ export class StockpageComponent implements OnInit{
       .find((p: any) => p.id == this.stock.product.id);
 
     this.newLockerNumber = null;
+    this.alitracer = '';
+    this.reference = '';
     this.dialogCreateVisible = true;
   }
 
   createStock() {
-    // 1. Validation de base sur la plage
-    if (this.newLockerNumber == null || this.newLockerNumber < 1 || this.newLockerNumber > 27) {
+    if (this.newLockerNumber == null || this.newLockerNumber < 1 || this.newLockerNumber > 24) {
       this.messageService.add({
         severity: 'error',
         summary: 'Erreur',
-        detail: 'Le numéro de casier doit être compris entre 1 et 27'
+        detail: 'Le numéro de casier doit être compris entre 1 et 24'
       });
       return;
     }
 
-    // 2. Vérifier si le casier est déjà utilisé
-    const allStocks = this.stockService.getAllStocks();
-    const lockerAlreadyUsed = allStocks.some(
-      (s: any) => s.lockerNumber === this.newLockerNumber
-    );
-
-    if (lockerAlreadyUsed) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Casier déjà utilisé',
-        detail: `Le casier ${this.newLockerNumber} est déjà affecté à un autre stock`
-      });
-      return;
-    }
-
-    // 3. Création du stock si tout est OK
     const stockToSend = {
       product: this.selectedProductForCreate,
+      alitracer: this.alitracer,
+      reference: this.reference,
       available: true,
       status: 1,
       creationDate: new Date()
@@ -166,10 +157,9 @@ export class StockpageComponent implements OnInit{
     this.stockService.addStock(stockToSend, this.newLockerNumber);
     this.dialogCreateVisible = false;
     this.showAddToast();
-
-    // Reset du select
     this.stock.product.id = null;
   }
+
 
 
 

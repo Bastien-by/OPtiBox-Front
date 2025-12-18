@@ -22,6 +22,8 @@ export class StockService {
   addStock(stockSent: any, lockerNumber: number) {
     const stock = {
       product: stockSent.product,
+      alitracer: stockSent.alitracer,
+      reference: stockSent.reference,
       available: true,
       status: 1,
       creationDate: new Date(),
@@ -37,6 +39,8 @@ export class StockService {
       id: stockSent.id,
       available: stockSent.available,
       status: stockSent.status,
+      alitracer: stockSent.alitracer,
+      reference: stockSent.reference,
     };
     this.httpClient.post('api/stocks', stock).subscribe((stockReceived: any) => {
       this.stockArray = this.stockArray.map(p => {

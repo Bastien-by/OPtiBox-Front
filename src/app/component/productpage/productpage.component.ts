@@ -35,24 +35,20 @@ import { AuthAppService } from '../../services/auth-app.service';
 export class ProductpageComponent implements OnInit {
   product: any = {
     title: '',
-    type: '',
     size: '',
     cmu: '',
     location: '',
     brand: '',
     picture: null,
-    alitracer: '',
   }
 
   selectedProduct: any = {
     title: '',
-    type: '',
     size: '',
     cmu: '',
     location: '',
     brand: '',
     picture: '',
-    alitracer: '',
   }
 
   dialog1Visible: boolean = false;
@@ -131,7 +127,7 @@ export class ProductpageComponent implements OnInit {
 
   addProduct() {
     // check if the product has a title, type, size, cmu, location and brand
-    if(this.product.title.trim().length === 0 || this.product.type.trim().length === 0 || this.product.size.trim().length === 0 || this.product.cmu.trim().length === 0 || this.product.location.trim().length === 0 || this.product.brand.trim().length === 0) {
+    if(this.product.title.trim().length === 0 || this.product.size.trim().length === 0 || this.product.cmu.trim().length === 0 || this.product.location.trim().length === 0 || this.product.brand.trim().length === 0) {
       this.showMissingFieldsToast();
       return;
     }
@@ -142,13 +138,11 @@ export class ProductpageComponent implements OnInit {
     // reset the product
     this.product = {
       title: '',
-      type: '',
       size: '',
       cmu: '',
       location: '',
       brand: '',
       picture: null,
-      alitracer: '',
     }
 
     this.hideDialog();
@@ -156,7 +150,7 @@ export class ProductpageComponent implements OnInit {
 
   updateProduct() {
     // check if the product has a title, type, size, cmu, location and brand
-    if(this.selectedProduct.title.trim().length === 0 || this.selectedProduct.type.trim().length === 0 || this.selectedProduct.size.trim().length === 0 || this.selectedProduct.cmu.trim().length === 0 || this.selectedProduct.location.trim().length === 0 || this.selectedProduct.brand.trim().length === 0){
+    if(this.selectedProduct.title.trim().length === 0 ||  this.selectedProduct.size.trim().length === 0 || this.selectedProduct.cmu.trim().length === 0 || this.selectedProduct.location.trim().length === 0 || this.selectedProduct.brand.trim().length === 0){
       this.showMissingFieldsToast();
       return;
     }

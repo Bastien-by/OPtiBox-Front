@@ -26,13 +26,11 @@ export class ProductService {
     console.log('Brand:', productSent.brand);
     const formData = new FormData();
     formData.append('title', productSent.title);
-    formData.append('type', productSent.type);
     formData.append('size', productSent.size);
     formData.append('cmu', productSent.cmu);
     formData.append('location', productSent.location);
     formData.append('brand', productSent.brand);
     formData.append('picture', productSent.picture); // Base64 de l'image
-    formData.append('alitracer', productSent.alitracer);
     this.httpClient.post('api/products', formData).subscribe(() => {
       this.refreshProducts();
     });
@@ -42,13 +40,11 @@ export class ProductService {
     const formData = new FormData();
     formData.append('id', productSent.id);
     formData.append('title', productSent.title);
-    formData.append('type', productSent.type);
     formData.append('size', productSent.size);
     formData.append('cmu', productSent.cmu);
     formData.append('location', productSent.location);
     formData.append('brand', productSent.brand);
     formData.append('picture', productSent.picture); // Base64 de l'image
-    formData.append('alitracer', productSent.alitracer);
     this.httpClient.put('api/products', formData).subscribe((productReceived: any) => {
       this.productArray = this.productArray.map(p => {
         if(p.id === productReceived.id){
