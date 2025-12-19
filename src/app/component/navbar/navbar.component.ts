@@ -14,6 +14,7 @@ import {faBoxesStacked} from "@fortawesome/free-solid-svg-icons";
 import {faPeopleGroup} from "@fortawesome/free-solid-svg-icons";
 import {faSignOutAlt} from "@fortawesome/free-solid-svg-icons";
 import {faCircleUser} from "@fortawesome/free-solid-svg-icons";
+import {faDoorOpen} from "@fortawesome/free-solid-svg-icons";
 import { Html5Qrcode } from 'html5-qrcode';
 import { firstValueFrom } from 'rxjs';
 import { ToastModule } from 'primeng/toast';
@@ -181,4 +182,5 @@ export class NavbarComponent implements OnDestroy {
   protected readonly faPeopleGroup = faPeopleGroup;
   protected readonly faSignOutAlt = faSignOutAlt;
   protected readonly faCircleUser = faCircleUser;
+  protected readonly faDoorOpen = faDoorOpen;
 }

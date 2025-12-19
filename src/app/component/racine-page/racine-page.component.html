@@ -8,25 +8,25 @@
         <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
           <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white bg-blue-500 hover:bg-blue-600
             "[ngClass]="{ 'bg-blue-500 hover:bg-blue-600': isLoggedIn(), 'bg-gray-500': !isLoggedIn() }"
-            (click)="navigateOrShowToast('/scan', isLoggedIn())">
+             (click)="navigateOrShowToast('/scan', isLoggedIn())">
             <fa-icon [icon]="faBarcode"></fa-icon> Scanner un produit
           </a>
 
           <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white
             "[ngClass]="{ 'bg-blue-500 hover:bg-blue-600': isLoggedIn(), 'bg-gray-500': !isLoggedIn() }"
-            (click)="navigateOrShowToast('/product', isLoggedIn())">
+             (click)="navigateOrShowToast('/product', isLoggedIn())">
             <fa-icon [icon]="faBox"></fa-icon> Gestion des produits
           </a>
 
           <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white bg-blue-500 hover:bg-blue-600
             "[ngClass]="{ 'bg-blue-500 hover:bg-blue-600': isAdmin() || isMaintenance(), 'bg-gray-500': !isLoggedIn()}"
-            (click)="navigateOrShowToast('/check', isAdmin() || isMaintenance())">
+             (click)="navigateOrShowToast('/check', isAdmin() || isMaintenance())">
             <fa-icon [icon]="faListCheck"></fa-icon> Contrôler un produit
           </a>
 
           <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white
             "[ngClass]="{ 'bg-blue-500 hover:bg-blue-600': isLoggedIn(), 'bg-gray-500': !isLoggedIn() }"
-            (click)="navigateOrShowToast('/stock', isLoggedIn())">
+             (click)="navigateOrShowToast('/stock', isLoggedIn())">
             <fa-icon [icon]="faBoxesStacked"></fa-icon> Gestion de stock
           </a>
 
@@ -37,12 +37,17 @@
 
           <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white
             "[ngClass]="{'bg-blue-500 hover:bg-blue-600': isAdmin(), 'bg-gray-500': !isAdmin()}"
-            (click)="navigateOrShowToast('/user', isAdmin())">
+             (click)="navigateOrShowToast('/user', isAdmin())">
             <fa-icon [icon]="faPeopleGroup"></fa-icon> Gestion des utilisateurs
           </a>
           <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white bg-blue-500 hover:bg-blue-600"
-            (click)="navigateOrShowToast('/procedure', true)">
+             (click)="navigateOrShowToast('/procedure', true)">
             <fa-icon [icon]="faList"></fa-icon> Procédures de Contrôles
+          </a>
+          <a class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white bg-blue-500 hover:bg-blue-600
+            "[ngClass]="{'bg-blue-500 hover:bg-blue-600': isAdmin(), 'bg-gray-500': !isAdmin()}"
+             (click)="navigateOrShowToast('/open-locker', isAdmin())">
+            <fa-icon [icon]="faDoorOpen"></fa-icon> Ouverture Casier (Maintenance)
           </a>
         </div>
       </div>
@@ -76,6 +81,24 @@
           </div>
           <p class="text-gray-600 text-sm">le lundi 27 mai 2024 à 08:27</p>
         </div>
+      </div>
+    </div>
+
+    <!-- Section Test NFC - en bas de page -->
+    <div class="mt-12 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-3xl p-8 shadow-2xl text-white">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div>
+          <h3 class="text-2xl font-bold mb-2">🪪 Test NFC / RFID</h3>
+          <p class="text-purple-100">Testez la lecture des tags NFC de la tablette</p>
+        </div>
+        <button
+          class="bg-white text-purple-600 font-bold px-8 py-4 rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 text-lg flex items-center gap-3"
+          (click)="testNFC()">
+          <span>📱 Scanner NFC</span>
+        </button>
+      </div>
+      <div *ngIf="nfcResult" class="mt-4 p-4 bg-white/20 rounded-2xl backdrop-blur-sm">
+        <p><strong>Résultat :</strong> {{ nfcResult }}</p>
       </div>
     </div>
   </div>

@@ -8,11 +8,7 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import {
-  faArrowRightFromBracket,
-  faArrowRightToBracket,
-  faBarcode
-} from '@fortawesome/free-solid-svg-icons';
+import { faBarcode } from '@fortawesome/free-solid-svg-icons';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { Html5Qrcode } from 'html5-qrcode';
 import { ScanService } from '../../services/scan.service';
@@ -48,23 +44,46 @@ export class ScanpageComponent implements OnInit, OnDestroy {
 
   lockers: number[] = Array.from({ length: 24 }, (_, i) => i + 1);
 
-  /* Dialog sélection de stocks dans un casier */
-  lockerDialogVisible = false;
-  selectedLocker: number | null = null;
-  lockerStocks: any[] = []; // stocks du casier courant (avec flag selected)
+  /* Contexte courant */
 
-  /* Dialog de scan */
+  activeLocker: number | null = null;
+
+  /* Retrait */
+
+  withdrawDialogVisible = false;
+  withdrawQuantity = 1;
+  withdrawMax = 0;
+  /** stocks disponibles dans le casier actif */
+  withdrawStocksPool: any[] = [];
+
+  /* Dépôt */
+
+  depositDialogVisible = false;
+  depositQuantity = 1;
+  depositMax = 0;
+  /** stocks empruntés dans le casier actif */
+  depositStocksPool: any[] = [];
+
+  /* Confirmation de fermeture casier */
+
+  lockerCloseDialogVisible = false;
+  private lockedFlow: 'withdraw' | 'deposit' | null = null;
+
+  /* Scan caméra */
+
   scanDialogVisible = false;
-  stocksToProcess: any[] = [];
-  currentStockIndex = 0;
+  scanMode: 'withdraw' | 'deposit' | null = null;
+  targetScanCount = 0;
+  scannedCount = 0;
+  scanLocked = false;
 
-  /* Scanner produit (html5-qrcode) */
   private html5QrCodeProduct?: Html5Qrcode;
   private productScannerInitialized = false;
 
-  selectedAvailability: boolean | null = null;
+  /** Liste des alitracer attendus pour ce cycle (toujours filtrés sur le casier actif et la quantité) */
+  expectedAlitracers: string[] = [];
 
-  /* Modèles métier existants */
+  /* Modèles métier pour historique */
 
   stock: any = {
     product: {
@@ -108,13 +127,10 @@ export class ScanpageComponent implements OnInit, OnDestroy {
     type: 'withdraw'
   };
 
-  dialog1Visible = false;
-  dialog2Visible = false;
-
-  responsiveOptions: any[] | undefined;
-
   isStockSelected = false;
   isButtonEnabled = true;
+
+  responsiveOptions: any[] | undefined;
 
   constructor(
     protected scanService: ScanService,
@@ -170,138 +186,151 @@ export class ScanpageComponent implements OnInit, OnDestroy {
     return this.allStocks.filter(s => s.lockerNumber === lockerNumber);
   }
 
-  /* Clic sur "Ouvrir" un casier :
-     étape 1 = afficher popup de sélection, pas encore ouvrir physiquement.
-  */
-  openLockerDialog(lockerNumber: number): void {
-    this.selectedLocker = lockerNumber;
-    this.lockerStocks = this.getStocksByLocker(lockerNumber).map(s => ({
-      ...s,
-      selected: false
-    }));
-    this.selectedAvailability = null;
-    this.lockerDialogVisible = true;
+  canWithdraw(lockerNumber: number): boolean {
+    return this.getStocksByLocker(lockerNumber).some(s => s.available === true);
   }
 
-  /* Après clic sur "Valider la sélection" dans le popup casier :
-     1) on ouvre physiquement le casier
-     2) on ouvre le popup de scan
-  */
-  async validateLockerSelection(): Promise<void> {
-    const selected = this.lockerStocks.filter(s => s.selected);
+  canDeposit(lockerNumber: number): boolean {
+    return this.getStocksByLocker(lockerNumber).some(s => s.available === false);
+  }
 
-    if (selected.length === 0) {
+  /* -------- RETRAIT -------- */
+
+  openWithdrawDialog(lockerNumber: number): void {
+    if (!this.canWithdraw(lockerNumber)) {
       this.messageService.add({
-        severity: 'warn',
-        summary: 'Sélection vide',
-        detail: 'Veuillez sélectionner au moins un stock.'
+        severity: 'info',
+        summary: 'Aucun outil à retirer',
+        detail: `Il n'y a aucun outil disponible à retirer dans le casier ${lockerNumber}.`
       });
       return;
     }
 
-    if (!this.selectedLocker) {
+    this.activeLocker = lockerNumber;
+
+    // stocks disponibles UNIQUEMENT dans ce casier
+    this.withdrawStocksPool = this.getStocksByLocker(lockerNumber).filter(s => s.available === true);
+    this.withdrawMax = this.withdrawStocksPool.length;
+
+    this.withdrawQuantity = 1;
+    this.withdrawDialogVisible = true;
+  }
+
+  async confirmWithdrawQuantity(): Promise<void> {
+    if (!this.activeLocker) {
+      return;
+    }
+
+    if (this.withdrawQuantity < 1 || this.withdrawQuantity > this.withdrawMax) {
       this.messageService.add({
         severity: 'error',
-        summary: 'Erreur',
-        detail: 'Casier non défini.'
+        summary: 'Quantité invalide',
+        detail: `Vous devez saisir un nombre entre 1 et ${this.withdrawMax}.`
       });
       return;
     }
 
-    this.lockerDialogVisible = false;
+    this.withdrawDialogVisible = false;
 
     try {
-      // ouvrir physiquement le casier maintenant
-      await this.scanService.openLocker(this.selectedLocker);
+      await this.scanService.openLocker(this.activeLocker);
       this.messageService.add({
         severity: 'info',
         summary: 'Casier ouvert',
-        detail: `Casier ${this.selectedLocker} ouvert, scannez les stocks sélectionnés.`
+        detail: `Casier ${this.activeLocker} ouvert, prenez les ${this.withdrawQuantity} stock(s).`
       });
     } catch (e) {
-      console.error('Erreur ouverture casier:', e);
+      console.error('Erreur ouverture casier (retrait) :', e);
       this.messageService.add({
         severity: 'error',
-        summary: 'Erreur',
-        detail: `Impossible d'ouvrir le casier ${this.selectedLocker}.`
+        summary: 'Erreur casier',
+        detail: `Impossible d'ouvrir le casier ${this.activeLocker}.`
       });
       return;
     }
 
-    // lancer le workflow de scan pour les stocks cochés
-    this.startScanForSelectedStocks(selected);
+    // tous les alitracer disponibles de ce casier seront acceptés
+    this.expectedAlitracers = this.withdrawStocksPool.map(s => s.alitracer);
+
+    this.lockedFlow = 'withdraw';
+    this.lockerCloseDialogVisible = true;
   }
 
-  onLockerStockToggle(stock: any): void {
-    const availability = stock.available; // true/false
 
-    // premier stock sélectionné : on fixe la règle
-    if (this.selectedAvailability === null && stock.selected) {
-      this.selectedAvailability = availability;
-      return;
-    }
+  /* -------- DÉPÔT -------- */
 
-    // si on essaye de cocher un stock d'un autre type, on annule
-    if (stock.selected && this.selectedAvailability !== availability) {
-      stock.selected = false;
+  openDepositDialog(lockerNumber: number): void {
+    if (!this.canDeposit(lockerNumber)) {
       this.messageService.add({
-        severity: 'warn',
-        summary: 'Sélection incompatible',
-        detail: this.selectedAvailability
-          ? 'Vous avez déjà sélectionné un stock Disponible, vous ne pouvez pas sélectionner un stock Emprunté.'
-          : 'Vous avez déjà sélectionné un stock Emprunté, vous ne pouvez pas sélectionner un stock Disponible.'
+        severity: 'info',
+        summary: 'Aucun outil à déposer',
+        detail: `Il n'y a aucun outil emprunté à déposer pour le casier ${lockerNumber}.`
       });
+      return;
     }
 
-    // si on décoche tout, on réinitialise la règle
-    const stillSelected = this.lockerStocks.some(s => s.selected);
-    if (!stillSelected) {
-      this.selectedAvailability = null;
-    }
+    this.activeLocker = lockerNumber;
+
+    // stocks empruntés UNIQUEMENT dans ce casier
+    this.depositStocksPool = this.getStocksByLocker(lockerNumber).filter(s => s.available === false);
+    this.depositMax = this.depositStocksPool.length;
+
+    this.depositQuantity = 1;
+    this.depositDialogVisible = true;
   }
 
-  /* -------- WORKFLOW DE SCAN MULTI-STOCKS -------- */
+  async confirmDepositQuantity(): Promise<void> {
+    if (!this.activeLocker) {
+      return;
+    }
 
-  startScanForSelectedStocks(stocks: any[]): void {
-    this.stocksToProcess = stocks;
-    this.currentStockIndex = 0;
+    if (this.depositQuantity < 1 || this.depositQuantity > this.depositMax) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Quantité invalide',
+        detail: `Vous devez saisir un nombre entre 1 et ${this.depositMax}.`
+      });
+      return;
+    }
 
-    // ouvrir le dialog de scan
+    this.depositDialogVisible = false;
+
+    // tous les alitracer empruntés de ce casier seront acceptés
+    this.expectedAlitracers = this.depositStocksPool.map(s => s.alitracer);
+
+    this.scanMode = 'deposit';
+    this.targetScanCount = this.depositQuantity;
+    this.scannedCount = 0;
     this.scanDialogVisible = true;
 
-    // laisser le dialog se rendre, puis lancer la caméra
-    setTimeout(() => {
-      this.askNextScan();
-    }, 0);
+    setTimeout(() => this.startScanWorkflow(), 0);
   }
 
-  private async askNextScan(): Promise<void> {
-    if (this.currentStockIndex >= this.stocksToProcess.length) {
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Terminé',
-        detail: 'Tous les stocks sélectionnés ont été traités.'
-      });
-      await this.stopProductScanner();
-      this.scanDialogVisible = false;
-      return;
+
+  /* -------- CONFIRMATION FERMETURE CASIER (retrait) -------- */
+
+  confirmLockerClosed(): void {
+    this.lockerCloseDialogVisible = false;
+
+    if (this.lockedFlow === 'withdraw') {
+      this.scanMode = 'withdraw';
+      this.targetScanCount = this.withdrawQuantity;
+      this.scannedCount = 0;
+      this.scanDialogVisible = true;
+
+      setTimeout(() => this.startScanWorkflow(), 0);
     }
 
-    const current = this.stocksToProcess[this.currentStockIndex];
-
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Scan requis',
-      detail: `Scannez l'ID Alitracer du stock : ${current.alitracer}`
-    });
-
-    await this.startScannerForCurrentStock(current);
+    if (this.lockedFlow === 'deposit') {
+      this.lockedFlow = null;
+    }
   }
 
-  private async startScannerForCurrentStock(current: any): Promise<void> {
-    if (this.html5QrCodeProduct) {
-      await this.stopProductScanner();
-    }
+
+  /* -------- SCAN WORKFLOW -------- */
+
+  private async startScanWorkflow(): Promise<void> {
+    await this.stopProductScanner();
 
     const elementId = 'qr-reader';
     this.html5QrCodeProduct = new Html5Qrcode(elementId);
@@ -311,31 +340,122 @@ export class ScanpageComponent implements OnInit, OnDestroy {
         { facingMode: 'environment' },
         { fps: 10, qrbox: { width: 250, height: 250 } },
         async (decodedText: string) => {
-          if (decodedText !== current.alitracer) {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'ID incorrect',
-              detail: `L'ID scanné (${decodedText}) ne correspond pas à ${current.alitracer}.`
-            });
-            return;
-          }
-
-          await this.stopProductScanner();
-
-          const type: 'withdraw' | 'deposit' = current.available ? 'withdraw' : 'deposit';
-          await this.onWithdrawOrDeposit(current, type);
-
-          this.currentStockIndex++;
-          this.askNextScan();
+          await this.handleScannedCode(decodedText);
         },
-        () => {
-          // erreurs de scan ignorées
-        }
+        () => {}
       );
       this.productScannerInitialized = true;
     } catch (err) {
-      console.error('Erreur lors du démarrage du scanner produit (workflow multi-stocks)', err);
+      console.error('Erreur démarrage scanner :', err);
+      this.scanDialogVisible = false;
     }
+  }
+
+  private async handleScannedCode(decodedText: string): Promise<void> {
+    // si on est en pause, on ignore
+    if (!this.scanMode || this.scanLocked) {
+      return;
+    }
+
+    // on verrouille immédiatement pour ~2s pour éviter les doubles lectures
+    this.scanLocked = true;
+    setTimeout(() => {
+      this.scanLocked = false;
+    }, 4000); // 4000 ms ≈ 4 secondes
+
+    const alitracer = decodedText.trim();
+
+    // Vérifier que cet alitracer est parmi ceux possibles du casier actif
+    if (this.expectedAlitracers.length > 0 && !this.expectedAlitracers.includes(alitracer)) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Alitracer non attendu',
+        detail: `Le code scanné ne fait pas partie des outils attendus pour le casier ${this.activeLocker}.`
+      });
+      return;
+    }
+
+    const stock = this.allStocks.find(s => s.alitracer === alitracer);
+
+    if (!stock) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Stock introuvable',
+        detail: `Aucun stock trouvé pour l'ID Alitracer scanné.`
+      });
+      return;
+    }
+
+    if (this.scanMode === 'withdraw') {
+      if (!stock.available) {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Stock déjà emprunté',
+          detail: 'Ce stock est déjà emprunté, il ne peut pas être retiré à nouveau.'
+        });
+        return;
+      }
+
+      await this.processWithdrawScan(stock);
+    }
+
+    if (this.scanMode === 'deposit') {
+      if (stock.available) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Déjà en stock',
+          detail: 'Ce stock est déjà disponible, il ne peut pas être déposé à nouveau.'
+        });
+        return;
+      }
+
+      await this.processDepositScan(stock);
+    }
+
+    this.scannedCount++;
+
+    if (this.scannedCount >= this.targetScanCount) {
+      await this.stopProductScanner();
+      this.scanDialogVisible = false;
+
+      if (this.scanMode === 'deposit' && this.activeLocker) {
+        try {
+          await this.scanService.openLocker(this.activeLocker);
+          this.lockedFlow = 'deposit';
+          this.lockerCloseDialogVisible = true;
+        } catch (e) {
+          console.error('Erreur ouverture casier (dépôt) :', e);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Erreur casier',
+            detail: `Impossible d'ouvrir le casier ${this.activeLocker} pour dépôt.`
+          });
+        }
+      }
+
+      this.scanMode = null;
+      await this.updateAvailableStocks();
+    }
+  }
+
+
+
+  private async processWithdrawScan(stock: any): Promise<void> {
+    this.history.type = 'withdraw';
+    this.stock.id = stock.id;
+    this.review = stock;
+    this.isStockSelected = true;
+    this.getLatestDate();
+    await this.addScan('withdraw');
+  }
+
+  private async processDepositScan(stock: any): Promise<void> {
+    this.history.type = 'deposit';
+    this.stock.id = stock.id;
+    this.review = stock;
+    this.isStockSelected = true;
+    this.getLatestDate();
+    await this.addScan('deposit');
   }
 
   private async stopProductScanner(): Promise<void> {
@@ -351,125 +471,7 @@ export class ScanpageComponent implements OnInit, OnDestroy {
     this.productScannerInitialized = false;
   }
 
-  private async onWithdrawOrDeposit(stock: any, type: 'withdraw' | 'deposit') {
-    if (type === 'withdraw') {
-      await this.onWithdraw(stock);
-    } else {
-      await this.onDeposit(stock);
-    }
-  }
-
-  /* -------- ANCIEN SCAN PRODUIT DIRECT (optionnel) -------- */
-
-  async toggleScanner(): Promise<void> {
-    if (this.productScannerInitialized) {
-      await this.stopProductScanner();
-      this.scanDialogVisible = false;
-      return;
-    }
-
-    this.scanDialogVisible = true;
-
-    setTimeout(() => this.startProductScanner(), 0);
-  }
-
-  private async startProductScanner(): Promise<void> {
-    if (this.productScannerInitialized) {
-      return;
-    }
-
-    const elementId = 'qr-reader';
-    this.html5QrCodeProduct = new Html5Qrcode(elementId);
-
-    try {
-      await this.html5QrCodeProduct.start(
-        { facingMode: 'environment' },
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        (decodedText: string) => {
-          this.stock.alitracer = decodedText;
-          this.detectStock();
-          this.stopProductScanner();
-          this.scanDialogVisible = false;
-        },
-        () => {
-          // erreurs de scan non bloquantes
-        }
-      );
-      this.productScannerInitialized = true;
-    } catch (err) {
-      console.error('Erreur lors du démarrage du scanner produit', err);
-      this.scanDialogVisible = false;
-    }
-  }
-
-  /* -------- TYPE (retrait / dépôt) -------- */
-
-  setType(type: string): void {
-    this.resetSelectedStock();
-    this.history.type = type;
-  }
-
-  /* -------- STOCK / PRODUIT -------- */
-
-  async detectStock(): Promise<void> {
-    if (!this.stock.alitracer) {
-      return;
-    }
-
-    this.review = this.stockService.getStockByAlitracer(this.stock.alitracer);
-
-    if (!this.review) {
-      this.isStockSelected = false;
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Stock non trouvé',
-        detail: `Aucun stock trouvé avec l'ID Alitracer: ${this.stock.alitracer}`
-      });
-      return;
-    }
-
-    if (this.history.type === 'withdraw' && this.review.available === false) {
-      this.isStockSelected = false;
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Indisponible',
-        detail: `Ce produit est déjà emprunté, vous ne pouvez pas le retirer.`
-      });
-      return;
-    }
-
-    if (this.history.type === 'deposit' && this.review.available === true) {
-      this.isStockSelected = false;
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Indisponible',
-        detail: `Ce produit est déjà en stock, vous ne pouvez pas le déposer.`
-      });
-      return;
-    }
-
-    this.isStockSelected = true;
-    this.stock.id = this.review.id;
-    this.getLatestDate();
-  }
-
-  onWithdraw(stock: any): void {
-    this.history.type = 'withdraw';
-    this.stock.id = stock.id;
-    this.review = stock;
-    this.isStockSelected = true;
-    this.getLatestDate();
-    this.addScan('withdraw');
-  }
-
-  onDeposit(stock: any): void {
-    this.history.type = 'deposit';
-    this.stock.id = stock.id;
-    this.review = stock;
-    this.isStockSelected = true;
-    this.getLatestDate();
-    this.addScan('deposit');
-  }
+  /* -------- HISTORIQUE / STATUTS -------- */
 
   async addScan(type: string): Promise<void> {
     const appUser = this.authApp.getCurrentUser();
@@ -492,19 +494,9 @@ export class ScanpageComponent implements OnInit, OnDestroy {
 
     try {
       await this.scanService.createHistory(this.history);
-
-      const lockerNumber = this.review.lockerNumber;
-
-      if (lockerNumber) {
-        await this.scanService.openLocker(lockerNumber);
-        console.log(`Casier ${lockerNumber} ouvert avec succès`);
-      } else {
-        console.warn('Aucun numéro de casier trouvé pour ce stock');
-      }
-
       this.showAddToast();
       await this.scanService.refreshData();
-      this.updateAvailableStocks();
+      await this.updateAvailableStocks();
     } catch (error) {
       console.error('Error adding scan:', error);
     }
@@ -517,50 +509,6 @@ export class ScanpageComponent implements OnInit, OnDestroy {
 
   async updateAvailableStocks(): Promise<void> {
     await this.loadStocks();
-  }
-
-  resetSelectedStock(): void {
-    this.stock = {
-      product: {
-        title: '',
-        type: '',
-        size: '',
-        cmu: '',
-        location: '',
-        picture: '',
-        alitracer: ''
-      },
-      available: null,
-      status: null,
-      creationDate: null
-    };
-
-    this.history = {
-      stock: {
-        id: ''
-      },
-      user: {
-        id: ''
-      },
-      date: '',
-      type: 'withdraw'
-    };
-
-    this.review = {
-      product: {
-        title: '',
-        type: '',
-        size: '',
-        cmu: '',
-        location: '',
-        picture: '',
-        alitracer: ''
-      },
-      available: null,
-      status: null,
-      creationDate: null,
-      lastCheckDate: null
-    };
   }
 
   getLatestDate(): void {
@@ -581,21 +529,15 @@ export class ScanpageComponent implements OnInit, OnDestroy {
     });
   }
 
-  getStatusClass(): string {
-    return this.checkService.getStatusClass(this.review);
-  }
-
   /* -------- TOASTS -------- */
 
   showAddToast(): void {
     this.messageService.add({
       severity: 'success',
-      summary: 'Success',
+      summary: 'Succès',
       detail: 'L\'opération a été enregistrée'
     });
   }
 
   protected readonly faBarcode = faBarcode;
-  protected readonly faArrowRightToBracket = faArrowRightToBracket;
-  protected readonly faArrowRightFromBracket = faArrowRightFromBracket;
 }

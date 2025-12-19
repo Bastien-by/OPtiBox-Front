@@ -10,7 +10,8 @@ import {
   faClockRotateLeft,
   faListCheck,
   faPeopleGroup,
-  faList
+  faList,
+  faDoorOpen
 } from '@fortawesome/free-solid-svg-icons';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { StockService } from '../../services/stock.service';
@@ -35,6 +36,11 @@ export class RacinePageComponent implements OnInit {
     date: null,
     status: null
   };
+
+  /** Résultat du test NFC */
+  nfcResult: string | null = null;
+  /** Statut de lecture NFC en cours */
+  nfcScanning = false;
 
   constructor(
     private messageService: MessageService,
@@ -103,6 +109,102 @@ export class RacinePageComponent implements OnInit {
     });
   }
 
+  /** Lecture réelle NFC avec Web NFC API */
+  async testNFC(): Promise<void> {
+    // Vérifier support NFC
+    if (!('NDEFReader' in window)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: '⚠️ NFC non supporté',
+        detail: 'Votre navigateur/tablette ne supporte pas la lecture NFC. Utilisez Chrome Android récent.'
+      });
+      return;
+    }
+
+    if (this.nfcScanning) {
+      this.messageService.add({
+        severity: 'info',
+        summary: '⏳ Lecture en cours',
+        detail: 'Approchez un autre tag NFC...'
+      });
+      return;
+    }
+
+    this.nfcResult = null;
+    this.nfcScanning = true;
+
+    try {
+      const reader = new (window as any).NDEFReader();
+
+      this.messageService.add({
+        severity: 'info',
+        summary: '🪪 Lecture NFC',
+        detail: 'Approchez un tag NFC de la tablette...'
+      });
+
+      // Écoute des tags NFC
+      reader.addEventListener('reading', (event: any) => {
+        console.log('NFC Tag détecté:', event);
+
+        // Extraire le contenu du tag (premier record NDEF)
+        const message = event.message;
+        let tagContent = '';
+
+        if (message && message.length > 0) {
+          const record = message[0];
+          tagContent = new TextDecoder().decode(record.data || new Uint8Array());
+        }
+
+        // Fallback si pas de NDEF : utiliser l'ID du tag
+        if (!tagContent && event.serialNumber) {
+          tagContent = `ID: ${event.serialNumber}`;
+        }
+
+        this.nfcResult = tagContent || 'Tag vide';
+        this.nfcScanning = false;
+
+        this.messageService.add({
+          severity: 'success',
+          summary: '✅ Tag NFC lu',
+          detail: `Contenu: ${this.nfcResult}`
+        });
+
+        console.log('Tag NFC complet:', {
+          id: event.serialNumber,
+          content: tagContent,
+          records: message
+        });
+      });
+
+      // Scan pendant 30 secondes max
+      await reader.scan({ signal: AbortSignal.timeout(30000) });
+
+    } catch (error: any) {
+      this.nfcScanning = false;
+
+      if (error.name === 'AbortError') {
+        this.messageService.add({
+          severity: 'info',
+          summary: '⏹️ Scan arrêté',
+          detail: 'Temps maximum écoulé (30s)'
+        });
+      } else if (error.name === 'NotAllowedError') {
+        this.messageService.add({
+          severity: 'error',
+          summary: '🚫 NFC refusé',
+          detail: 'Activez NFC et autorisez la lecture'
+        });
+      } else {
+        this.messageService.add({
+          severity: 'error',
+          summary: '❌ Erreur NFC',
+          detail: error.message || 'Erreur inconnue'
+        });
+        console.error('Erreur NFC:', error);
+      }
+    }
+  }
+
   protected readonly faBarcode = faBarcode;
   protected readonly faListCheck = faListCheck;
   protected readonly faClockRotateLeft = faClockRotateLeft;
@@ -110,4 +212,5 @@ export class RacinePageComponent implements OnInit {
   protected readonly faBoxesStacked = faBoxesStacked;
   protected readonly faPeopleGroup = faPeopleGroup;
   protected readonly faList = faList;
+  protected readonly faDoorOpen = faDoorOpen;
 }

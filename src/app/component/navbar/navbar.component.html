@@ -22,7 +22,7 @@
               <fa-icon [icon]="faBarcode" class="lg:hidden"></fa-icon>
             </a>
             <a
-              *ngIf="isLoggedIn() && isAdmin() || isMaintenance()"
+              *ngIf="isLoggedIn() && (isAdmin() || isMaintenance())"
               routerLink="check"
               routerLinkActive="bg-gray-200"
               class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
@@ -30,6 +30,7 @@
               <fa-icon [icon]="faListCheck" class="lg:hidden"></fa-icon>
             </a>
             <a
+              *ngIf="isLoggedIn()"
               routerLink="history"
               routerLinkActive="bg-gray-200"
               class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
@@ -37,6 +38,7 @@
               <fa-icon [icon]="faClockRotateLeft" class="lg:hidden"></fa-icon>
             </a>
             <a
+              *ngIf="isLoggedIn()"
               routerLink="procedure"
               routerLinkActive="bg-gray-200"
               class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
@@ -44,7 +46,7 @@
               <fa-icon [icon]="faList" class="lg:hidden"></fa-icon>
             </a>
             <a
-              *ngIf="isLoggedIn() && isAdmin()"
+              *ngIf="isLoggedIn() && isMaintenance() || isAdmin()"
               routerLink="product"
               routerLinkActive="bg-gray-200"
               class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
@@ -52,7 +54,7 @@
               <fa-icon [icon]="faBox" class="lg:hidden"></fa-icon>
             </a>
             <a
-              *ngIf="isLoggedIn() && isAdmin()"
+              *ngIf="isLoggedIn() && isMaintenance() || isAdmin()"
               routerLink="stock"
               routerLinkActive="bg-gray-200"
               class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
@@ -66,6 +68,15 @@
               class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
               <span class="hidden lg:inline">Utilisateurs</span>
               <fa-icon [icon]="faPeopleGroup" class="lg:hidden"></fa-icon>
+            </a>
+            <!-- NOUVEAU : Onglet Ouverture (Admin uniquement) -->
+            <a
+              *ngIf="isLoggedIn() && isAdmin()"
+              routerLink="open-locker"
+              routerLinkActive="bg-gray-200"
+              class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+              <span class="hidden lg:inline">Ouverture</span>
+              <fa-icon [icon]="faDoorOpen" class="lg:hidden"></fa-icon>
             </a>
           </div>
         </div>
