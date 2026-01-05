@@ -53,7 +53,7 @@ export class ScanpageComponent implements OnInit, OnDestroy {
   withdrawDialogVisible = false;
   withdrawQuantity = 1;
   withdrawMax = 0;
-  /** stocks disponibles dans le casier actif */
+  /** stocks disponibles ET non HS dans le casier actif */
   withdrawStocksPool: any[] = [];
 
   /* Dépôt */
@@ -61,7 +61,7 @@ export class ScanpageComponent implements OnInit, OnDestroy {
   depositDialogVisible = false;
   depositQuantity = 1;
   depositMax = 0;
-  /** stocks empruntés dans le casier actif */
+  /** stocks empruntés ET non HS dans le casier actif */
   depositStocksPool: any[] = [];
 
   /* Confirmation de fermeture casier */
@@ -186,32 +186,74 @@ export class ScanpageComponent implements OnInit, OnDestroy {
     return this.allStocks.filter(s => s.lockerNumber === lockerNumber);
   }
 
-  canWithdraw(lockerNumber: number): boolean {
-    return this.getStocksByLocker(lockerNumber).some(s => s.available === true);
+  /**
+   * Classe de statut : vert = OK, noir gras = NOK, rouge = HS
+   */
+  getStatusClass(stock: any): string {
+    if (stock.status === 1) {
+      return 'text-green-500 font-bold';
+    }
+    if (stock.status === 0) {
+      return 'text-black font-bold';
+    }
+    if (stock.status === 2) {
+      return 'text-red-600 font-bold';
+    }
+    return 'text-gray-500';
   }
 
+  /**
+   * On peut retirer si au moins un stock est disponible ET non HS
+   */
+  canWithdraw(lockerNumber: number): boolean {
+    return this.getStocksByLocker(lockerNumber).some(
+      s => s.available === true && s.status !== 2
+    );
+  }
+
+  /**
+   * On peut déposer si au moins un stock est emprunté ET non HS
+   */
   canDeposit(lockerNumber: number): boolean {
-    return this.getStocksByLocker(lockerNumber).some(s => s.available === false);
+    return this.getStocksByLocker(lockerNumber).some(
+      s => s.available === false && s.status !== 2
+    );
   }
 
   /* -------- RETRAIT -------- */
 
   openWithdrawDialog(lockerNumber: number): void {
-    if (!this.canWithdraw(lockerNumber)) {
-      this.messageService.add({
-        severity: 'info',
-        summary: 'Aucun outil à retirer',
-        detail: `Il n'y a aucun outil disponible à retirer dans le casier ${lockerNumber}.`
-      });
+    const stocks = this.getStocksByLocker(lockerNumber);
+
+    // stocks dispo non HS
+    this.withdrawStocksPool = stocks.filter(
+      s => s.available === true && s.status !== 2
+    );
+    this.withdrawMax = this.withdrawStocksPool.length;
+
+    if (this.withdrawMax === 0) {
+      // Soit aucun dispo, soit tous les dispo sont HS -> message clair
+      const hasAvailableHs = stocks.some(
+        s => s.available === true && s.status === 2
+      );
+
+      if (hasAvailableHs) {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Produit HS',
+          detail: `Impossible de retirer dans le casier ${lockerNumber} : les stocks disponibles sont HS.`
+        });
+      } else {
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Aucun outil à retirer',
+          detail: `Il n'y a aucun outil disponible à retirer dans le casier ${lockerNumber}.`
+        });
+      }
       return;
     }
 
     this.activeLocker = lockerNumber;
-
-    // stocks disponibles UNIQUEMENT dans ce casier
-    this.withdrawStocksPool = this.getStocksByLocker(lockerNumber).filter(s => s.available === true);
-    this.withdrawMax = this.withdrawStocksPool.length;
-
     this.withdrawQuantity = 1;
     this.withdrawDialogVisible = true;
   }
@@ -249,32 +291,46 @@ export class ScanpageComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // tous les alitracer disponibles de ce casier seront acceptés
+    // tous les alitracer disponibles non HS de ce casier seront acceptés
     this.expectedAlitracers = this.withdrawStocksPool.map(s => s.alitracer);
 
     this.lockedFlow = 'withdraw';
     this.lockerCloseDialogVisible = true;
   }
 
-
   /* -------- DÉPÔT -------- */
 
   openDepositDialog(lockerNumber: number): void {
-    if (!this.canDeposit(lockerNumber)) {
-      this.messageService.add({
-        severity: 'info',
-        summary: 'Aucun outil à déposer',
-        detail: `Il n'y a aucun outil emprunté à déposer pour le casier ${lockerNumber}.`
-      });
+    const stocks = this.getStocksByLocker(lockerNumber);
+
+    // stocks empruntés non HS
+    this.depositStocksPool = stocks.filter(
+      s => s.available === false && s.status !== 2
+    );
+    this.depositMax = this.depositStocksPool.length;
+
+    if (this.depositMax === 0) {
+      const hasLoanedHs = stocks.some(
+        s => s.available === false && s.status === 2
+      );
+
+      if (hasLoanedHs) {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Produit HS',
+          detail: `Impossible de déposer dans le casier ${lockerNumber} : les stocks empruntés sont HS.`
+        });
+      } else {
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Aucun outil à déposer',
+          detail: `Il n'y a aucun outil emprunté à déposer pour le casier ${lockerNumber}.`
+        });
+      }
       return;
     }
 
     this.activeLocker = lockerNumber;
-
-    // stocks empruntés UNIQUEMENT dans ce casier
-    this.depositStocksPool = this.getStocksByLocker(lockerNumber).filter(s => s.available === false);
-    this.depositMax = this.depositStocksPool.length;
-
     this.depositQuantity = 1;
     this.depositDialogVisible = true;
   }
@@ -295,7 +351,7 @@ export class ScanpageComponent implements OnInit, OnDestroy {
 
     this.depositDialogVisible = false;
 
-    // tous les alitracer empruntés de ce casier seront acceptés
+    // tous les alitracer empruntés non HS de ce casier seront acceptés
     this.expectedAlitracers = this.depositStocksPool.map(s => s.alitracer);
 
     this.scanMode = 'deposit';
@@ -305,7 +361,6 @@ export class ScanpageComponent implements OnInit, OnDestroy {
 
     setTimeout(() => this.startScanWorkflow(), 0);
   }
-
 
   /* -------- CONFIRMATION FERMETURE CASIER (retrait) -------- */
 
@@ -325,7 +380,6 @@ export class ScanpageComponent implements OnInit, OnDestroy {
       this.lockedFlow = null;
     }
   }
-
 
   /* -------- SCAN WORKFLOW -------- */
 
@@ -352,20 +406,17 @@ export class ScanpageComponent implements OnInit, OnDestroy {
   }
 
   private async handleScannedCode(decodedText: string): Promise<void> {
-    // si on est en pause, on ignore
     if (!this.scanMode || this.scanLocked) {
       return;
     }
 
-    // on verrouille immédiatement pour ~2s pour éviter les doubles lectures
     this.scanLocked = true;
     setTimeout(() => {
       this.scanLocked = false;
-    }, 4000); // 4000 ms ≈ 4 secondes
+    }, 4000);
 
     const alitracer = decodedText.trim();
 
-    // Vérifier que cet alitracer est parmi ceux possibles du casier actif
     if (this.expectedAlitracers.length > 0 && !this.expectedAlitracers.includes(alitracer)) {
       this.messageService.add({
         severity: 'error',
@@ -382,6 +433,16 @@ export class ScanpageComponent implements OnInit, OnDestroy {
         severity: 'error',
         summary: 'Stock introuvable',
         detail: `Aucun stock trouvé pour l'ID Alitracer scanné.`
+      });
+      return;
+    }
+
+    // Blocage HS : ni retrait ni dépôt pour un produit HS
+    if (stock.status === 2) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Produit HS',
+        detail: 'Ce stock est HS, il ne peut pas être retiré ou déposé via le scan.'
       });
       return;
     }
@@ -437,8 +498,6 @@ export class ScanpageComponent implements OnInit, OnDestroy {
       await this.updateAvailableStocks();
     }
   }
-
-
 
   private async processWithdrawScan(stock: any): Promise<void> {
     this.history.type = 'withdraw';

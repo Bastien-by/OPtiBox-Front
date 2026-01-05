@@ -105,7 +105,7 @@ export class RacinePageComponent implements OnInit {
     this.messageService.add({
       severity: 'error',
       summary: 'Accès non autorisé',
-      detail: 'Vous devez avoir un rôle admin pour accéder à cette page'
+      detail: 'Vous devez être connecté ou avoir les droits nécessaires pour accéder à cette page'
     });
   }
 

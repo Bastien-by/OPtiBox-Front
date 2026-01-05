@@ -1,135 +1,268 @@
 <div class="flex flex-col gap-6 p-6 sm:p-8 md:p-10">
   <div>
-    <h1 class="text-2xl font-bold py-3"><fa-icon [icon]="faClockRotateLeft"></fa-icon> Historique</h1>
+    <h1 class="text-2xl font-bold py-3">
+      <fa-icon [icon]="faClockRotateLeft"></fa-icon> Historique
+    </h1>
     <h2 class="text-xl">
       Consultez l'historique des retraits et retours de stock, ainsi que les contrôles internes effectués sur les moyens de levage.
     </h2>
   </div>
+
   <!-- line separator -->
   <div class="border-b-2 border-gray-200"></div>
+
+  <!-- Onglets -->
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
-    <button [ngClass]="tab == 'withdraw' ? 'bg-blue-500 hover:bg-blue-700 text-white font-bold rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 p-5 text-2xl' : 'bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold rounded focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 p-5 text-2xl'" (click)="setType('withdraw')"><fa-icon [icon]="faArrowRightFromBracket"></fa-icon> Retraits</button>
-    <button [ngClass]="tab == 'deposit' ? 'bg-blue-500 hover:bg-blue-700 text-white font-bold rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 p-5 text-2xl' : 'bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold rounded focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 p-5 text-2xl'" (click)="setType('deposit')"><fa-icon [icon]="faArrowRightToBracket"></fa-icon> Dépôts</button>
-    <button [ngClass]="tab == 'check' ? 'bg-blue-500 hover:bg-blue-700 text-white font-bold rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 p-5 text-2xl' : 'bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold rounded focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 p-5 text-2xl'" (click)="setType('check')"><fa-icon [icon]="faListCheck"></fa-icon> Contrôles</button>
+    <button
+      [ngClass]="tab === 'withdraw'
+        ? 'bg-blue-500 hover:bg-blue-700 text-white font-bold rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 p-5 text-2xl'
+        : 'bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold rounded focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 p-5 text-2xl'"
+      (click)="setType('withdraw')">
+      <fa-icon [icon]="faArrowRightFromBracket"></fa-icon> Retraits
+    </button>
+
+    <button
+      [ngClass]="tab === 'deposit'
+        ? 'bg-blue-500 hover:bg-blue-700 text-white font-bold rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 p-5 text-2xl'
+        : 'bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold rounded focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 p-5 text-2xl'"
+      (click)="setType('deposit')">
+      <fa-icon [icon]="faArrowRightToBracket"></fa-icon> Dépôts
+    </button>
+
+    <button
+      [ngClass]="tab === 'check'
+        ? 'bg-blue-500 hover:bg-blue-700 text-white font-bold rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 p-5 text-2xl'
+        : 'bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold rounded focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 p-5 text-2xl'"
+      (click)="setType('check')">
+      <fa-icon [icon]="faListCheck"></fa-icon> Contrôles
+    </button>
   </div>
 
-  <div *ngIf="tab == 'withdraw'" class="rounded overflow-auto shadow-lg bg-gray-100 border p-5 gap-3">
-    <div *ngIf="historyService.getAllWithdrawHistory().length === 0" class="text-center text-gray-500">
-      <p>Aucun historique de retrait n'a été créé</p>
+  <!-- Barre de filtres -->
+  <div class="bg-white shadow-md rounded-lg p-4 flex flex-col md:flex-row gap-4 items-end mb-4">
+    <!-- Utilisateur -->
+    <div class="flex-1">
+      <label class="block text-sm font-medium text-gray-700 mb-1">Utilisateur</label>
+      <select
+        class="border border-gray-300 rounded p-2 w-full text-sm"
+        [(ngModel)]="filterUser"
+        (ngModelChange)="applyFilters()">
+        <option value="">Tous les utilisateurs</option>
+        <option *ngFor="let u of users" [value]="u">{{ u }}</option>
+      </select>
     </div>
-    <table class="min-w-full divide-y divide-gray-200">
+
+    <!-- Mois -->
+    <div class="flex-1">
+      <label class="block text-sm font-medium text-gray-700 mb-1">Mois</label>
+      <select
+        class="border border-gray-300 rounded p-2 w-full text-sm"
+        [(ngModel)]="filterMonth"
+        (ngModelChange)="applyFilters()">
+        <option value="">Tous</option>
+        <option *ngFor="let m of months" [value]="m.value">{{ m.label }}</option>
+      </select>
+    </div>
+
+    <!-- Année -->
+    <div class="flex-1">
+      <label class="block text-sm font-medium text-gray-700 mb-1">Année</label>
+      <select
+        class="border border-gray-300 rounded p-2 w-full text-sm"
+        [(ngModel)]="filterYear"
+        (ngModelChange)="applyFilters()">
+        <option value="">Toutes</option>
+        <option *ngFor="let y of years" [value]="y">{{ y }}</option>
+      </select>
+    </div>
+
+    <!-- Statut (uniquement pour Contrôles) -->
+    <div class="flex-1" *ngIf="tab === 'check'">
+      <label class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
+      <select
+        class="border border-gray-300 rounded p-2 w-full text-sm"
+        [(ngModel)]="filterStatus"
+        (ngModelChange)="applyFilters()">
+        <option value="">Tous</option>
+        <option value="1">OK</option>
+        <option value="0">NOK</option>
+        <option value="2">HS</option>
+      </select>
+    </div>
+
+    <button
+      type="button"
+      class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded text-sm"
+      (click)="resetFilters()">
+      Réinitialiser
+    </button>
+  </div>
+
+  <!-- RETRAITS -->
+  <div *ngIf="tab === 'withdraw'" class="rounded overflow-auto shadow-lg bg-gray-100 border p-5 gap-3">
+    <div *ngIf="filteredHistory.length === 0" class="text-center text-gray-500">
+      <p>Aucun historique de retrait ne correspond aux filtres</p>
+    </div>
+
+    <table class="min-w-full divide-y divide-gray-200" *ngIf="filteredHistory.length > 0">
       <thead class="bg-gray-50">
       <tr>
-        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
-        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom du produit</th>
-        <!--<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>-->
-        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utilisateur</th>
-        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type de produit</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alitracer</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produit</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utilisateur</th>
       </tr>
       </thead>
       <tbody class="bg-white divide-y divide-gray-200">
-      <ng-container *ngFor="let history of getPaginatedHistory(historyService.getAllWithdrawHistory())">
+      <ng-container *ngFor="let history of getPaginatedHistory(filteredHistory)">
         <tr>
           <td class="px-6 py-4 whitespace-nowrap">
-            <img [src]="history.stock.product.picture ? history.stock.product.picture : 'assets/images/default_image.jpg'" alt="product image" class="h-10 w-10 rounded-full">
+            <img
+              [src]="history.stock.product.picture ? history.stock.product.picture : 'assets/images/default_image.jpg'"
+              alt="product image"
+              class="h-10 w-10 rounded-full">
           </td>
-          <td class="px-6 py-4 whitespace-nowrap">{{ history.stock.product.title }}</td>
-          <!--<td class="px-6 py-4 whitespace-nowrap">retrait</td>-->
-          <td class="px-6 py-4 whitespace-nowrap">{{ history.date | date: 'dd/MM/yyyy HH:mm' }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">{{ history.stock.alitracer }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            {{ history.stock.product.title }} {{ history.stock.product.size }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            {{ history.date | date: 'dd/MM/yyyy HH:mm' }}
+          </td>
           <td class="px-6 py-4 whitespace-nowrap">{{ history.user.username }}</td>
-          <td class="px-6 py-4 whitespace-nowrap"><p-tag [value]="history.stock.product.type"></p-tag></td>
         </tr>
       </ng-container>
       </tbody>
     </table>
+
     <div class="flex justify-between mt-4">
-      <button *ngIf="currentPage > 1" class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded" (click)="prevPage()">Précédent</button>
-      <button *ngIf="currentPage * itemsPerPage < historyService.getAllWithdrawHistory().length" class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded" (click)="nextPage(historyService.getAllWithdrawHistory().length)">Suivant</button>
+      <button
+        *ngIf="currentPage > 1"
+        class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded"
+        (click)="prevPage()">
+        Précédent
+      </button>
+      <button
+        *ngIf="currentPage * itemsPerPage < filteredHistory.length"
+        class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded"
+        (click)="nextPage(filteredHistory.length)">
+        Suivant
+      </button>
     </div>
   </div>
 
-  <div *ngIf="tab == 'deposit'" class="rounded overflow-auto shadow-lg bg-gray-100 border p-5 gap-3">
-    <div *ngIf="historyService.getAllDepositHistory().length === 0" class="text-center text-gray-500">
-      <p>Aucun historique de dépôts n'a été créé</p>
+  <!-- DÉPÔTS -->
+  <div *ngIf="tab === 'deposit'" class="rounded overflow-auto shadow-lg bg-gray-100 border p-5 gap-3">
+    <div *ngIf="filteredHistory.length === 0" class="text-center text-gray-500">
+      <p>Aucun historique de dépôts ne correspond aux filtres</p>
     </div>
-    <table class="min-w-full divide-y divide-gray-200">
+
+    <table class="min-w-full divide-y divide-gray-200" *ngIf="filteredHistory.length > 0">
       <thead class="bg-gray-50">
       <tr>
-        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
-        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom du produit</th>
-        <!--<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>-->
-        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utilisateur</th>
-        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type de produit</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alitracer</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produit</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utilisateur</th>
       </tr>
       </thead>
       <tbody class="bg-white divide-y divide-gray-200">
-      <ng-container *ngFor="let history of getPaginatedHistory(historyService.getAllDepositHistory())">
+      <ng-container *ngFor="let history of getPaginatedHistory(filteredHistory)">
         <tr>
           <td class="px-6 py-4 whitespace-nowrap">
-            <img [src]="history.stock.product.picture ? history.stock.product.picture : 'assets/images/default_image.jpg'" alt="product image" class="h-10 w-10 rounded-full">
+            <img
+              [src]="history.stock.product.picture ? history.stock.product.picture : 'assets/images/default_image.jpg'"
+              alt="product image"
+              class="h-10 w-10 rounded-full">
           </td>
-          <td class="px-6 py-4 whitespace-nowrap">{{ history.stock.product.title }}</td>
-          <!--<td class="px-6 py-4 whitespace-nowrap">dépôt</td>-->
-          <td class="px-6 py-4 whitespace-nowrap">{{ history.date | date: 'dd/MM/yyyy HH:mm' }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">{{ history.stock.alitracer }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            {{ history.stock.product.title }} {{ history.stock.product.size }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            {{ history.date | date: 'dd/MM/yyyy HH:mm' }}
+          </td>
           <td class="px-6 py-4 whitespace-nowrap">{{ history.user.username }}</td>
-          <td class="px-6 py-4 whitespace-nowrap"><p-tag [value]="history.stock.product.type"></p-tag></td>
         </tr>
       </ng-container>
       </tbody>
     </table>
+
     <div class="flex justify-between mt-4">
-      <button *ngIf="currentPage > 1" class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded" (click)="prevPage()">Précédent</button>
-      <button *ngIf="currentPage * itemsPerPage < historyService.getAllDepositHistory().length" class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded" (click)="nextPage(historyService.getAllDepositHistory().length)">Suivant</button>
+      <button
+        *ngIf="currentPage > 1"
+        class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded"
+        (click)="prevPage()">
+        Précédent
+      </button>
+      <button
+        *ngIf="currentPage * itemsPerPage < filteredHistory.length"
+        class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded"
+        (click)="nextPage(filteredHistory.length)">
+        Suivant
+      </button>
     </div>
   </div>
 
-  <div *ngIf="tab == 'check'" class="rounded overflow-auto shadow-lg bg-gray-100 border p-5 gap-3">
-    <div *ngIf="historyService.getAllCheckHistory().length === 0" class="text-center text-gray-500">
-      <p>Aucun historique de contrôle n'a été créé</p>
+  <!-- CONTRÔLES -->
+  <div *ngIf="tab === 'check'" class="rounded overflow-auto shadow-lg bg-gray-100 border p-5 gap-3">
+    <div *ngIf="filteredHistory.length === 0" class="text-center text-gray-500">
+      <p>Aucun historique de contrôle ne correspond aux filtres</p>
     </div>
-    <table class="min-w-full divide-y divide-gray-200">
+
+    <table class="min-w-full divide-y divide-gray-200" *ngIf="filteredHistory.length > 0">
       <thead class="bg-gray-50">
       <tr>
-        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
-        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom du produit</th>
-        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
-        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utilisateur</th>
-        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type de produit</th>
-        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commentaire</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alitracer</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produit</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utilisateur</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commentaire</th>
       </tr>
       </thead>
       <tbody class="bg-white divide-y divide-gray-200">
-      <ng-container *ngFor="let history of getPaginatedHistory(historyService.getAllCheckHistory())">
+      <ng-container *ngFor="let history of getPaginatedHistory(filteredHistory)">
         <tr>
           <td class="px-6 py-4 whitespace-nowrap">
-            <img [src]="history.stock.product.picture ? history.stock.product.picture : 'assets/images/default_image.jpg'" alt="product image" class="h-10 w-10 rounded-full">
+            <img
+              [src]="history.stock.product.picture ? history.stock.product.picture : 'assets/images/default_image.jpg'"
+              alt="product image"
+              class="h-10 w-10 rounded-full">
           </td>
-          <td class="px-6 py-4 whitespace-nowrap">{{ history.stock.product.title }}</td>
-          <td class="px-6 py-4 whitespace-nowrap">{{ history.status == 0 ? 'NOK' : history.status == 1 ? 'OK' : history.status == 2 ? 'HS' : 'Inconnu' }}</td>
-          <td class="px-6 py-4 whitespace-nowrap">{{ history.date | date: 'dd/MM/yyyy HH:mm' }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">{{ history.stock.alitracer }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            {{ history.stock.product.title }} {{ history.stock.product.size }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            {{ history.status == 0 ? 'NOK' : history.status == 1 ? 'OK' : history.status == 2 ? 'HS' : 'Inconnu' }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            {{ history.date | date: 'dd/MM/yyyy HH:mm' }}
+          </td>
           <td class="px-6 py-4 whitespace-nowrap">{{ history.user.username }}</td>
-          <td class="px-6 py-4 whitespace-nowrap"><p-tag [value]="history.stock.product.type"></p-tag></td>
           <td class="px-6 py-4 whitespace-nowrap">{{ history.comment }}</td>
-          <!--<td class="px-6 py-4 whitespace-nowrap">
-            <div class="flex justify-center items-center space-x-2">
-              <div class="bg-blue-500 hover:bg-blue-700 rounded-full w-10 h-10 flex items-center justify-center cursor-pointer">
-                <i class="pi pi-pencil text-white"></i>
-              </div>
-              <div class="bg-red-500 hover:bg-red-700 rounded-full w-10 h-10 flex items-center justify-center cursor-pointer">
-                <i class="pi pi-trash text-white"></i>
-              </div>
-            </div>
-          </td>-->
         </tr>
       </ng-container>
       </tbody>
     </table>
+
     <div class="flex justify-between mt-4">
-      <button *ngIf="currentPage > 1" class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded" (click)="prevPage()">Précédent</button>
-      <button *ngIf="currentPage * itemsPerPage < historyService.getAllCheckHistory().length" class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded" (click)="nextPage(historyService.getAllCheckHistory().length)">Suivant</button>
+      <button
+        *ngIf="currentPage > 1"
+        class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded"
+        (click)="prevPage()">
+        Précédent
+      </button>
+      <button
+        *ngIf="currentPage * itemsPerPage < filteredHistory.length"
+        class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded"
+        (click)="nextPage(filteredHistory.length)">
+        Suivant
+      </button>
     </div>
   </div>
 </div>

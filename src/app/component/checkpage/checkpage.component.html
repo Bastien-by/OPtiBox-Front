@@ -1,164 +1,181 @@
 <div class="flex flex-col gap-6 p-6 sm:p-8 md:p-10">
-  <!-- Si pas connecté -->
+  <!-- Message si non connecté -->
   <div *ngIf="!isLoggedIn()" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
     <p class="font-bold">Accès aux contrôles interdit</p>
     <p>Vous devez être connecté avec votre badge pour réaliser un contrôle.</p>
   </div>
 
-  <!-- Contenu uniquement si connecté -->
+  <!-- Contenu seulement si connecté -->
   <div *ngIf="isLoggedIn()">
-    <!-- Deux colonnes responsives -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <div>
-        <h1 class="text-2xl font-bold py-3">
-          <fa-icon [icon]="faListCheck"></fa-icon> Contrôles internes
-        </h1>
-        <h2 class="text-xl">
-          Sélectionnez le produit à contrôler, analysez celui-ci et déclarez son état.
-        </h2>
-      </div>
+    <h1 class="text-2xl font-bold py-3">
+      <fa-icon [icon]="faListCheck"></fa-icon> Contrôles internes
+    </h1>
+    <h2 class="text-xl mb-4">
+      Liste des stocks à contrôler, casier par casier.
+    </h2>
+
+    <!-- Tableau des casiers / stocks -->
+    <div class="bg-white shadow-md rounded-lg p-6">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Casier</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stocks</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Contrôle</th>
+        </tr>
+        </thead>
+
+        <tbody class="bg-white divide-y divide-gray-200">
+        <tr *ngFor="let locker of lockers; let i = index"
+            [ngClass]="i % 2 === 0 ? 'bg-white' : 'bg-gray-100'">
+
+          <!-- Colonne casier -->
+          <td class="px-6 py-4 whitespace-nowrap font-bold align-top">
+            Casier {{ locker.number }}
+          </td>
+
+          <!-- Liste des stocks du casier -->
+          <td class="px-6 py-4">
+            <div class="flex-1">
+              <ng-container *ngIf="locker.stocks && locker.stocks.length > 0; else noStock">
+                <div class="flex flex-wrap gap-3">
+                  <div
+                    *ngFor="let stock of locker.stocks"
+                    class="flex items-center gap-3 border rounded px-3 py-2 bg-gray-50 max-w-xs">
+                    <img
+                      [src]="stock.product.picture ? stock.product.picture : 'assets/images/default_image.jpg'"
+                      alt="product image"
+                      class="h-10 w-10 rounded-full">
+                    <div class="text-xs">
+                      <div><b>ID Alitracer :</b> {{ stock.alitracer }}</div>
+                      <div><b>Taille :</b> {{ stock.product.size }}</div>
+                      <div><b>CMU :</b> {{ stock.product.cmu }}</div>
+                      <div><b>Emplacement :</b> {{ stock.product.location }}</div>
+                      <div>
+                        <b>Statut :</b>
+                        <span [class]="getStatusClassFromStock(stock)">
+                          {{ getStatusLabelFromStock(stock) }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </ng-container>
+              <ng-template #noStock>
+                <span class="text-gray-400 text-sm italic">Aucun stock dans ce casier</span>
+              </ng-template>
+            </div>
+          </td>
+
+          <!-- Bouton Contrôler devant chaque stock -->
+          <td class="px-6 py-4 text-right align-top">
+            <div class="flex flex-col items-end gap-2"
+                 *ngIf="locker.stocks && locker.stocks.length > 0">
+              <button
+                *ngFor="let stock of locker.stocks"
+                class="font-bold px-3 py-2 rounded-md text-white text-xs"
+                [ngClass]="selectedStockForCheck?.id === stock.id
+                  ? 'bg-blue-700'
+                  : 'bg-blue-500 hover:bg-blue-700'"
+                (click)="openCheckDialog(stock)">
+                Contrôler ({{ stock.alitracer }})
+              </button>
+            </div>
+          </td>
+        </tr>
+        </tbody>
+      </table>
     </div>
+  </div>
 
-  <!-- line separator -->
-  <div class="border-b-2 border-gray-200"></div>
+  <!-- Dialog de contrôle (popup centré) -->
+  <p-dialog
+    header="Contrôle du produit"
+    [(visible)]="checkDialogVisible"
+    [modal]="true"
+    [closable]="true"
+    [dismissableMask]="true"
+    [style]="{ width: '45vw', maxWidth: '600px' }"
+    [baseZIndex]="10000">
 
-  <div class="mt-4">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <ng-container *ngIf="selectedStockForCheck">
+      <div class="flex flex-col md:flex-row md:items-start gap-6 mb-6">
+        <img
+          class="h-32 w-32 object-cover rounded"
+          [src]="selectedStockForCheck.product.picture || 'assets/images/default_image.jpg'"
+          alt="Product Image">
 
-      <div class="lg:col-span-1 bg-white shadow-md rounded-lg p-6">
-        <h1 class="text-2xl font-bold mb-4">Sélectionner un produit</h1>
-        <label class="block text-gray-700 font-bold mb-2">Choisir un produit</label>
-        <select
-          id="selectWithdraw"
-          class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md"
-          [(ngModel)]="stock.id"
-          (change)="detectStock()">
-          <option value="0" disabled selected>Choisir un produit</option>
-          <option *ngFor="let item of stocksArray" [value]="item.id">
-            {{ item.product.title }}
-          </option>
-        </select>
-        <!-- Input pour scanner le produit -->
-        <div class="mt-4">
-          <label class="block text-gray-700 font-bold mb-2">Scanner l'ID Alitracer</label>
-          <input
-            class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md"
-            [(ngModel)]="stock.alitracer"
-            (change)="detectStock()"
-            type="text"
-            placeholder="ID Alitracer">
-        </div>
-      </div>
-
-      <!-- Caractéristiques du produit -->
-      <div class="lg:col-span-2 bg-white shadow-md rounded-lg p-6">
-        <div *ngIf="review.id" class="p-6">
-          <div class="flex justify-between items-center mb-4">
-            <div>
-              <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Aperçu du produit</div>
-              <p class="text-lg leading-tight font-medium text-black">
-                {{ review.id }} - {{ review.product.title }}
-              </p>
-            </div>
-            <div>
-              <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Statut</div>
-              <p class="text-lg leading-tight font-medium" [class]="getStatusClass()">
-                {{ review.status == 0 ? 'NOK' : review.status == 1 ? 'OK' : 'HS' }}
-              </p>
-            </div>
-            <div>
-              <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Dernier contrôle effectué</div>
-              <p class="text-lg leading-tight text-gray-500">{{ review.lastCheckDate }}</p>
-            </div>
-            <div>
-              <div class="uppercase tracking-wide text-sm text-gray-500 font-semibold">Date de création</div>
-              <p class="text-lg leading-tight text-gray-500">
-                {{ review.creationDate | date: 'dd/MM/yyyy' }}
-              </p>
-            </div>
-          </div>
-          <div class="flex">
-            <div class="flex-shrink-0">
-              <img
-                class="h-48 w-48 object-cover"
-                [src]="review.product.picture ? review.product.picture : 'assets/images/default_image.jpg'"
-                alt="Product Image">
-            </div>
-            <div class="ml-6">
-              <div class="grid grid-cols-2 gap-x-12">
-                <div>
-                  <div class="mt-4">
-                    <div class="text-gray-500">Type</div>
-                    <div class="text-black">{{ review.product.type }}</div>
-                  </div>
-                  <div class="mt-4">
-                    <div class="text-gray-500">Marque</div>
-                    <div class="text-black">{{ review.product.brand }}</div>
-                  </div>
-                  <div class="mt-4">
-                    <div class="text-gray-500">Taille</div>
-                    <div class="text-black">{{ review.product.size }}</div>
-                  </div>
-                </div>
-                <div>
-                  <div class="mt-4">
-                    <div class="text-gray-500">Emplacement</div>
-                    <div class="text-black">{{ review.product.location }}</div>
-                  </div>
-                  <div class="mt-4">
-                    <div class="text-gray-500">Charge maximale d’utilisation</div>
-                    <div class="text-black">{{ review.product.cmu }}</div>
-                  </div>
-                  <div class="mt-4">
-                    <div class="text-gray-500">ID ALITRACER</div>
-                    <div class="text-black">{{ review.product.alitracer }}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- si review est vide -->
-        <div *ngIf="!review.id" class="text-center self-center">
-          <p class="text-lg font-bold">
-            Veuillez scanner ou sélectionner un produit pour afficher ses caractéristiques
+        <div class="flex-1 text-sm">
+          <p class="text-lg font-bold mb-1">
+            {{ selectedStockForCheck.product.title }}
           </p>
-        </div>
-      </div>
-    </div>
+          <p class="text-gray-600 mb-2">
+            ID Alitracer : {{ selectedStockForCheck.alitracer }} •
+            Casier {{ selectedStockForCheck.lockerNumber }}
+          </p>
 
-    <div *ngIf="review.id" class="bg-white shadow-md rounded-lg p-6">
-      <h1 class="text-2xl font-bold mb-4">Analyse</h1>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
-        <div class="flex items center gap-4">
-          <label class="block text-gray-700 font-bold mb-2">Commentaire</label>
-          <input
-            class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md"
-            [(ngModel)]="check.comment"
-            type="text"
-            placeholder="Analyse visuelle du produit">
+          <div class="grid grid-cols-2 gap-x-6 mt-2">
+            <div>
+              <div class="text-gray-500">Type</div>
+              <div class="text-black">{{ selectedStockForCheck.product.type }}</div>
+
+              <div class="text-gray-500 mt-2">Marque</div>
+              <div class="text-black">{{ selectedStockForCheck.product.brand }}</div>
+            </div>
+            <div>
+              <div class="text-gray-500">Taille</div>
+              <div class="text-black">{{ selectedStockForCheck.product.size }}</div>
+
+              <div class="text-gray-500 mt-2">CMU</div>
+              <div class="text-black">{{ selectedStockForCheck.product.cmu }}</div>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <div class="text-gray-500">Statut actuel</div>
+            <div class="text-black" [class]="getStatusClassFromStock(selectedStockForCheck)">
+              {{ getStatusLabelFromStock(selectedStockForCheck) }}
+            </div>
+          </div>
         </div>
       </div>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+      <!-- Commentaire -->
+      <div class="mb-4 text-sm">
+        <label class="block text-gray-700 font-bold mb-2">Commentaire (optionnel)</label>
+        <textarea
+          class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md"
+          [(ngModel)]="checkComment"
+          rows="3"
+          placeholder="Analyse visuelle du produit">
+        </textarea>
+      </div>
+
+      <!-- Boutons OK / NOK / HS -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-2">
         <button
-          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-6 px-6 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-xl"
-          (click)="setStatus(1, review.id)">
+          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded text-lg"
+          type="button"
+          (click)="confirmCheck(1)">
           OK
         </button>
         <button
-          class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-6 px-6 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-xl"
-          (click)="setStatus(0, review.id)">
+          class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded text-lg"
+          type="button"
+          (click)="confirmCheck(0)">
           NOK
         </button>
         <button
-          class="bg-red-500 hover:bg-red-700 text-white font-bold py-6 px-6 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-xl"
-          (click)="setStatus(2, review.id)">
+          class="bg-red-500 hover:bg-red-700 text-white font-bold py-3 px-4 rounded text-lg"
+          type="button"
+          (click)="confirmCheck(2)">
           HS
         </button>
       </div>
-    </div>
-  </div>
-  <p-toast></p-toast>
+    </ng-container>
+  </p-dialog>
+
+  <p-toast position="bottom-right"></p-toast>
 </div>
 
 <!-- Hidden divs for tailwindcss color classes -->

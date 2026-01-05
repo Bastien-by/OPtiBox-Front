@@ -12,19 +12,21 @@ export class HistoryService {
     this.refreshHistory();
   }
 
-  refreshHistory(){
-    this.httpClient.get('api/history/withdraw').subscribe((withdrawHistory: any) => {
-      this.withdrawHistoryArray = withdrawHistory;
-    })
-
-    this.httpClient.get('api/history/deposit').subscribe((depositHistory: any) => {
-      this.depositHistoryArray = depositHistory;
-    })
-
-    this.httpClient.get('api/checks').subscribe((checkHistory: any) => {
-      this.checkHistoryArray = checkHistory;
-    })
+  // history.service.ts
+  refreshHistory(): Promise<void> {
+    return Promise.all([
+      this.httpClient.get('api/history/withdraw').toPromise().then((withdrawHistory: any) => {
+        this.withdrawHistoryArray = withdrawHistory;
+      }),
+      this.httpClient.get('api/history/deposit').toPromise().then((depositHistory: any) => {
+        this.depositHistoryArray = depositHistory;
+      }),
+      this.httpClient.get('api/checks').toPromise().then((checkHistory: any) => {
+        this.checkHistoryArray = checkHistory;
+      })
+    ]).then(() => {});
   }
+
 
   getAllWithdrawHistory() {
     return this.withdrawHistoryArray;

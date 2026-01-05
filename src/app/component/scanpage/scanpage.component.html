@@ -18,9 +18,15 @@
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
         <tr>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Casier</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stocks</th>
-          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Casier
+          </th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Stocks
+          </th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Actions
+          </th>
         </tr>
         </thead>
 
@@ -50,13 +56,17 @@
                       <div><b>Taille :</b> {{ stock.product.size }}</div>
                       <div><b>CMU :</b> {{ stock.product.cmu }}</div>
                       <div><b>Emplacement :</b> {{ stock.product.location }}</div>
-                      <div><b>Disp. :</b> {{ stock.available ? 'Disponible' : 'Emprunté' }}</div>
+                      <div>
+                        <b>Disp. :</b>
+                        <span class="font-semibold" [ngClass]="stock.available ? 'text-green-600' : 'text-orange-600'"> {{ stock.available ? 'Disponible' : 'Emprunté' }} </span>
+                      </div>
                       <div>
                         <b>Statut :</b>
-                        {{ stock.status === 0 ? 'NOK' : stock.status === 1 ? 'OK' : 'HS' }}
+                        <span [ngClass]="getStatusClass(stock)"> {{ stock.status === 1 ? 'OK' : stock.status === 0 ? 'NOK' : 'HS' }} </span>
                       </div>
                     </div>
                   </div>
+
                 </div>
               </ng-container>
               <ng-template #noStock>
@@ -99,7 +109,7 @@
     <div class="flex flex-col gap-4 p-4 text-sm">
       <p>
         Il y a
-        <b>{{ withdrawMax }}</b> stock(s) disponible(s) dans ce casier.
+        <b>{{ withdrawMax }}</b> stock(s) disponible(s) non HS dans ce casier.
       </p>
       <label class="font-semibold">
         Combien de stocks souhaitez-vous retirer ?
@@ -111,8 +121,9 @@
         [min]="1"
         [max]="withdrawMax"
         placeholder="Nombre entre 1 et {{ withdrawMax }}">
+
       <p class="text-xs text-gray-500">
-        Vous ne pouvez pas dépasser le nombre de stocks disponibles.
+        Vous ne pouvez pas dépasser le nombre de stocks disponibles non HS.
       </p>
 
       <div class="flex justify-end gap-2 mt-2">
@@ -141,7 +152,7 @@
     <div class="flex flex-col gap-4 p-4 text-sm">
       <p>
         Il y a
-        <b>{{ depositMax }}</b> stock(s) emprunté(s) pouvant être déposé(s) dans ce casier.
+        <b>{{ depositMax }}</b> stock(s) emprunté(s) non HS pouvant être déposé(s) dans ce casier.
       </p>
       <label class="font-semibold">
         Combien de stocks souhaitez-vous déposer dans ce casier ?
@@ -155,7 +166,7 @@
         placeholder="Nombre entre 1 et {{ depositMax }}">
 
       <p class="text-xs text-gray-500">
-        Vous ne pouvez pas dépasser le nombre de stocks empruntés.
+        Vous ne pouvez pas dépasser le nombre de stocks empruntés non HS.
       </p>
 
       <div class="flex justify-end gap-2 mt-2">
