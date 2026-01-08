@@ -1,25 +1,24 @@
 import { Injectable } from '@angular/core';
-import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router } from '@angular/router';
-import { KeycloakService } from 'keycloak-angular';
+import { CanActivate, Router } from '@angular/router';
+import { AuthAppService } from './services/auth-app.service';  // Ajuste le chemin (ex: src/app/services/)
 
 @Injectable({ providedIn: 'root' })
 export class AuthGuard implements CanActivate {
-  constructor(private keycloakService: KeycloakService, private router: Router) {}
+  constructor(private authService: AuthAppService, private router: Router) {}
 
-  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
-    if (!this.keycloakService.isLoggedIn()) {
-      this.keycloakService.login();
+  canActivate(): boolean {
+    if (!this.authService.isLoggedIn()) {
+      this.router.navigate(['/racine']);
       return false;
     }
 
-    const requiredRole = 'admin'; // rôle autorisé à accéder aux pages
-
-    if (this.keycloakService.isUserInRole(requiredRole)) {
-      return true; // L'utilisateur a le rôle nécessaire pour accéder à la page
-    } else {
-      alert('Vous n\'avez pas les autorisations nécessaires pour accéder à cette page');
-      this.router.navigate(['/']); // Redirige vers la page d'accueil si l'utilisateur n'a pas les autorisations nécessaires
-      return false;
+    // Protège les pages ADMIN uniquement
+    if (this.authService.isAdmin()) {
+      return true;
     }
+
+    alert("Accès réservé aux administrateurs");
+    this.router.navigate(['/racine']);
+    return false;
   }
 }

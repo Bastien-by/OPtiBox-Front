@@ -19,8 +19,7 @@
       <h2 class="text-xl font-bold mb-4">Ajout d'un utilisateur</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
         <input class="border border-gray-300 p-2" type="text" [(ngModel)]="user.username" placeholder="Nom de l'utilisateur" maxlength="20">
-        <input class="border border-gray-300 p-2" type="password" [(ngModel)]="user.password" placeholder="Mot de passe" maxlength="50">
-        <input class="border border-gray-300 p-2" type="text" [(ngModel)]="user.token" placeholder="Token" maxlength="20">
+        <input class="border border-gray-300 p-2" type="text" [(ngModel)]="user.token" placeholder="Mot de Passe" maxlength="20">
         <select class="border border-gray-300 p-2 rounded" [(ngModel)]="user.role">
           <option value="ADMIN">Admin</option>
           <option value="MAINTENANCE">Maintenance</option>
@@ -66,7 +65,7 @@
       <div class="flex flex-col gap-3 p-5">
         <h1 class="text-2xl font-bold py-3">Utilisateur n° {{ selectedUser.id }}</h1>
         <input class="border border-gray-300 p-2 rounded" type="text" [(ngModel)]="selectedUser.username" placeholder="Nom de l'utilisateur">
-        <input class="border border-gray-300 p-2 rounded" type="text" [(ngModel)]="selectedUser.token" placeholder="token">
+        <input class="border border-gray-300 p-2 rounded" type="text" [(ngModel)]="selectedUser.token" placeholder="Mot de Passe">
         <select class="border border-gray-300 p-2 rounded bg-white" [(ngModel)]="selectedUser.role">
           <option value="ADMIN">Admin</option>
           <option value="MAINTENANCE">Maintenance</option>

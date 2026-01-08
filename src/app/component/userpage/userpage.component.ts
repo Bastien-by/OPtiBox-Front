@@ -91,7 +91,7 @@ export class UserpageComponent implements OnInit{
   }
 
   addUser() {
-    if(this.user.username.trim().length === 0 || this.user.password.trim().length === 0 || this.user.token.trim().length === 0 || this.user.role.trim().length === 0){
+    if(this.user.username.trim().length === 0 || this.user.token.trim().length === 0 || this.user.role.trim().length === 0){
       this.showMissingFieldsToast();
       return;
     }
@@ -101,7 +101,6 @@ export class UserpageComponent implements OnInit{
     // reset the user
     this.user = {
       username: '',
-      password: '',
       token: '',
       role: '',
     }

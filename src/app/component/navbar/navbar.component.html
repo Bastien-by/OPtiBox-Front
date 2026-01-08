@@ -30,7 +30,6 @@
               <fa-icon [icon]="faListCheck" class="lg:hidden"></fa-icon>
             </a>
             <a
-              *ngIf="isLoggedIn()"
               routerLink="history"
               routerLinkActive="bg-gray-200"
               class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
@@ -38,7 +37,6 @@
               <fa-icon [icon]="faClockRotateLeft" class="lg:hidden"></fa-icon>
             </a>
             <a
-              *ngIf="isLoggedIn()"
               routerLink="procedure"
               routerLinkActive="bg-gray-200"
               class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
@@ -46,7 +44,7 @@
               <fa-icon [icon]="faList" class="lg:hidden"></fa-icon>
             </a>
             <a
-              *ngIf="isLoggedIn() && isMaintenance() || isAdmin()"
+              *ngIf="isLoggedIn() && (isAdmin() || isMaintenance())"
               routerLink="product"
               routerLinkActive="bg-gray-200"
               class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
@@ -54,7 +52,7 @@
               <fa-icon [icon]="faBox" class="lg:hidden"></fa-icon>
             </a>
             <a
-              *ngIf="isLoggedIn() && isMaintenance() || isAdmin()"
+              *ngIf="isLoggedIn() && (isAdmin() || isMaintenance())"
               routerLink="stock"
               routerLinkActive="bg-gray-200"
               class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
