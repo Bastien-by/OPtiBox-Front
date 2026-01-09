@@ -9,9 +9,11 @@ import {
   faArrowRightFromBracket,
   faArrowRightToBracket,
   faClockRotateLeft,
-  faListCheck
+  faListCheck,
+  faFilePdf
 } from '@fortawesome/free-solid-svg-icons';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-historypage',
@@ -70,7 +72,10 @@ export class HistorypageComponent implements OnInit {
   ];
   years: string[] = [];
 
-  constructor(protected historyService: HistoryService) {}
+  constructor(
+    protected historyService: HistoryService,
+    private httpClient: HttpClient
+  ) {}
 
   async ngOnInit(): Promise<void> {
     await this.historyService.refreshHistory();
@@ -165,6 +170,36 @@ export class HistorypageComponent implements OnInit {
     this.currentPage = 1;
   }
 
+  /**
+   * Télécharge le PDF d'un contrôle
+   */
+  downloadPdf(filename: string): void {
+    if (!filename) {
+      alert('Aucun PDF associé à ce contrôle');
+      return;
+    }
+
+    const url = `api/pdf/download/${filename}`;
+
+    this.httpClient.get(url, { responseType: 'blob' }).subscribe({
+      next: (blob: Blob) => {
+        // Crée un lien de téléchargement
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.click();
+
+        // Nettoie l'URL temporaire
+        window.URL.revokeObjectURL(url);
+      },
+      error: (error) => {
+        console.error('Erreur téléchargement PDF:', error);
+        alert('PDF introuvable sur le serveur');
+      }
+    });
+  }
+
 
   resetFilters(): void {
     this.filterUser = '';
@@ -196,4 +231,5 @@ export class HistorypageComponent implements OnInit {
   protected readonly faArrowRightToBracket = faArrowRightToBracket;
   protected readonly faListCheck = faListCheck;
   protected readonly faClockRotateLeft = faClockRotateLeft;
+  protected readonly faFilePdf = faFilePdf;
 }

@@ -19,6 +19,8 @@ import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { CheckService } from '../../services/check.service';
 import { StockService } from '../../services/stock.service';
 import { AuthAppService } from '../../services/auth-app.service';
+import { PdfService, CheckPdfData } from '../../services/pdf.service';
+import { HttpClient } from '@angular/common/http';
 
 interface Product {
   title: string;
@@ -27,10 +29,11 @@ interface Product {
   cmu: string;
   location: string;
   picture: string;
-  brand?: string;
+  brand: string;
 }
 
 interface Stock {
+  reference: string;
   id: number;
   alitracer: string;
   lockerNumber: number;
@@ -75,7 +78,9 @@ export class CheckpageComponent implements OnInit {
     private checkService: CheckService,
     private messageService: MessageService,
     private stockService: StockService,
-    private authApp: AuthAppService
+    private authApp: AuthAppService,
+    private pdfService: PdfService,
+    private httpClient: HttpClient
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -98,6 +103,7 @@ export class CheckpageComponent implements OnInit {
       id: s.id,
       alitracer: s.alitracer,
       lockerNumber: s.lockerNumber,
+      reference: s.reference,
       status: s.status,
       product: {
         title: s.product.title,
@@ -175,9 +181,11 @@ export class CheckpageComponent implements OnInit {
       return;
     }
 
+    const checkDate = new Date().toISOString();
+
     const payload: any = {
       id: null,
-      date: new Date().toISOString(),
+      date: checkDate,
       status,
       comment: this.checkComment || '',
       user: { id: appUser.id },
@@ -185,25 +193,51 @@ export class CheckpageComponent implements OnInit {
     };
 
     try {
-      await this.checkService.createCheck(payload);
+      // 1. Crée le check
+      const savedCheck: any = await this.checkService.createCheck(payload);
+
+      // 2. Prépare les données PDF
+      const pdfData: CheckPdfData = {
+        checkDate: checkDate,
+        productName: this.selectedStockForCheck.product?.title || 'Produit inconnu',
+        alitracer: this.selectedStockForCheck.alitracer || '',
+        reference: this.selectedStockForCheck.reference || '',
+        lockerNumber: this.selectedStockForCheck.lockerNumber,
+        status: status,
+        comment: this.checkComment || '',
+        controlledBy: appUser.username,
+        brand: this.selectedStockForCheck.product?.brand || 'N/A',
+        cmu: this.selectedStockForCheck.product?.cmu || 'N/A',
+        size: this.selectedStockForCheck.product?.size || 'N/A'
+      };
+
+      // 3. Génère ET sauvegarde le PDF
+      const pdfResult: any = await this.pdfService.generateAndSavePdf(pdfData);
+
+      // 4. Met à jour le check avec le filename
+      if (pdfResult && pdfResult.filename) {
+        await this.httpClient.patch(
+          `api/checks/${savedCheck.id}/pdf`,
+          {},
+          { params: { filename: pdfResult.filename } }
+        ).toPromise();
+      }
+
       this.showAddToast();
-
-      // Met à jour le statut côté front
       this.selectedStockForCheck.status = status;
-
-      // Rafraîchit les données complètes
       await this.checkService.refreshData();
       await this.loadLockers();
 
-      // Ferme le dialog
       this.checkDialogVisible = false;
       this.selectedStockForCheck = null;
       this.checkComment = '';
+
     } catch (error) {
       console.error('Error adding check:', error);
       this.showErrorToast('Erreur lors de l\'enregistrement du contrôle');
     }
   }
+
 
   /**
    * Toast success

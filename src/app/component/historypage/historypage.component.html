@@ -222,6 +222,7 @@
         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utilisateur</th>
         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commentaire</th>
+        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">PDF</th>
       </tr>
       </thead>
       <tbody class="bg-white divide-y divide-gray-200">
@@ -238,13 +239,34 @@
             {{ history.stock.product.title }} {{ history.stock.product.size }}
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
+          <span [ngClass]="{
+            'text-green-600 font-bold': history.status == 1,
+            'text-orange-500 font-bold': history.status == 0,
+            'text-red-600 font-bold': history.status == 2
+          }">
             {{ history.status == 0 ? 'NOK' : history.status == 1 ? 'OK' : history.status == 2 ? 'HS' : 'Inconnu' }}
+          </span>
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
             {{ history.date | date: 'dd/MM/yyyy HH:mm' }}
           </td>
           <td class="px-6 py-4 whitespace-nowrap">{{ history.user.username }}</td>
-          <td class="px-6 py-4 whitespace-nowrap">{{ history.comment }}</td>
+          <td class="px-6 py-4">{{ history.comment || '-' }}</td>
+          <td class="px-6 py-4 text-center">
+            <button
+              *ngIf="history.pdfFilename"
+              (click)="downloadPdf(history.pdfFilename)"
+              class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-3 rounded text-xs inline-flex items-center gap-1"
+              title="Télécharger le PDF">
+              <fa-icon [icon]="faFilePdf"></fa-icon>
+              <span>PDF</span>
+            </button>
+            <span
+              *ngIf="!history.pdfFilename"
+              class="text-gray-400 text-xs italic">
+            Aucun PDF
+          </span>
+          </td>
         </tr>
       </ng-container>
       </tbody>
