@@ -9,8 +9,8 @@
           <a
             class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white"
             [ngClass]="{ 'bg-blue-500 hover:bg-blue-600': isLoggedIn(), 'bg-gray-500': !isLoggedIn() }"
-            (click)="navigateOrShowToast('/scan', isLoggedIn())">
-            <fa-icon [icon]="faBarcode"></fa-icon> Scanner un produit
+            (click)="navigateOrShowToast('/withdraw-deposit', isLoggedIn())">
+            <fa-icon [icon]="faBarcode"></fa-icon> Retirer/Déposer un produit
           </a>
 
           <a
@@ -57,14 +57,6 @@
             <fa-icon [icon]="faList"></fa-icon> Procédures de Contrôles
           </a>
 
-          <a
-            *ngIf="isAdmin()"
-            class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white"
-            [ngClass]="{ 'bg-blue-500 hover:bg-blue-600': isAdmin(), 'bg-gray-500': !isAdmin() }"
-            (click)="navigateOrShowToast('/open-locker', isAdmin())">
-            <fa-icon [icon]="faDoorOpen"></fa-icon> Ouverture Casier (Maintenance)
-          </a>
-
         </div>
       </div>
       <div class="mt-8 md:mt-0 md:ml-8 md:w-1/3 w-full">
@@ -86,35 +78,29 @@
         </div>
         <div class="bg-white p-4 rounded-3xl shadow-md">
           <div class="flex items-center justify-between mb-2">
-            <p class="font-bold">Dernier contrôle interne</p>
-            <button class="bg-blue-500 text-white px-2 py-1 rounded-md">PDF</button>
+            <p class="font-bold">Dernier contrôle</p>
+            <button
+              *ngIf="lastCheck.pdfFilename"
+              (click)="downloadLastPdf()"
+              class="bg-blue-500 text-white px-2 py-1 rounded-md hover:bg-blue-600 transition"
+              [disabled]="isDownloading">
+              <fa-icon [icon]="faFilePdf"></fa-icon>
+              {{ isDownloading ? 'Téléchargement...' : 'PDF' }}
+            </button>
+            <button
+              *ngIf="!lastCheck.pdfFilename"
+              disabled
+              class="bg-gray-300 text-gray-500 px-2 py-1 rounded-md cursor-not-allowed">
+              PDF
+            </button>
           </div>
-          <p *ngIf="lastCheck.date" class="text-gray-600 text-sm">le {{ lastCheck.date | date: 'EEEE dd MMMM yyyy à HH:mm': 'fr':'fr-FR' }}</p>
-          <p *ngIf="!lastCheck.date" class="text-gray-600 text-sm">Aucun contrôle effectué</p>
-          <div class="flex items-center justify-between mt-4">
-            <p class="font-bold">Dernier contrôle réglementaire</p>
-            <button class="bg-blue-500 text-white px-2 py-1 rounded-md" >PDF</button>
-          </div>
-          <p class="text-gray-600 text-sm">le lundi 27 mai 2024 à 08:27</p>
+          <p *ngIf="lastCheck.date" class="text-gray-600 text-sm">
+            le {{ lastCheck.date | date: 'EEEE dd MMMM yyyy à HH:mm': 'fr':'fr-FR' }}
+          </p>
+          <p *ngIf="!lastCheck.date" class="text-gray-600 text-sm">
+            Aucun contrôle effectué
+          </p>
         </div>
-      </div>
-    </div>
-
-    <!-- Section Test NFC - en bas de page -->
-    <div class="mt-12 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-3xl p-8 shadow-2xl text-white">
-      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-        <div>
-          <h3 class="text-2xl font-bold mb-2">🪪 Test NFC / RFID</h3>
-          <p class="text-purple-100">Testez la lecture des tags NFC de la tablette</p>
-        </div>
-        <button
-          class="bg-white text-purple-600 font-bold px-8 py-4 rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 text-lg flex items-center gap-3"
-          (click)="testNFC()">
-          <span>📱 Scanner NFC</span>
-        </button>
-      </div>
-      <div *ngIf="nfcResult" class="mt-4 p-4 bg-white/20 rounded-2xl backdrop-blur-sm">
-        <p><strong>Résultat :</strong> {{ nfcResult }}</p>
       </div>
     </div>
   </div>

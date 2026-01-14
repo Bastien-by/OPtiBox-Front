@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { NgForOf } from '@angular/common';
+import { NgForOf, NgIf } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { CarouselModule } from 'primeng/carousel';
@@ -16,6 +16,16 @@ import { StockService } from '../../services/stock.service';
 import { CheckService } from '../../services/check.service';
 import { AuthAppService } from '../../services/auth-app.service';
 
+interface LockerStats {
+  available: number;
+  empty: number;
+  total: number;
+}
+
+interface LockerInfo {
+  hasStock: boolean;
+}
+
 @Component({
   selector: 'app-scanpage',
   standalone: true,
@@ -23,6 +33,7 @@ import { AuthAppService } from '../../services/auth-app.service';
   styleUrls: ['./scanpage.component.css'],
   imports: [
     NgForOf,
+    NgIf,
     ReactiveFormsModule,
     FormsModule,
     CarouselModule,
@@ -44,9 +55,23 @@ export class ScanpageComponent implements OnInit, OnDestroy {
 
   lockers: number[] = Array.from({ length: 24 }, (_, i) => i + 1);
 
+  // Map pour l'affichage type open-locker
+  lockersMap: { [lockerNumber: number]: LockerInfo | undefined } = {};
+
+  // Stats pour le header
+  stats: LockerStats = {
+    available: 0,
+    empty: 0,
+    total: 24
+  };
+
   /* Contexte courant */
 
   activeLocker: number | null = null;
+
+  // Stocks du casier actif pour le dialog de détails
+  lockerStocks: any[] = [];
+  lockerDetailsDialogVisible = false;
 
   /* Retrait */
 
@@ -148,6 +173,8 @@ export class ScanpageComponent implements OnInit, OnDestroy {
     ];
 
     await this.loadStocks();
+    await this.loadLastCheckDates();
+    this.buildLockersMapAndStats();
   }
 
   ngOnDestroy(): void {
@@ -160,6 +187,67 @@ export class ScanpageComponent implements OnInit, OnDestroy {
     this.availableStocks = this.scanService.getAvailableStocks();
     this.loanedStocks = this.scanService.getLoanedStocks();
     this.allStocks = [...this.availableStocks, ...this.loanedStocks];
+  }
+
+  private async loadLastCheckDates(): Promise<void> {
+    for (const stock of this.allStocks) {
+      this.stockService.getCheckIdByStockId(stock.id).subscribe({
+        next: (checks) => {
+          if (checks.length > 0) {
+            const latestCheck = checks.sort(
+              (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+            )[0];
+            stock.lastCheckDate = new Date(latestCheck.date).toLocaleString('fr-FR', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+          } else {
+            stock.lastCheckDate = null;
+          }
+        },
+        error: err => {
+          console.error(`Erreur check pour stock ${stock.id}:`, err);
+          stock.lastCheckDate = null;
+        }
+      });
+    }
+  }
+
+  private buildLockersMapAndStats(): void {
+    const map: { [lockerNumber: number]: LockerInfo } = {};
+    let available = 0;
+    let empty = 0;
+
+    for (const num of this.lockers) {
+      const stocks = this.getStocksByLocker(num);
+      const hasStock = stocks.length > 0;
+      map[num] = { hasStock };
+
+      if (hasStock) {
+        // on compte comme "dispo" si au moins un stock dispo non HS
+        if (stocks.some(s => s.available === true && s.status !== 2)) {
+          available++;
+        }
+      } else {
+        empty++;
+      }
+    }
+
+    this.lockersMap = map;
+    this.stats = {
+      available,
+      empty,
+      total: this.lockers.length
+    };
+  }
+
+  async refreshLockers(): Promise<void> {
+    await this.updateAvailableStocks();
+    await this.loadLastCheckDates();
+    this.buildLockersMapAndStats();
   }
 
   /* -------- AUTH -------- */
@@ -184,6 +272,12 @@ export class ScanpageComponent implements OnInit, OnDestroy {
 
   getStocksByLocker(lockerNumber: number) {
     return this.allStocks.filter(s => s.lockerNumber === lockerNumber);
+  }
+
+  openLockerDetails(lockerNumber: number): void {
+    this.activeLocker = lockerNumber;
+    this.lockerStocks = this.getStocksByLocker(lockerNumber);
+    this.lockerDetailsDialogVisible = true;
   }
 
   /**
@@ -273,6 +367,7 @@ export class ScanpageComponent implements OnInit, OnDestroy {
     }
 
     this.withdrawDialogVisible = false;
+    this.lockerDetailsDialogVisible = false; // ← AJOUT ICI
 
     try {
       await this.scanService.openLocker(this.activeLocker);
@@ -297,7 +392,6 @@ export class ScanpageComponent implements OnInit, OnDestroy {
     this.lockedFlow = 'withdraw';
     this.lockerCloseDialogVisible = true;
   }
-
   /* -------- DÉPÔT -------- */
 
   openDepositDialog(lockerNumber: number): void {
@@ -350,6 +444,7 @@ export class ScanpageComponent implements OnInit, OnDestroy {
     }
 
     this.depositDialogVisible = false;
+    this.lockerDetailsDialogVisible = false; // ← AJOUT ICI
 
     // tous les alitracer empruntés non HS de ce casier seront acceptés
     this.expectedAlitracers = this.depositStocksPool.map(s => s.alitracer);
@@ -361,6 +456,7 @@ export class ScanpageComponent implements OnInit, OnDestroy {
 
     setTimeout(() => this.startScanWorkflow(), 0);
   }
+
 
   /* -------- CONFIRMATION FERMETURE CASIER (retrait) -------- */
 
@@ -496,6 +592,8 @@ export class ScanpageComponent implements OnInit, OnDestroy {
 
       this.scanMode = null;
       await this.updateAvailableStocks();
+      await this.loadLastCheckDates();
+      this.buildLockersMapAndStats();
     }
   }
 
@@ -523,7 +621,7 @@ export class ScanpageComponent implements OnInit, OnDestroy {
         await this.html5QrCodeProduct.stop();
         await this.html5QrCodeProduct.clear();
       } catch (err) {
-        console.error('Erreur à l’arrêt du scanner produit', err);
+        console.error("Erreur à l'arrêt du scanner produit", err);
       }
     }
     this.html5QrCodeProduct = undefined;
@@ -556,6 +654,8 @@ export class ScanpageComponent implements OnInit, OnDestroy {
       this.showAddToast();
       await this.scanService.refreshData();
       await this.updateAvailableStocks();
+      await this.loadLastCheckDates();
+      this.buildLockersMapAndStats();
     } catch (error) {
       console.error('Error adding scan:', error);
     }

@@ -3,6 +3,7 @@ import { Router, RouterModule } from '@angular/router';
 import { DatePipe, NgClass, NgIf } from '@angular/common';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { HttpClient } from '@angular/common/http';
 import {
   faBarcode,
   faBox,
@@ -11,7 +12,8 @@ import {
   faListCheck,
   faPeopleGroup,
   faList,
-  faDoorOpen
+  faDoorOpen,
+  faFilePdf
 } from '@fortawesome/free-solid-svg-icons';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { StockService } from '../../services/stock.service';
@@ -34,20 +36,20 @@ export class RacinePageComponent implements OnInit {
 
   lastCheck: any = {
     date: null,
-    status: null
+    status: null,
+    pdfFilename: null
   };
 
-  /** Résultat du test NFC */
-  nfcResult: string | null = null;
-  /** Statut de lecture NFC en cours */
-  nfcScanning = false;
+  /** État du téléchargement PDF */
+  isDownloading = false;
 
   constructor(
     private messageService: MessageService,
     private stockService: StockService,
     private checkService: CheckService,
     private router: Router,
-    private authApp: AuthAppService
+    private authApp: AuthAppService,
+    private httpClient: HttpClient
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -55,7 +57,77 @@ export class RacinePageComponent implements OnInit {
     this.updateStockCounts();
 
     await this.checkService.getChecks();
-    this.lastCheck = this.checkService.getLastCheck();
+    this.loadLastCheck();
+  }
+
+  /**
+   * Charger le dernier contrôle depuis l'API
+   */
+  loadLastCheck(): void {
+    this.httpClient.get<any>('api/checks/last').subscribe({
+      next: (response) => {
+        this.lastCheck = response;
+        console.log('Dernier contrôle chargé:', this.lastCheck);
+      },
+      error: (error) => {
+        console.error('Erreur chargement dernier contrôle:', error);
+        // Fallback sur l'ancien système si l'API ne répond pas
+        this.lastCheck = this.checkService.getLastCheck();
+      }
+    });
+  }
+
+  /**
+   * Télécharger le dernier PDF
+   */
+  downloadLastPdf(): void {
+    if (!this.lastCheck.pdfFilename) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'PDF non disponible',
+        detail: 'Aucun PDF associé à ce contrôle'
+      });
+      return;
+    }
+
+    this.isDownloading = true;
+
+    // Télécharger le PDF depuis le backend
+    this.httpClient.get(`api/pdf/download/${this.lastCheck.pdfFilename}`, {
+      responseType: 'blob'
+    }).subscribe({
+      next: (blob: Blob) => {
+        // Créer un lien de téléchargement
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = this.lastCheck.pdfFilename;
+        link.click();
+
+        // Nettoyer
+        window.URL.revokeObjectURL(url);
+
+        this.isDownloading = false;
+
+        this.messageService.add({
+          severity: 'success',
+          summary: '✅ PDF téléchargé',
+          detail: this.lastCheck.pdfFilename
+        });
+
+        console.log('✅ PDF téléchargé:', this.lastCheck.pdfFilename);
+      },
+      error: (error) => {
+        console.error('❌ Erreur téléchargement PDF:', error);
+        this.isDownloading = false;
+
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur téléchargement',
+          detail: 'Impossible de télécharger le PDF'
+        });
+      }
+    });
   }
 
   updateStockCounts() {
@@ -109,102 +181,6 @@ export class RacinePageComponent implements OnInit {
     });
   }
 
-  /** Lecture réelle NFC avec Web NFC API */
-  async testNFC(): Promise<void> {
-    // Vérifier support NFC
-    if (!('NDEFReader' in window)) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: '⚠️ NFC non supporté',
-        detail: 'Votre navigateur/tablette ne supporte pas la lecture NFC. Utilisez Chrome Android récent.'
-      });
-      return;
-    }
-
-    if (this.nfcScanning) {
-      this.messageService.add({
-        severity: 'info',
-        summary: '⏳ Lecture en cours',
-        detail: 'Approchez un autre tag NFC...'
-      });
-      return;
-    }
-
-    this.nfcResult = null;
-    this.nfcScanning = true;
-
-    try {
-      const reader = new (window as any).NDEFReader();
-
-      this.messageService.add({
-        severity: 'info',
-        summary: '🪪 Lecture NFC',
-        detail: 'Approchez un tag NFC de la tablette...'
-      });
-
-      // Écoute des tags NFC
-      reader.addEventListener('reading', (event: any) => {
-        console.log('NFC Tag détecté:', event);
-
-        // Extraire le contenu du tag (premier record NDEF)
-        const message = event.message;
-        let tagContent = '';
-
-        if (message && message.length > 0) {
-          const record = message[0];
-          tagContent = new TextDecoder().decode(record.data || new Uint8Array());
-        }
-
-        // Fallback si pas de NDEF : utiliser l'ID du tag
-        if (!tagContent && event.serialNumber) {
-          tagContent = `ID: ${event.serialNumber}`;
-        }
-
-        this.nfcResult = tagContent || 'Tag vide';
-        this.nfcScanning = false;
-
-        this.messageService.add({
-          severity: 'success',
-          summary: '✅ Tag NFC lu',
-          detail: `Contenu: ${this.nfcResult}`
-        });
-
-        console.log('Tag NFC complet:', {
-          id: event.serialNumber,
-          content: tagContent,
-          records: message
-        });
-      });
-
-      // Scan pendant 30 secondes max
-      await reader.scan({ signal: AbortSignal.timeout(30000) });
-
-    } catch (error: any) {
-      this.nfcScanning = false;
-
-      if (error.name === 'AbortError') {
-        this.messageService.add({
-          severity: 'info',
-          summary: '⏹️ Scan arrêté',
-          detail: 'Temps maximum écoulé (30s)'
-        });
-      } else if (error.name === 'NotAllowedError') {
-        this.messageService.add({
-          severity: 'error',
-          summary: '🚫 NFC refusé',
-          detail: 'Activez NFC et autorisez la lecture'
-        });
-      } else {
-        this.messageService.add({
-          severity: 'error',
-          summary: '❌ Erreur NFC',
-          detail: error.message || 'Erreur inconnue'
-        });
-        console.error('Erreur NFC:', error);
-      }
-    }
-  }
-
   protected readonly faBarcode = faBarcode;
   protected readonly faListCheck = faListCheck;
   protected readonly faClockRotateLeft = faClockRotateLeft;
@@ -213,4 +189,5 @@ export class RacinePageComponent implements OnInit {
   protected readonly faPeopleGroup = faPeopleGroup;
   protected readonly faList = faList;
   protected readonly faDoorOpen = faDoorOpen;
+  protected readonly faFilePdf = faFilePdf;
 }

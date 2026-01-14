@@ -24,7 +24,9 @@ export interface CheckPdfData {
 })
 export class PdfService {
 
-  constructor(private httpClient: HttpClient) {}
+  constructor(
+    private httpClient: HttpClient,
+  ) {}
 
   /**
    * Génère le PDF et le sauvegarde sur le backend (SANS téléchargement auto)

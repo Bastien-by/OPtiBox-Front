@@ -7,7 +7,6 @@ import {ScanpageComponent} from "./component/scanpage/scanpage.component";
 import {HistorypageComponent} from "./component/historypage/historypage.component";
 import {ProcedurepageComponent} from "./component/procedurepage/procedurepage.component";
 import {CheckpageComponent} from "./component/checkpage/checkpage.component";
-import {OpenLockerComponent} from "./component/openlockerpage/openlocker.component";
 import { AuthGuard } from './auth.guard';
 
 export const routes: Routes = [
@@ -15,7 +14,7 @@ export const routes: Routes = [
     path: "", component: RacinePageComponent
   },
   {
-    path: "scan", component: ScanpageComponent
+    path: "withdraw-deposit", component: ScanpageComponent
   },
   {
     path: "check", component: CheckpageComponent
@@ -25,9 +24,6 @@ export const routes: Routes = [
   },
   {
     path: "procedure", component: ProcedurepageComponent
-  },
-  {
-    path: 'open-locker', component: OpenLockerComponent
   },
   {
     path: "product", component: ProductpageComponent,
@@ -43,6 +39,6 @@ export const routes: Routes = [
     path: "**", redirectTo: ""
   },
   {
-    path: "racine", component: RacinePageComponent
+    path: "racine", component: RacinePageComponent,
   },
 ];

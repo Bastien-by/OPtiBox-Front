@@ -15,10 +15,10 @@
             </a>
             <a
               *ngIf="isLoggedIn()"
-              routerLink="scan"
+              routerLink="withdraw-deposit"
               routerLinkActive="bg-gray-200"
               class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-              <span class="hidden lg:inline">Scan</span>
+              <span class="hidden lg:inline">Retrait/Dépôt</span>
               <fa-icon [icon]="faBarcode" class="lg:hidden"></fa-icon>
             </a>
             <a

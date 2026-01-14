@@ -23,6 +23,7 @@
     "@fortawesome/free-brands-svg-icons": "^6.4.2",
     "@fortawesome/free-regular-svg-icons": "^6.4.2",
     "@fortawesome/free-solid-svg-icons": "^6.4.2",
+    "@microsoft/microsoft-graph-client": "^3.0.7",
     "angular2-qrcode": "^2.0.3",
     "angularx-qrcode": "^17.0.1",
     "file-saver": "^2.0.5",

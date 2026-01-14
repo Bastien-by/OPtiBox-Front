@@ -15,6 +15,7 @@ registerLocaleData(localeFr, 'fr');
 })
 export class AppComponent implements OnInit{
   title = 'SHOP-STI';
+  showNavbar = true;
 
   constructor(private httpClient: HttpClient) {
   }
