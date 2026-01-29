@@ -458,11 +458,36 @@ export class ScanpageComponent implements OnInit, OnDestroy {
   }
 
 
-  /* -------- CONFIRMATION FERMETURE CASIER (retrait) -------- */
+  /* -------- CONFIRMATION FERMETURE CASIER (retrait / dépôt) -------- */
 
-  confirmLockerClosed(): void {
+  async confirmLockerClosed(): Promise<void> {
     this.lockerCloseDialogVisible = false;
 
+    if (!this.activeLocker) {
+      console.error('Aucun casier actif pour fermeture');
+      return;
+    }
+
+    try {
+      // Appel de ton API REST pour fermer le casier
+      await this.scanService.closeLocker(this.activeLocker);
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Casier fermé',
+        detail: `Casier ${this.activeLocker} fermé.`
+      });
+    } catch (e) {
+      console.error('Erreur fermeture casier :', e);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Erreur casier',
+        detail: `Impossible de fermer le casier ${this.activeLocker}.`
+      });
+      // Selon la criticité, tu peux soit faire un return ici, soit continuer
+      // return;
+    }
+
+    // Ensuite seulement, on reprend le flow métier
     if (this.lockedFlow === 'withdraw') {
       this.scanMode = 'withdraw';
       this.targetScanCount = this.withdrawQuantity;
@@ -473,9 +498,11 @@ export class ScanpageComponent implements OnInit, OnDestroy {
     }
 
     if (this.lockedFlow === 'deposit') {
+      // Pour le dépôt tu ne relances pas de scan, tu remets juste l'état à zéro
       this.lockedFlow = null;
     }
   }
+
 
   /* -------- SCAN WORKFLOW -------- */
 

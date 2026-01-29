@@ -1,6 +1,12 @@
 import { Injectable } from '@angular/core';
-import {HttpClient} from "@angular/common/http";
+import { HttpClient } from "@angular/common/http";
 import { firstValueFrom } from 'rxjs';
+
+export interface ScanResponse {
+  success: boolean;
+  value: string;
+  timestamp: number;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +16,6 @@ export class ScanService {
   private availableStocksArray: any[] = [];
   private loanedStocksArray: any[] = [];
   private usersArray: any[] = [];
-  private history: any = {};
 
   constructor(private httpClient: HttpClient) {
     this.refreshAvailableStocks();
@@ -18,7 +23,10 @@ export class ScanService {
     this.refreshUsers();
   }
 
-  // ↓ NOUVELLE méthode pour ouvrir un casier
+  /* ========================================
+   * GESTION CASIERS (OPEN/CLOSE)
+   * ======================================== */
+
   async openLocker(lockerNumber: number): Promise<any> {
     try {
       return await firstValueFrom(
@@ -30,7 +38,84 @@ export class ScanService {
     }
   }
 
+  async closeLocker(lockerNumber: number): Promise<any> {
+    try {
+      return await firstValueFrom(
+        this.httpClient.post(`api/locker/close/${lockerNumber}`, {})
+      );
+    } catch (error) {
+      console.error('Erreur Fermeture casier:', error);
+      throw error;
+    }
+  }
 
+  /* ========================================
+   * SCAN API (utilisé par les composants)
+   * ======================================== */
+
+  /**
+   * ✅ Lit la valeur (SANS cache)
+   */
+  async readScan(): Promise<ScanResponse> {
+    try {
+      // ✅ Force un timestamp unique pour éviter le cache HTTP
+      const timestamp = Date.now();
+
+      const response = await firstValueFrom(
+        this.httpClient.post<ScanResponse>(
+          `api/scan/read?t=${timestamp}`,  // ✅ Query param anti-cache
+          {},
+          {
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',  // ✅ Désactive cache
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
+          }
+        )
+      );
+
+      return response;
+
+    } catch (error) {
+      console.error('[ScanService] Erreur lecture:', error);
+      return { success: false, value: '', timestamp: 0 };
+    }
+  }
+
+
+
+  /**
+   * Efface la valeur dans l'automate
+   */
+  async clearScan(): Promise<any> {
+    try {
+      return await firstValueFrom(
+        this.httpClient.post('api/scan/clear', {})
+      );
+    } catch (error) {
+      console.error('Erreur clear scan:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Vérifie la connexion PLC
+   */
+  async healthCheck(): Promise<any> {
+    try {
+      return await firstValueFrom(
+        this.httpClient.get('api/scan/health')
+      );
+    } catch (error) {
+      console.error('Erreur health check PLC:', error);
+      throw error;
+    }
+  }
+
+  /* ========================================
+   * REFRESH DATA
+   * ======================================== */
 
   refreshData() {
     return Promise.all([
@@ -82,6 +167,10 @@ export class ScanService {
     });
   }
 
+  /* ========================================
+   * GETTERS
+   * ======================================== */
+
   getAvailableStocks() {
     return this.availableStocksArray;
   }
@@ -94,12 +183,11 @@ export class ScanService {
     return this.usersArray;
   }
 
+  /* ========================================
+   * HISTORY
+   * ======================================== */
 
   async createHistory(history: any): Promise<void> {
     await firstValueFrom(this.httpClient.post('api/history', history));
   }
-
-
 }
-
-

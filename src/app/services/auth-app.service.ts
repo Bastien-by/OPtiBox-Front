@@ -5,7 +5,7 @@ export interface AppUser {
   id: number;
   username: string;
   role: 'ADMIN' | 'MAINTENANCE' | 'OPERATEUR';
-  token?: string;      // si tu en as un côté backend
+  token?: string;
 }
 
 interface StoredUser {
@@ -20,12 +20,10 @@ const STORAGE_KEY = 'optibox_user';
 })
 export class AuthAppService {
 
-  // utilisateur courant en mémoire
   private currentUserSubject = new BehaviorSubject<AppUser | null>(this.loadUserFromStorage());
   currentUser$ = this.currentUserSubject.asObservable();
 
-  /** Durée de session OptiBox en ms (ex: 5min) */
-  private sessionTTL = 120 * 60 * 1000;
+  private sessionTTL = 300 * 60 * 1000;
 
   private loadUserFromStorage(): AppUser | null {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -53,6 +51,30 @@ export class AuthAppService {
       expiry: Date.now() + this.sessionTTL
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+  }
+
+  // ✅ AJOUTE CETTE MÉTHODE (mock local, sans HTTP)
+  async authenticate(username: string, password: string): Promise<boolean> {
+    // Liste des utilisateurs en dur
+    const mockUsers = [
+      { id: 1, username: 'admin', password: 'admin123', role: 'ADMIN' as const },
+      { id: 2, username: 'operator', password: 'operator123', role: 'OPERATEUR' as const },
+      { id: 3, username: 'maintenance', password: 'maintenance123', role: 'MAINTENANCE' as const }
+    ];
+
+    // Simule un délai réseau (optionnel)
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    const user = mockUsers.find(u => u.username === username && u.password === password);
+
+    if (user) {
+      // Login réussi → stocke l'utilisateur
+      this.login({ id: user.id, username: user.username, role: user.role });
+      return true;
+    }
+
+    // Identifiants incorrects
+    return false;
   }
 
   login(user: AppUser): void {

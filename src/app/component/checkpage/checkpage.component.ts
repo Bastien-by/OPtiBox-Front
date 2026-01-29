@@ -1,13 +1,14 @@
-import { Component, OnInit } from '@angular/core';
-import { NgForOf, NgIf, NgClass, DatePipe  } from '@angular/common';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { NgForOf, NgIf, NgClass, DatePipe } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { ToastModule } from 'primeng/toast';
 import { DialogModule } from 'primeng/dialog';
 import { MessageService } from 'primeng/api';
 
-import { faListCheck, faFileExcel, faDoorOpen} from '@fortawesome/free-solid-svg-icons';
+import { faListCheck, faFileExcel, faDoorOpen, faBarcode, faStop } from '@fortawesome/free-solid-svg-icons';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { Html5Qrcode } from 'html5-qrcode';
 
 import { CheckService } from '../../services/check.service';
 import { StockService } from '../../services/stock.service';
@@ -65,12 +66,12 @@ interface LockerInfo {
   styleUrls: ['./checkpage.component.css'],
   providers: [MessageService]
 })
-export class CheckpageComponent implements OnInit {
+export class CheckpageComponent implements OnInit, OnDestroy {
 
   // Tous les stocks
   allStocks: Stock[] = [];
 
-  // Map pour affichage grille (INITIALISÉ AVEC VALEURS PAR DÉFAUT)
+  // Map pour affichage grille
   lockersMap: { [lockerNumber: number]: LockerInfo | undefined } = {};
 
   // Stats
@@ -97,21 +98,28 @@ export class CheckpageComponent implements OnInit {
   // Visibilité du dialog de contrôle individuel
   checkDialogVisible = false;
 
-  // Contrôle en masse
-  bulkCheckDialogVisible = false;
-  bulkCheckComment = '';
-
   // Confirmation fermeture casier
   lockerCloseDialogVisible = false;
-  private checkFlow: 'individual' | 'bulk' | null = null;
   private pendingStatus: number | null = null;
 
   // Excel mensuels
   monthlyExcelFiles: any[] = [];
 
+  // MODE SCAN (caméra)
+  scanModeActive = false;
+  scanDialogVisible = false;
+  scanLocked = false;
+  private html5QrCodeProduct?: Html5Qrcode;
+  private productScannerInitialized = false;
+
+  // Mode "Tout Contrôler" (scan global sans casier spécifique)
+  globalControlMode = false;
+
   protected readonly faListCheck = faListCheck;
   protected readonly faFileExcel = faFileExcel;
   protected readonly faDoorOpen = faDoorOpen;
+  protected readonly faBarcode = faBarcode;
+  protected readonly faStop = faStop;
 
   constructor(
     private checkService: CheckService,
@@ -134,6 +142,10 @@ export class CheckpageComponent implements OnInit {
     await this.loadLastCheckDates();
     this.buildLockersMapAndStats();
     await this.loadMonthlyExcelFiles();
+  }
+
+  ngOnDestroy(): void {
+    this.stopProductScanner();
   }
 
   isLoggedIn(): boolean {
@@ -328,52 +340,25 @@ export class CheckpageComponent implements OnInit {
   }
 
   /**
-   * Ouverture du dialog de contrôle individuel pour un stock donné
-   * Ouvre d'abord le casier physiquement
+   * ==============================
+   * CONTRÔLE PAR SCAN CAMÉRA (UN CASIER)
+   * ==============================
    */
-  async openCheckDialog(stock: Stock): Promise<void> {
-    this.selectedStockForCheck = stock;
-    this.checkComment = '';
-    this.checkFlow = 'individual';
-
-    // Ouvre le casier physiquement
-    try {
-      await this.scanService.openLocker(stock.lockerNumber);
-      this.messageService.add({
-        severity: 'info',
-        summary: 'Casier ouvert',
-        detail: `Casier ${stock.lockerNumber} ouvert pour contrôle.`
-      });
-
-      // Affiche directement le dialog de contrôle
-      this.checkDialogVisible = true;
-
-    } catch (e) {
-      console.error('Erreur ouverture casier (contrôle) :', e);
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Erreur casier',
-        detail: `Impossible d'ouvrir le casier ${stock.lockerNumber}.`
-      });
-    }
-  }
 
   /**
-   * Ouvre le dialog de contrôle en masse
-   * Ouvre d'abord le casier physiquement
+   * Démarre le mode de contrôle par scan caméra pour UN casier
+   * Ouvre le casier et lance la caméra
    */
-  async openBulkCheckDialog(): Promise<void> {
+  async startScanControl(): Promise<void> {
+    if (!this.activeLocker) {
+      this.showErrorToast('Aucun casier sélectionné');
+      return;
+    }
+
     if (this.lockerStocks.length === 0) {
       this.showErrorToast('Aucun stock à contrôler dans ce casier');
       return;
     }
-
-    if (!this.activeLocker) {
-      return;
-    }
-
-    this.bulkCheckComment = '';
-    this.checkFlow = 'bulk';
 
     // Ouvre le casier physiquement
     try {
@@ -381,75 +366,92 @@ export class CheckpageComponent implements OnInit {
       this.messageService.add({
         severity: 'info',
         summary: 'Casier ouvert',
-        detail: `Casier ${this.activeLocker} ouvert pour contrôle en masse.`
+        detail: `Casier ${this.activeLocker} ouvert. Scannez les alitracers avec la caméra.`
       });
 
-      // Affiche directement le dialog de contrôle en masse
-      this.bulkCheckDialogVisible = true;
+      // Active le mode scan
+      this.scanModeActive = true;
+      this.globalControlMode = false;
+      this.lockerDetailsDialogVisible = false;
+      this.scanDialogVisible = true;
+
+      // Lance la caméra après l'ouverture du dialog
+      setTimeout(() => this.startScanWorkflow(), 300);
 
     } catch (e) {
-      console.error('Erreur ouverture casier (contrôle masse) :', e);
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Erreur casier',
-        detail: `Impossible d'ouvrir le casier ${this.activeLocker}.`
-      });
+      console.error('Erreur ouverture casier:', e);
+      this.showErrorToast(`Impossible d'ouvrir le casier ${this.activeLocker}`);
     }
   }
 
   /**
-   * Vérifie si au moins un stock du casier n'a pas été contrôlé ce mois-ci
-   * @param lockerNumber Numéro du casier
-   * @returns true si au moins un stock n'est pas contrôlé ce mois-ci
+   * Arrête le mode de contrôle et demande confirmation fermeture casier
    */
-  needsCheck(lockerNumber: number): boolean {
-    const stocks = this.getStocksByLocker(lockerNumber);
+  async stopScanControl(): Promise<void> {
+    this.scanModeActive = false;
+    this.scanDialogVisible = false;
+    await this.stopProductScanner();
 
-    if (stocks.length === 0) {
-      return false; // Casier vide, pas besoin de contrôle
-    }
-
-    // Début du mois en cours
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-    // Vérifie si au moins un stock n'a pas été contrôlé ce mois-ci
-    return stocks.some(stock => {
-      if (!stock.lastCheckDate) {
-        return true; // Jamais contrôlé
-      }
-
-      // Convertit lastCheckDate en Date
-      const lastCheckDate = new Date(stock.lastCheckDate);
-
-      // Si le dernier contrôle est avant le début du mois, il faut contrôler
-      return lastCheckDate < startOfMonth;
-    });
+    // Affiche le dialog de confirmation fermeture casier
+    this.lockerCloseDialogVisible = true;
   }
 
   /**
-   * Confirmation que le casier a été refermé
-   * Exécute ensuite l'enregistrement du contrôle
+   * Confirmation fermeture casier (après arrêt du scan)
    */
   async confirmLockerClosed(): Promise<void> {
     this.lockerCloseDialogVisible = false;
 
-    if (this.pendingStatus === null) {
-      return;
+    // On garde la valeur locale pour le log / message
+    const lockerToClose = this.activeLocker;
+
+    if (lockerToClose != null) {
+      try {
+        await this.scanService.closeLocker(lockerToClose);
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Casier fermé',
+          detail: `Casier ${lockerToClose} fermé.`
+        });
+      } catch (error) {
+        console.error('Erreur fermeture casier:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur casier',
+          detail: `Impossible de fermer le casier ${lockerToClose}.`
+        });
+        // Tu peux choisir de return ici si tu ne veux pas reset le contexte en cas d’erreur
+        // return;
+      }
     }
 
-    // Exécute le contrôle selon le flow
-    if (this.checkFlow === 'individual') {
-      await this.executeIndividualCheck(this.pendingStatus);
-    } else if (this.checkFlow === 'bulk') {
-      await this.executeBulkCheck(this.pendingStatus);
-    }
+    // Réinitialise le contexte
+    this.activeLocker = null;
+    this.selectedStockForCheck = null;
+    this.globalControlMode = false;
 
-    this.pendingStatus = null;
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Contrôle terminé',
+      detail: 'Le mode de contrôle a été arrêté.'
+    });
+
+    await this.refreshLockers();
   }
 
-  async openAllLockers(): Promise<void> {
+
+  /**
+   * ==============================
+   * TOUT CONTRÔLER (MODE GLOBAL)
+   * ==============================
+   */
+
+  /**
+   * Ouvre tous les casiers et lance le mode scan global
+   */
+  async startGlobalControl(): Promise<void> {
     try {
+      // Ouvre tous les casiers
       for (let i = 1; i <= 24; i++) {
         try {
           await this.scanService.openLocker(i);
@@ -461,16 +463,180 @@ export class CheckpageComponent implements OnInit {
 
       this.messageService.add({
         severity: 'success',
-        summary: 'Tous les casiers',
-        detail: 'Tous les casiers ont été ouverts'
+        summary: 'Tous les casiers ouverts',
+        detail: 'Tous les casiers ont été ouverts. Scannez n\'importe quel alitracer.'
       });
-    } catch {
+
+      // Active le mode scan global
+      this.scanModeActive = true;
+      this.globalControlMode = true;
+      this.activeLocker = null;
+      this.lockerStocks = this.allStocks; // Tous les stocks disponibles
+      this.scanDialogVisible = true;
+
+      // Lance la caméra
+      setTimeout(() => this.startScanWorkflow(), 300);
+
+    } catch (error) {
       this.messageService.add({
         severity: 'error',
         summary: 'Erreur globale',
         detail: 'Erreur lors de l\'ouverture des casiers'
       });
     }
+  }
+
+  /**
+   * Initialise Html5Qrcode sur l'élément #qr-reader
+   */
+  private async startScanWorkflow(): Promise<void> {
+    await this.stopProductScanner();
+
+    const elementId = 'qr-reader';
+    this.html5QrCodeProduct = new Html5Qrcode(elementId);
+
+    try {
+      await this.html5QrCodeProduct.start(
+        { facingMode: 'environment' }, // Caméra arrière
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        async (decodedText: string) => {
+          await this.handleScannedCode(decodedText);
+        },
+        () => {} // Ignore les erreurs de frame
+      );
+      this.productScannerInitialized = true;
+    } catch (err) {
+      console.error('Erreur démarrage scanner contrôle:', err);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Erreur caméra',
+        detail: 'Impossible de démarrer la caméra. Vérifiez les permissions.'
+      });
+      this.scanDialogVisible = false;
+    }
+  }
+
+  /**
+   * Gestion d'un code scanné par la caméra
+   */
+  private async handleScannedCode(decodedText: string): Promise<void> {
+    if (!this.scanModeActive || this.scanLocked) {
+      return;
+    }
+
+    // Lock pour éviter les scans multiples
+    this.scanLocked = true;
+    setTimeout(() => {
+      this.scanLocked = false;
+    }, 1500);
+
+    const alitracer = decodedText.trim();
+
+    // Mode global : cherche dans TOUS les stocks
+    if (this.globalControlMode) {
+      const stock = this.allStocks.find(s => s.alitracer === alitracer);
+
+      if (!stock) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Stock non trouvé',
+          detail: `L'alitracer "${alitracer}" ne correspond à aucun stock.`
+        });
+        return;
+      }
+
+      // Ouvre le dialog de contrôle pour ce stock
+      this.selectedStockForCheck = stock;
+      this.checkComment = '';
+      this.checkDialogVisible = true;
+      return;
+    }
+
+    // Mode casier spécifique : cherche uniquement dans le casier actif
+    if (!this.activeLocker) {
+      this.showErrorToast('Aucun casier actif pour ce contrôle');
+      return;
+    }
+
+    const stock = this.lockerStocks.find(s => s.alitracer === alitracer);
+
+    if (!stock) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Stock non trouvé',
+        detail: `L'alitracer "${alitracer}" ne correspond à aucun stock du casier ${this.activeLocker}.`
+      });
+      return;
+    }
+
+    // Ouvre le dialog de contrôle pour ce stock
+    this.selectedStockForCheck = stock;
+    this.checkComment = '';
+    this.checkDialogVisible = true;
+  }
+
+  /**
+   * Arrête le scanner caméra
+   */
+  private async stopProductScanner(): Promise<void> {
+    if (this.html5QrCodeProduct && this.productScannerInitialized) {
+      try {
+        await this.html5QrCodeProduct.stop();
+        await this.html5QrCodeProduct.clear();
+      } catch (err) {
+        console.error("Erreur à l'arrêt du scanner contrôle", err);
+      }
+    }
+    this.html5QrCodeProduct = undefined;
+    this.productScannerInitialized = false;
+  }
+
+  /**
+   * Vérifie si au moins un stock du casier n'a pas été contrôlé ce mois-ci
+   */
+  needsCheck(lockerNumber: number): boolean {
+    const stocks = this.getStocksByLocker(lockerNumber);
+
+    if (stocks.length === 0) {
+      return false;
+    }
+
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    return stocks.some(stock => {
+      if (!stock.lastCheckDate) {
+        return true;
+      }
+
+      const parts = stock.lastCheckDate.split(/[\s/:]/);
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parseInt(parts[2], 10);
+      const lastCheckDate = new Date(year, month, day);
+
+      return lastCheckDate < startOfMonth;
+    });
+  }
+
+  /**
+   * Vérifie si un stock spécifique a été contrôlé ce mois-ci
+   */
+  isStockCheckedThisMonth(stock: Stock): boolean {
+    if (!stock.lastCheckDate) {
+      return false;
+    }
+
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const parts = stock.lastCheckDate.split(/[\s/:]/);
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const year = parseInt(parts[2], 10);
+    const lastCheckDate = new Date(year, month, day);
+
+    return lastCheckDate >= startOfMonth;
   }
 
   private addRecentAction(action: string, locker: number): void {
@@ -520,29 +686,18 @@ export class CheckpageComponent implements OnInit {
   }
 
   /**
-   * Clic sur OK/NOK/HS pour contrôle individuel
-   * Ferme le dialog et demande confirmation fermeture casier
+   * Clic sur OK/NOK/HS pour contrôle
    */
   confirmCheck(status: number): void {
-    this.pendingStatus = status;
     this.checkDialogVisible = false;
-    this.lockerCloseDialogVisible = true;
+    // Exécute immédiatement le contrôle (sans dialog de confirmation)
+    this.executeCheck(status);
   }
 
   /**
-   * Clic sur Tous OK/NOK/HS pour contrôle en masse
-   * Ferme le dialog et demande confirmation fermeture casier
+   * Exécution du contrôle après confirmation fermeture
    */
-  confirmBulkCheck(status: number): void {
-    this.pendingStatus = status;
-    this.bulkCheckDialogVisible = false;
-    this.lockerCloseDialogVisible = true;
-  }
-
-  /**
-   * Exécution du contrôle INDIVIDUEL après confirmation fermeture
-   */
-  private async executeIndividualCheck(status: number): Promise<void> {
+  private async executeCheck(status: number): Promise<void> {
     if (!this.selectedStockForCheck) {
       this.showErrorToast('Aucun produit sélectionné pour le contrôle');
       return;
@@ -620,120 +775,20 @@ export class CheckpageComponent implements OnInit {
 
       this.selectedStockForCheck = null;
       this.checkComment = '';
-      this.checkFlow = null;
+
+      // Retourne directement au scan (pas de dialog de confirmation)
+      if (this.scanModeActive) {
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Contrôle enregistré',
+          detail: 'Vous pouvez scanner le prochain stock.'
+        });
+      }
 
     } catch (error) {
       console.error('Error adding check:', error);
       this.showErrorToast('Erreur lors de l\'enregistrement du contrôle');
     }
-  }
-
-  /**
-   * Exécution du contrôle EN MASSE après confirmation fermeture
-   */
-  private async executeBulkCheck(status: number): Promise<void> {
-    if (this.lockerStocks.length === 0) {
-      this.showErrorToast('Aucun stock à contrôler');
-      return;
-    }
-
-    const appUser = this.authApp.getCurrentUser();
-    if (!appUser) {
-      this.showErrorToast('Vous devez être connecté pour réaliser un contrôle');
-      return;
-    }
-
-    const checkDate = new Date().toISOString();
-    let successCount = 0;
-    let errorCount = 0;
-
-    // Boucle sur tous les stocks du casier
-    for (const stock of this.lockerStocks) {
-      try {
-        const payload: any = {
-          id: null,
-          date: checkDate,
-          status,
-          comment: this.bulkCheckComment || '',
-          user: { id: appUser.id },
-          stock: { id: stock.id }
-        };
-
-        // 1. Crée le check
-        const savedCheck: any = await this.checkService.createCheck(payload);
-
-        // 2. Prépare les données PDF
-        const pdfData: CheckPdfData = {
-          checkDate: checkDate,
-          productName: stock.product?.title || 'Produit inconnu',
-          alitracer: stock.alitracer || '',
-          reference: stock.reference || '',
-          lockerNumber: stock.lockerNumber,
-          status: status,
-          comment: this.bulkCheckComment || '',
-          controlledBy: appUser.username,
-          brand: stock.product?.brand || 'N/A',
-          cmu: stock.product?.cmu || 'N/A',
-          size: stock.product?.size || 'N/A'
-        };
-
-        // 3. Génère ET sauvegarde le PDF
-        const pdfResult: any = await this.pdfService.generateAndSavePdf(pdfData);
-
-        // 4. Met à jour le check avec le filename
-        if (pdfResult && pdfResult.filename) {
-          await this.httpClient.patch(
-            `api/checks/${savedCheck.id}/pdf`,
-            {},
-            { params: { filename: pdfResult.filename } }
-          ).toPromise();
-        }
-
-        // 5. Met à jour le fichier Excel mensuel
-        await this.updateMonthlyExcel(
-          stock,
-          status,
-          this.bulkCheckComment,
-          appUser.username
-        );
-
-        // Met à jour le statut local
-        stock.status = status;
-        const stockInList = this.allStocks.find(s => s.id === stock.id);
-        if (stockInList) {
-          stockInList.status = status;
-        }
-
-        successCount++;
-
-      } catch (error) {
-        console.error(`Erreur contrôle stock ${stock.alitracer}:`, error);
-        errorCount++;
-      }
-    }
-
-    // Toast de résultat
-    if (successCount > 0) {
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Contrôles enregistrés',
-        detail: `${successCount} contrôle(s) réalisé(s) avec succès${errorCount > 0 ? `, ${errorCount} erreur(s)` : ''}`
-      });
-    }
-
-    if (errorCount > 0 && successCount === 0) {
-      this.showErrorToast(`Échec du contrôle en masse (${errorCount} erreur(s))`);
-    }
-
-    await this.checkService.refreshData();
-    await this.loadLockers();
-    await this.loadLastCheckDates();
-    this.buildLockersMapAndStats();
-    await this.loadMonthlyExcelFiles();
-
-    this.lockerDetailsDialogVisible = false;
-    this.bulkCheckComment = '';
-    this.checkFlow = null;
   }
 
   /**
@@ -756,5 +811,13 @@ export class CheckpageComponent implements OnInit {
       summary: 'Erreur',
       detail
     });
+  }
+
+  /**
+   * Nom du user connecté
+   */
+  get currentUserName(): string {
+    const user = this.authApp.getCurrentUser();
+    return user ? user.username : 'Utilisateur';
   }
 }

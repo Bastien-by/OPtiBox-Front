@@ -1,18 +1,29 @@
 <nav class="bg-white shadow-lg fixed w-full z-10">
+
   <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+
     <div class="relative flex items-center justify-between h-16">
+
       <div class="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
+
         <div class="flex-shrink-0 flex items-center text-blue-900 font-bold text-xl">
+
           <img src="assets/images/OptiBoxLogo.jpg" alt="OptiBox Logo" class="h-10 w-auto self-center" />
+
         </div>
+
         <div class="hidden sm:block sm:ml-6">
+
           <div class="flex space-x-4">
+
             <a
+              *ngIf="isLoggedIn()"
               routerLink="racine"
               routerLinkActive="bg-gray-200"
               class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
               <fa-icon [icon]="faHouse"></fa-icon>
             </a>
+
             <a
               *ngIf="isLoggedIn()"
               routerLink="withdraw-deposit"
@@ -21,6 +32,7 @@
               <span class="hidden lg:inline">Retrait/Dépôt</span>
               <fa-icon [icon]="faBarcode" class="lg:hidden"></fa-icon>
             </a>
+
             <a
               *ngIf="isLoggedIn() && (isAdmin() || isMaintenance())"
               routerLink="check"
@@ -29,20 +41,25 @@
               <span class="hidden lg:inline">Contrôles</span>
               <fa-icon [icon]="faListCheck" class="lg:hidden"></fa-icon>
             </a>
+
             <a
+              *ngIf="isLoggedIn()"
               routerLink="history"
               routerLinkActive="bg-gray-200"
               class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
               <span class="hidden lg:inline">Historique</span>
               <fa-icon [icon]="faClockRotateLeft" class="lg:hidden"></fa-icon>
             </a>
+
             <a
+              *ngIf="isLoggedIn()"
               routerLink="procedure"
               routerLinkActive="bg-gray-200"
               class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
               <span class="hidden lg:inline">Procédures</span>
               <fa-icon [icon]="faList" class="lg:hidden"></fa-icon>
             </a>
+
             <a
               *ngIf="isLoggedIn() && (isAdmin() || isMaintenance())"
               routerLink="product"
@@ -51,6 +68,7 @@
               <span class="hidden lg:inline">Produits</span>
               <fa-icon [icon]="faBox" class="lg:hidden"></fa-icon>
             </a>
+
             <a
               *ngIf="isLoggedIn() && (isAdmin() || isMaintenance())"
               routerLink="stock"
@@ -59,6 +77,7 @@
               <span class="hidden lg:inline">Stock</span>
               <fa-icon [icon]="faBoxesStacked" class="lg:hidden"></fa-icon>
             </a>
+
             <a
               *ngIf="isLoggedIn() && isAdmin()"
               routerLink="user"
@@ -67,21 +86,26 @@
               <span class="hidden lg:inline">Utilisateurs</span>
               <fa-icon [icon]="faPeopleGroup" class="lg:hidden"></fa-icon>
             </a>
-            <!-- NOUVEAU : Onglet Ouverture (Admin uniquement) -->
-            <a
-              *ngIf="isLoggedIn() && isAdmin()"
-              routerLink="open-locker"
-              routerLinkActive="bg-gray-200"
-              class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-              <span class="hidden lg:inline">Ouverture</span>
-              <fa-icon [icon]="faDoorOpen" class="lg:hidden"></fa-icon>
-            </a>
+
           </div>
+
         </div>
+
       </div>
 
       <div class="flex items-center">
-        <!-- Utilisateur connecté (OptiBox) -->
+
+        <!-- ✅ BOUTON CONNEXION (si NON connecté) -->
+        <div *ngIf="!isLoggedIn()">
+          <button
+            routerLink="/login"
+            class="text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2">
+            <fa-icon [icon]="faSignInAlt"></fa-icon>
+            <span class="hidden sm:inline">Connexion</span>
+          </button>
+        </div>
+
+        <!-- ✅ USER + LOGOUT (si connecté) -->
         <div
           *ngIf="isLoggedIn()"
           class="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium flex items-center">
@@ -94,29 +118,12 @@
           </button>
         </div>
 
-        <!-- Scan badge + texte "Se connecter" quand pas loggé -->
-        <div *ngIf="!isLoggedIn()" class="flex items-center gap-3 px-3 py-2">
-          <span class="text-gray-600 text-sm font-medium">Se connecter</span>
-          <button
-            type="button"
-            class="bg-blue-500 hover:bg-blue-700 text-white font-bold px-3 py-2 rounded-md text-sm flex items-center"
-            (click)="toggleBadgeScanner()">
-            <fa-icon [icon]="faBarcode" class="mr-2"></fa-icon>
-            {{ badgeScannerVisible ? 'Arrêter le scan' : 'Scanner le badge' }}
-          </button>
-        </div>
       </div>
+
     </div>
+
   </div>
 
-  <!-- Zone caméra pour badge, sous la navbar -->
-  <div *ngIf="badgeScannerVisible" class="bg-gray-100 border-t border-gray-300">
-    <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-3">
-      <div class="border rounded-lg overflow-hidden">
-        <div id="qr-reader-badge" class="w-full"></div>
-      </div>
-    </div>
-  </div>
 </nav>
 
 <p-toast></p-toast>
