@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/optibox-front
+  IMAGE_NAME: bastien-by/optibox-front
 
 jobs:
 
