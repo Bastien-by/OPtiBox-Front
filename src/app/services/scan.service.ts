@@ -8,6 +8,12 @@ export interface ScanResponse {
   timestamp: number;
 }
 
+export interface BatchLockerResponse {
+  successCount: number;
+  failCount: number;
+  total: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -27,6 +33,9 @@ export class ScanService {
    * GESTION CASIERS (OPEN/CLOSE)
    * ======================================== */
 
+  /**
+   * Ouvre un casier spécifique
+   */
   async openLocker(lockerNumber: number): Promise<any> {
     try {
       return await firstValueFrom(
@@ -38,6 +47,9 @@ export class ScanService {
     }
   }
 
+  /**
+   * Ferme un casier spécifique
+   */
   async closeLocker(lockerNumber: number): Promise<any> {
     try {
       return await firstValueFrom(
@@ -45,6 +57,46 @@ export class ScanService {
       );
     } catch (error) {
       console.error('Erreur Fermeture casier:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ✅ Ouvre TOUS les casiers (1 à 24) en une seule requête backend
+   */
+  async openAllLockers(): Promise<BatchLockerResponse> {
+    try {
+      console.log('📤 Requête ouverture de tous les casiers...');
+
+      const response = await firstValueFrom(
+        this.httpClient.post<BatchLockerResponse>('api/locker/all/open', {})
+      );
+
+      console.log('✅ Réponse ouverture:', response);
+      return response;
+
+    } catch (error) {
+      console.error('❌ Erreur ouverture tous casiers:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ✅ Ferme TOUS les casiers (1 à 24) en une seule requête backend
+   */
+  async closeAllLockers(): Promise<BatchLockerResponse> {
+    try {
+      console.log('📤 Requête fermeture de tous les casiers...');
+
+      const response = await firstValueFrom(
+        this.httpClient.post<BatchLockerResponse>('api/locker/all/close', {})
+      );
+
+      console.log('✅ Réponse fermeture:', response);
+      return response;
+
+    } catch (error) {
+      console.error('❌ Erreur fermeture tous casiers:', error);
       throw error;
     }
   }
@@ -82,8 +134,6 @@ export class ScanService {
       return { success: false, value: '', timestamp: 0 };
     }
   }
-
-
 
   /**
    * Efface la valeur dans l'automate

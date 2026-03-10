@@ -17,8 +17,14 @@
               <a
                 class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white"
                 [ngClass]="{ 'bg-blue-500 hover:bg-blue-600': isLoggedIn(), 'bg-gray-500': !isLoggedIn() }"
-                (click)="navigateOrShowToast('/withdraw-deposit', isLoggedIn())">
-                <fa-icon [icon]="faBarcode"></fa-icon> Retirer/Déposer un produit
+                (click)="navigateOrShowToast('/withdraw-deposit', isLoggedIn())"><fa-icon [icon]="faArrowRightFromBracket" ></fa-icon> Retirer un produit
+              </a>
+
+              <a
+                class="block w-full text-white text-center px-4 py-2 rounded-md font-bold hover:text-white"
+                [ngClass]="{ 'bg-blue-500 hover:bg-blue-600': isLoggedIn(), 'bg-gray-500': !isLoggedIn() }"
+                (click)="navigateOrShowToast('/deposit', isLoggedIn())">
+                <fa-icon [icon]="faArrowRightToBracket"></fa-icon> Déposer un produit
               </a>
 
               <a

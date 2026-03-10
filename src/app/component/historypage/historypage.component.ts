@@ -41,7 +41,7 @@ export class HistorypageComponent implements OnInit {
   currentPage = 1;
   itemsPerPage = 30;
 
-  // Données brutes de l’onglet courant
+  // Données brutes de l'onglet courant
   allHistory: any[] = [];
 
   // Données filtrées
@@ -51,8 +51,7 @@ export class HistorypageComponent implements OnInit {
   filterUser = '';
   filterMonth: string = '';   // '1'..'12'
   filterYear: string = '';    // '2025', '2026', ...
-
-  filterStatus: string = '';          // uniquement pour "check"
+  filterStatus: string = '';  // uniquement pour "check"
 
   // Liste des utilisateurs pour le select
   users: string[] = [];
@@ -95,11 +94,24 @@ export class HistorypageComponent implements OnInit {
       this.allHistory = this.historyService.getAllCheckHistory();
     }
 
+    // ✅ TRI PAR DATE DÉCROISSANTE (plus récents en premier)
+    this.sortByDateDesc();
+
     this.buildUsersList();
     this.buildYearsList();
     this.applyFilters();
   }
 
+  /**
+   * ✅ Trie allHistory par date décroissante (plus récents en premier)
+   */
+  private sortByDateDesc(): void {
+    this.allHistory.sort((a, b) => {
+      const dateA = a.date ? new Date(a.date).getTime() : 0;
+      const dateB = b.date ? new Date(b.date).getTime() : 0;
+      return dateB - dateA; // ✅ Décroissant
+    });
+  }
 
   private buildYearsList(): void {
     const ys = this.allHistory
@@ -110,7 +122,6 @@ export class HistorypageComponent implements OnInit {
       .sort((a, b) => b - a)   // années décroissantes
       .map(y => y.toString());
   }
-
 
   /**
    * Construit la liste des utilisateurs distincts pour le select
@@ -167,6 +178,13 @@ export class HistorypageComponent implements OnInit {
       return true;
     });
 
+    // ✅ TRI PAR DATE DÉCROISSANTE après filtrage
+    this.filteredHistory.sort((a, b) => {
+      const dateA = a.date ? new Date(a.date).getTime() : 0;
+      const dateB = b.date ? new Date(b.date).getTime() : 0;
+      return dateB - dateA; // ✅ Décroissant
+    });
+
     this.currentPage = 1;
   }
 
@@ -200,7 +218,6 @@ export class HistorypageComponent implements OnInit {
     });
   }
 
-
   resetFilters(): void {
     this.filterUser = '';
     this.filterMonth = '';
@@ -208,7 +225,6 @@ export class HistorypageComponent implements OnInit {
     this.filterStatus = '';
     this.applyFilters();
   }
-
 
   getPaginatedHistory(data: any[]): any[] {
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;

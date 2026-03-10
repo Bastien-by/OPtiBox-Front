@@ -1,0 +1,120 @@
+<div class="flex flex-col gap-6 p-6 sm:p-8 md:p-10">
+  <!-- Message si non connecté -->
+  <div *ngIf="!isLoggedIn()" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+    <p class="font-bold">Accès aux dépôts interdit</p>
+    <p>Vous devez être connecté avec votre badge pour effectuer un dépôt.</p>
+  </div>
+
+  <!-- Contenu seulement si connecté -->
+  <div *ngIf="isLoggedIn()">
+    <h1 class="text-2xl font-bold py-3 flex items-center gap-3">
+      <fa-icon [icon]="faBoxOpen"></fa-icon>
+      Dépôt d'outils
+    </h1>
+    <h2 class="text-xl mb-4">
+      Scannez tous les outils que vous souhaitez déposer, puis validez.
+    </h2>
+
+    <!-- Bouton démarrer scan -->
+    <div class="bg-white rounded-3xl shadow-xl p-6">
+      <button
+        class="bg-green-600 hover:bg-green-800 text-white px-8 py-4 rounded-xl font-bold text-lg w-full"
+        type="button"
+        (click)="startDepositScan()">
+        <fa-icon [icon]="faBarcode"></fa-icon> Démarrer le scan des outils
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Zone de scan PLEIN ÉCRAN (douchette) -->
+<div *ngIf="scanDialogVisible" class="fixed inset-0 bg-black/80 z-50 flex flex-col">
+  <!-- Header avec instructions + bouton arrêter -->
+  <div class="p-6 text-lg text-gray-100 bg-black/60 flex justify-between items-center">
+    <div>
+      <p class="font-bold mb-1">📦 Veuillez scanner tous les outils que vous souhaitez déposer</p>
+      <p class="text-sm">{{ scannedTools.length }} outil(s) scanné(s)</p>
+    </div>
+    <button
+      class="bg-red-500 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-lg flex items-center gap-2"
+      type="button"
+      (click)="stopDepositScan()">
+      <fa-icon [icon]="faStop"></fa-icon> Arrêter le scan
+    </button>
+  </div>
+
+  <!-- Message d'attente centré -->
+  <div class="flex-1 flex items-center justify-center p-8">
+    <div class="bg-gray-900 rounded-2xl shadow-2xl border-4 border-yellow-400 p-12 text-center">
+      <div class="text-white text-xl mb-4">
+        <i class="pi pi-spin pi-spinner" style="font-size: 3rem"></i>
+      </div>
+      <p class="text-white text-lg font-semibold">
+        En attente du scan douchette...
+      </p>
+      <p class="text-gray-400 text-sm mt-2">
+        Scannez l'alitracer de chaque outil à déposer
+      </p>
+    </div>
+  </div>
+
+  <!-- Liste des outils scannés (bas gauche) -->
+  <div class="p-6 bg-black/60 absolute bottom-0 left-0 max-w-md">
+    <p class="text-gray-200 font-semibold mb-3">Outils scannés :</p>
+    <div class="flex flex-col gap-2 max-h-64 overflow-y-auto">
+      <div
+        *ngFor="let tool of scannedTools"
+        class="bg-green-500 text-black px-4 py-2 rounded-lg font-mono text-sm font-bold flex items-center gap-2">
+        <span>{{ tool.alitracer }}</span>
+        <span class="text-xs">({{ tool.product.size }} - {{ tool.product.cmu }})</span>
+        <span class="ml-auto">Casier {{ tool.lockerNumber }}</span>
+      </div>
+    </div>
+    <div *ngIf="scannedTools.length === 0" class="text-gray-400 text-sm italic">
+      Aucun outil scanné pour le moment
+    </div>
+  </div>
+</div>
+
+<!-- Dialog : Rangement par casier -->
+<p-dialog
+  header="Rangement - Casier {{ currentLocker }}"
+  [(visible)]="lockerDialogVisible"
+  [modal]="true"
+  [closable]="false"
+  [style]="{ width: '50vw' }"
+  [baseZIndex]="11000"
+  [dismissableMask]="false">
+
+  <div class="flex flex-col gap-4 p-4">
+    <!-- Instruction -->
+    <div class="bg-blue-50 border border-blue-200 rounded p-4">
+      <p class="font-bold text-lg mb-2">
+        Veuillez ranger les outils suivants dans le casier {{ currentLocker }} :
+      </p>
+      <ul class="list-disc list-inside space-y-1 text-sm">
+        <li *ngFor="let tool of currentLockerTools" class="font-mono">
+          {{ tool.alitracer }} ({{ tool.product.size }} - {{ tool.product.cmu }})
+        </li>
+      </ul>
+    </div>
+
+    <!-- Avertissement fermeture -->
+    <div class="bg-orange-50 border border-orange-200 rounded p-4">
+      <p class="font-bold text-orange-800">⚠️ Fermez bien le casier après avoir rangé</p>
+      <p class="text-sm text-gray-600 mt-1">
+        Assurez-vous que tous les outils sont bien placés dans le casier avant de fermer.
+      </p>
+    </div>
+
+    <!-- Bouton fermer casier -->
+    <button
+      class="bg-red-600 hover:bg-red-800 text-white font-bold px-6 py-3 rounded-lg w-full text-lg"
+      type="button"
+      (click)="closeCurrentLocker()">
+      <fa-icon [icon]="faDoorClosed"></fa-icon> Fermer le casier {{ currentLocker }}
+    </button>
+  </div>
+</p-dialog>
+
+<p-toast></p-toast>

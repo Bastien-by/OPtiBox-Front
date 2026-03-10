@@ -1,0 +1,46 @@
+.fixed {
+  position: fixed;
+}
+
+.inset-0 {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.z-50 {
+  z-index: 50;
+}
+
+.bg-black\/80 {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.bg-black\/60 {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.absolute {
+  position: absolute;
+}
+
+.bottom-0 {
+  bottom: 0;
+}
+
+.left-0 {
+  left: 0;
+}
+
+.max-w-md {
+  max-width: 28rem;
+}
+
+.max-h-64 {
+  max-height: 16rem;
+}
+
+.overflow-y-auto {
+  overflow-y: auto;
+}

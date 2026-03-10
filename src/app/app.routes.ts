@@ -9,10 +9,11 @@ import { ProductpageComponent } from './component/productpage/productpage.compon
 import { StockpageComponent } from './component/stockpage/stockpage.component';
 import { UserpageComponent } from './component/userpage/userpage.component';
 import { AuthGuard } from './auth.guard';
+import {DepositpageComponent} from "./component/depositpage/depositpage.component";
 
 export const routes: Routes = [
   // ✅ Route par défaut → racine (page d'accueil publique)
-  { path: '', redirectTo: '/racine', pathMatch: 'full' },
+  { path: '', redirectTo: '/login', pathMatch: 'full' },
 
   // ✅ Page racine (accueil, SANS guard)
   { path: 'racine', component: RacinePageComponent },
@@ -24,6 +25,11 @@ export const routes: Routes = [
   {
     path: 'scanpage',
     component: ScanpageComponent,
+    canActivate: [AuthGuard]
+  },// ✅ Pages protégées (AVEC guard)
+  {
+    path: 'deposit',
+    component: DepositpageComponent,
     canActivate: [AuthGuard]
   },
   {

@@ -8,7 +8,6 @@ import { MessageService } from 'primeng/api';
 
 import { faListCheck, faFileExcel, faDoorOpen, faBarcode, faStop } from '@fortawesome/free-solid-svg-icons';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
-import { Html5Qrcode } from 'html5-qrcode';
 
 import { CheckService } from '../../services/check.service';
 import { StockService } from '../../services/stock.service';
@@ -100,20 +99,22 @@ export class CheckpageComponent implements OnInit, OnDestroy {
 
   // Confirmation fermeture casier
   lockerCloseDialogVisible = false;
-  private pendingStatus: number | null = null;
 
   // Excel mensuels
   monthlyExcelFiles: any[] = [];
 
-  // MODE SCAN (caméra)
-  scanModeActive = false;
+  // MODE SCAN DOUCHETTE
   scanDialogVisible = false;
-  scanLocked = false;
-  private html5QrCodeProduct?: Html5Qrcode;
-  private productScannerInitialized = false;
 
   // Mode "Tout Contrôler" (scan global sans casier spécifique)
   globalControlMode = false;
+
+  /** Liste des alitracer attendus (si mode casier spécifique) */
+  expectedAlitracers: string[] = [];
+
+  /* Polling douchette */
+  private pollingInterval: any;
+  private isProcessing = false;
 
   protected readonly faListCheck = faListCheck;
   protected readonly faFileExcel = faFileExcel;
@@ -145,7 +146,7 @@ export class CheckpageComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.stopProductScanner();
+    this.stopPolling();
   }
 
   isLoggedIn(): boolean {
@@ -215,6 +216,14 @@ export class CheckpageComponent implements OnInit, OnDestroy {
       });
     }
   }
+
+  /**
+   * Retourne le nombre total de stocks disponibles
+   */
+  get totalAvailableStocks(): number {
+    return this.allStocks.length;
+  }
+
 
   /**
    * Charge la liste des fichiers Excel mensuels disponibles
@@ -339,89 +348,102 @@ export class CheckpageComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * ==============================
-   * CONTRÔLE PAR SCAN CAMÉRA (UN CASIER)
-   * ==============================
-   */
+  /* -------- CONTRÔLE GLOBAL -------- */
 
   /**
-   * Démarre le mode de contrôle par scan caméra pour UN casier
-   * Ouvre le casier et lance la caméra
+   * ✅ Démarre le contrôle global : envoie UNIQUEMENT la commande Manage_All = true
+   * L'automate gère l'ouverture des 24 casiers
    */
-  async startScanControl(): Promise<void> {
-    if (!this.activeLocker) {
-      this.showErrorToast('Aucun casier sélectionné');
-      return;
-    }
-
-    if (this.lockerStocks.length === 0) {
-      this.showErrorToast('Aucun stock à contrôler dans ce casier');
-      return;
-    }
-
-    // Ouvre le casier physiquement
+  async startGlobalControl(): Promise<void> {
     try {
-      await this.scanService.openLocker(this.activeLocker);
       this.messageService.add({
         severity: 'info',
-        summary: 'Casier ouvert',
-        detail: `Casier ${this.activeLocker} ouvert. Scannez les alitracers avec la caméra.`
+        summary: 'Ouverture en cours',
+        detail: 'Commande d\'ouverture envoyée à l\'automate...'
       });
 
-      // Active le mode scan
-      this.scanModeActive = true;
-      this.globalControlMode = false;
-      this.lockerDetailsDialogVisible = false;
+      // ✅ UNE SEULE requête : écrit Manage_All = true
+      const result = await this.scanService.openAllLockers();
+
+      // ✅ CORRIGÉ : Utilise successCount au lieu de message
+      console.log(`📊 Commande ouverture envoyée avec succès`);
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Commande envoyée',
+        detail: 'L\'automate ouvre tous les casiers. Démarrage du scan...'
+      });
+
+      // Active le mode scan global
+      this.globalControlMode = true;
+      this.activeLocker = null;
+      this.expectedAlitracers = [];
       this.scanDialogVisible = true;
 
-      // Lance la caméra après l'ouverture du dialog
-      setTimeout(() => this.startScanWorkflow(), 300);
+      console.log('⏱️ Démarrage du polling immédiat');
+      this.startPolling();
 
-    } catch (e) {
-      console.error('Erreur ouverture casier:', e);
-      this.showErrorToast(`Impossible d'ouvrir le casier ${this.activeLocker}`);
+    } catch (error) {
+      console.error('❌ Erreur commande ouverture:', error);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Erreur',
+        detail: 'Erreur lors de l\'envoi de la commande d\'ouverture'
+      });
     }
   }
 
   /**
-   * Arrête le mode de contrôle et demande confirmation fermeture casier
-   */
-  async stopScanControl(): Promise<void> {
-    this.scanModeActive = false;
-    this.scanDialogVisible = false;
-    await this.stopProductScanner();
-
-    // Affiche le dialog de confirmation fermeture casier
-    this.lockerCloseDialogVisible = true;
-  }
-
-  /**
-   * Confirmation fermeture casier (après arrêt du scan)
+   * ✅ Confirmation fermeture : envoie UNIQUEMENT la commande Manage_All = false
+   * L'automate gère la fermeture des 24 casiers
    */
   async confirmLockerClosed(): Promise<void> {
     this.lockerCloseDialogVisible = false;
 
-    // On garde la valeur locale pour le log / message
-    const lockerToClose = this.activeLocker;
-
-    if (lockerToClose != null) {
+    if (this.globalControlMode) {
+      // ✅ Mode global : ferme TOUS les casiers via Manage_All = false
       try {
-        await this.scanService.closeLocker(lockerToClose);
         this.messageService.add({
           severity: 'info',
+          summary: 'Fermeture en cours',
+          detail: 'Commande de fermeture envoyée à l\'automate...'
+        });
+
+        // ✅ UNE SEULE requête : écrit Manage_All = false
+        const result = await this.scanService.closeAllLockers();
+
+        // ✅ CORRIGÉ : Utilise successCount au lieu de message
+        console.log(`📊 Commande fermeture envoyée avec succès`);
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Commande envoyée',
+          detail: 'L\'automate ferme tous les casiers.'
+        });
+
+      } catch (error) {
+        console.error('❌ Erreur commande fermeture:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Erreur lors de l\'envoi de la commande de fermeture'
+        });
+      }
+
+      this.globalControlMode = false;
+
+    } else if (this.activeLocker) {
+      // ✅ Mode casier spécifique : ferme UN SEUL casier
+      try {
+        await this.scanService.closeLocker(this.activeLocker);
+        this.messageService.add({
+          severity: 'success',
           summary: 'Casier fermé',
-          detail: `Casier ${lockerToClose} fermé.`
+          detail: `Casier ${this.activeLocker} fermé.`
         });
       } catch (error) {
         console.error('Erreur fermeture casier:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erreur casier',
-          detail: `Impossible de fermer le casier ${lockerToClose}.`
-        });
-        // Tu peux choisir de return ici si tu ne veux pas reset le contexte en cas d’erreur
-        // return;
+        this.showErrorToast(`Impossible de fermer le casier ${this.activeLocker}`);
       }
     }
 
@@ -440,155 +462,177 @@ export class CheckpageComponent implements OnInit, OnDestroy {
   }
 
 
-  /**
-   * ==============================
-   * TOUT CONTRÔLER (MODE GLOBAL)
-   * ==============================
-   */
+
+  /* -------- CONTRÔLE CASIER SPÉCIFIQUE -------- */
 
   /**
-   * Ouvre tous les casiers et lance le mode scan global
+   * ✅ Démarre le mode de contrôle par scan douchette pour UN casier
    */
-  async startGlobalControl(): Promise<void> {
-    try {
-      // Ouvre tous les casiers
-      for (let i = 1; i <= 24; i++) {
-        try {
-          await this.scanService.openLocker(i);
-          this.addRecentAction('Ouverture', i);
-        } catch (e) {
-          console.warn(`Casier ${i} ignoré:`, e);
-        }
-      }
-
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Tous les casiers ouverts',
-        detail: 'Tous les casiers ont été ouverts. Scannez n\'importe quel alitracer.'
-      });
-
-      // Active le mode scan global
-      this.scanModeActive = true;
-      this.globalControlMode = true;
-      this.activeLocker = null;
-      this.lockerStocks = this.allStocks; // Tous les stocks disponibles
-      this.scanDialogVisible = true;
-
-      // Lance la caméra
-      setTimeout(() => this.startScanWorkflow(), 300);
-
-    } catch (error) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Erreur globale',
-        detail: 'Erreur lors de l\'ouverture des casiers'
-      });
-    }
-  }
-
-  /**
-   * Initialise Html5Qrcode sur l'élément #qr-reader
-   */
-  private async startScanWorkflow(): Promise<void> {
-    await this.stopProductScanner();
-
-    const elementId = 'qr-reader';
-    this.html5QrCodeProduct = new Html5Qrcode(elementId);
-
-    try {
-      await this.html5QrCodeProduct.start(
-        { facingMode: 'environment' }, // Caméra arrière
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        async (decodedText: string) => {
-          await this.handleScannedCode(decodedText);
-        },
-        () => {} // Ignore les erreurs de frame
-      );
-      this.productScannerInitialized = true;
-    } catch (err) {
-      console.error('Erreur démarrage scanner contrôle:', err);
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Erreur caméra',
-        detail: 'Impossible de démarrer la caméra. Vérifiez les permissions.'
-      });
-      this.scanDialogVisible = false;
-    }
-  }
-
-  /**
-   * Gestion d'un code scanné par la caméra
-   */
-  private async handleScannedCode(decodedText: string): Promise<void> {
-    if (!this.scanModeActive || this.scanLocked) {
+  async startScanControl(): Promise<void> {
+    if (!this.activeLocker) {
+      this.showErrorToast('Aucun casier sélectionné');
       return;
     }
 
-    // Lock pour éviter les scans multiples
-    this.scanLocked = true;
-    setTimeout(() => {
-      this.scanLocked = false;
-    }, 1500);
+    if (this.lockerStocks.length === 0) {
+      this.showErrorToast('Aucun stock à contrôler dans ce casier');
+      return;
+    }
 
-    const alitracer = decodedText.trim();
+    // Ouvre le casier physiquement
+    try {
+      await this.scanService.openLocker(this.activeLocker);
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Casier ouvert',
+        detail: `Casier ${this.activeLocker} ouvert. Vous pouvez scanner.`
+      });
 
-    // Mode global : cherche dans TOUS les stocks
-    if (this.globalControlMode) {
+      // Active le mode scan
+      this.globalControlMode = false;
+      this.expectedAlitracers = this.lockerStocks.map(s => s.alitracer);
+      this.lockerDetailsDialogVisible = false;
+      this.scanDialogVisible = true;
+
+      // ✅ DÉMARRE le polling immédiatement
+      this.startPolling();
+
+    } catch (e) {
+      console.error('Erreur ouverture casier:', e);
+      this.showErrorToast(`Impossible d'ouvrir le casier ${this.activeLocker}`);
+    }
+  }
+
+  /**
+   * ✅ Arrête le mode de contrôle
+   */
+  async stopScanControl(): Promise<void> {
+    this.stopPolling();
+
+    this.scanDialogVisible = false;
+
+    // ✅ Affiche le dialog de confirmation fermeture immédiatement
+    this.lockerCloseDialogVisible = true;
+  }
+
+
+
+
+  /* -------- POLLING DOUCHETTE -------- */
+
+  /**
+   * ✅ Démarre le polling (2000) avec check isProcessing AVANT readScan
+   */
+  private startPolling(): void {
+    console.log('⚡ POLLING DOUCHETTE START');
+
+    // Clear initial
+    this.scanService.clearScan();
+
+    this.pollingInterval = setInterval(async () => {
+      // ✅ STOP si déjà en cours de traitement
+      if (this.isProcessing) {
+        console.log('⏸️ Traitement en cours, skip ce cycle');
+        return;
+      }
+
+      try {
+        const response = await this.scanService.readScan();
+
+        if (response && response.success && response.value) {
+          const val = response.value.trim();
+
+          if (val !== '') {
+            console.log(`✅ SCAN DÉTECTÉ: "${val}"`);
+
+            // ✅ LOCK immédiatement
+            this.isProcessing = true;
+
+            // ✅ Traite le scan
+            await this.handleScannedCode(val);
+          }
+        }
+      } catch (err) {
+        console.error('❌ Erreur poll:', err);
+        this.isProcessing = false; // ✅ Débloque en cas d'erreur
+      }
+    }, 2000);
+  }
+
+  /**
+   * ✅ Arrête le polling
+   */
+  private stopPolling(): void {
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+      this.pollingInterval = null;
+      console.log('⏹️ POLLING STOP');
+    }
+    this.isProcessing = false;
+  }
+
+  /**
+   * ✅ Traite le code scanné (SANS vérification mensuelle)
+   */
+  private async handleScannedCode(decodedText: string): Promise<void> {
+    try {
+      console.log('🔍 Traitement scan:', decodedText);
+
+      const alitracer = decodedText.trim();
+
+      // En mode casier spécifique, vérifie que l'alitracer appartient au casier
+      if (!this.globalControlMode && this.expectedAlitracers.length > 0) {
+        if (!this.expectedAlitracers.includes(alitracer)) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Alitracer non attendu',
+            detail: `Ce code ne fait pas partie du casier ${this.activeLocker}.`
+          });
+          return;
+        }
+      }
+
       const stock = this.allStocks.find(s => s.alitracer === alitracer);
 
       if (!stock) {
         this.messageService.add({
-          severity: 'warn',
-          summary: 'Stock non trouvé',
-          detail: `L'alitracer "${alitracer}" ne correspond à aucun stock.`
+          severity: 'error',
+          summary: 'Stock introuvable',
+          detail: `Aucun stock trouvé pour l'ID Alitracer scanné.`
         });
         return;
       }
 
-      // Ouvre le dialog de contrôle pour ce stock
+      // ✅ SUPPRIMÉ : Vérification mensuelle (on peut checker plusieurs fois)
+
+      // Ouvre le dialog de contrôle (OK/NOK/HS)
       this.selectedStockForCheck = stock;
       this.checkComment = '';
       this.checkDialogVisible = true;
-      return;
-    }
 
-    // Mode casier spécifique : cherche uniquement dans le casier actif
-    if (!this.activeLocker) {
-      this.showErrorToast('Aucun casier actif pour ce contrôle');
-      return;
-    }
+      // ⏸️ Pause le polling pendant le dialog
+      this.stopPolling();
 
-    const stock = this.lockerStocks.find(s => s.alitracer === alitracer);
+    } catch (error) {
+      console.error('❌ Erreur traitement scan:', error);
 
-    if (!stock) {
       this.messageService.add({
-        severity: 'warn',
-        summary: 'Stock non trouvé',
-        detail: `L'alitracer "${alitracer}" ne correspond à aucun stock du casier ${this.activeLocker}.`
+        severity: 'error',
+        summary: 'Erreur',
+        detail: 'Une erreur est survenue lors du traitement du scan.'
       });
-      return;
-    }
 
-    // Ouvre le dialog de contrôle pour ce stock
-    this.selectedStockForCheck = stock;
-    this.checkComment = '';
-    this.checkDialogVisible = true;
-  }
+    } finally {
+      // ✅ CLEAR + UNLOCK dans TOUS les cas
+      await this.scanService.clearScan();
+      console.log('🧹 Buffer cleared');
 
-  /**
-   * Arrête le scanner caméra
-   */
-  private async stopProductScanner(): Promise<void> {
-    if (this.html5QrCodeProduct && this.productScannerInitialized) {
-      try {
-        await this.html5QrCodeProduct.stop();
-        await this.html5QrCodeProduct.clear();
-      } catch (err) {
-        console.error("Erreur à l'arrêt du scanner contrôle", err);
-      }
+      // ✅ Pause 1000ms pour être sûr que le buffer est vidé
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      this.isProcessing = false;
+      console.log('🔓 isProcessing = false');
     }
-    this.html5QrCodeProduct = undefined;
-    this.productScannerInitialized = false;
   }
 
   /**
@@ -620,24 +664,33 @@ export class CheckpageComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Vérifie si un stock spécifique a été contrôlé ce mois-ci
+   * Retourne true si le dernier contrôle du stock est dans le mois courant
    */
   isStockCheckedThisMonth(stock: Stock): boolean {
     if (!stock.lastCheckDate) {
       return false;
     }
 
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    // stock.lastCheckDate est une string "dd/MM/yyyy HH:mm"
+    const parts = stock.lastCheckDate.split(/[\\s/:]/); // [dd, MM, yyyy, HH, mm]
+    if (parts.length < 3) {
+      return false;
+    }
 
-    const parts = stock.lastCheckDate.split(/[\s/:]/);
     const day = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1;
+    const month = parseInt(parts[1], 10) - 1; // JS: 0 = Janvier
     const year = parseInt(parts[2], 10);
-    const lastCheckDate = new Date(year, month, day);
 
-    return lastCheckDate >= startOfMonth;
+    const lastCheck = new Date(year, month, day);
+    const now = new Date();
+
+    return (
+      lastCheck.getFullYear() === now.getFullYear() &&
+      lastCheck.getMonth() === now.getMonth()
+    );
   }
+
+
 
   private addRecentAction(action: string, locker: number): void {
     this.recentActions.unshift({ action, locker, time: new Date() });
@@ -690,12 +743,12 @@ export class CheckpageComponent implements OnInit, OnDestroy {
    */
   confirmCheck(status: number): void {
     this.checkDialogVisible = false;
-    // Exécute immédiatement le contrôle (sans dialog de confirmation)
+    // Exécute immédiatement le contrôle
     this.executeCheck(status);
   }
 
   /**
-   * Exécution du contrôle après confirmation fermeture
+   * Exécution du contrôle après validation
    */
   private async executeCheck(status: number): Promise<void> {
     if (!this.selectedStockForCheck) {
@@ -776,14 +829,14 @@ export class CheckpageComponent implements OnInit, OnDestroy {
       this.selectedStockForCheck = null;
       this.checkComment = '';
 
-      // Retourne directement au scan (pas de dialog de confirmation)
-      if (this.scanModeActive) {
-        this.messageService.add({
-          severity: 'info',
-          summary: 'Contrôle enregistré',
-          detail: 'Vous pouvez scanner le prochain stock.'
-        });
-      }
+      // ✅ Relance le polling pour le prochain scan
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Contrôle enregistré',
+        detail: 'Vous pouvez scanner le prochain stock.'
+      });
+
+      setTimeout(() => this.startPolling(), 500);
 
     } catch (error) {
       console.error('Error adding check:', error);

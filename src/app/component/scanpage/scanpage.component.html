@@ -2,14 +2,14 @@
   <!-- Message si non connecté -->
   <div *ngIf="!isLoggedIn()" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
     <p class="font-bold">Accès au scan interdit</p>
-    <p>Vous devez être connecté avec votre badge pour effectuer un retrait ou un dépôt.</p>
+    <p>Vous devez être connecté avec votre badge pour effectuer un retrait.</p>
   </div>
 
   <!-- Contenu seulement si connecté -->
   <div *ngIf="isLoggedIn()">
     <h1 class="text-2xl font-bold py-3 flex items-center gap-3">
       <fa-icon [icon]="faBarcode"></fa-icon>
-      Scanner Entrées-Sorties
+      Retrait d'outils
     </h1>
     <h2 class="text-xl mb-4">
       Sélectionnez un casier pour voir et gérer ses stocks.
@@ -36,12 +36,6 @@
       <div class="flex justify-between items-center mb  -4">
         <h2 class="text-2xl font-bold text-gray-900">Casiers 1-24</h2>
         <div class="flex gap-3">
-          <button
-            class="bg-blue-500 hover:bg-blue-800 text-white px-6 py-2 rounded-xl font-bold text-sm"
-            type="button"
-            (click)="refreshLockers()">
-            Rafraîchir
-          </button>
         </div>
       </div>
 
@@ -261,7 +255,7 @@
             Stocks dans le casier {{ activeLocker }} :
           </p>
           <p class="text-xs text-gray-500">
-            Cliquez sur Retirer ou Déposer pour lancer le workflow de scan.
+            Cliquez sur Retirer pour lancer le workflow de scan.
           </p>
         </div>
 
@@ -273,14 +267,6 @@
             type="button"
             (click)="openWithdrawDialog(activeLocker)">
             Retirer
-          </button>
-          <button
-            class="font-bold px-3 py-2 rounded-md text-white"
-            [ngClass]="canDeposit(activeLocker) ? 'bg-green-600 hover:bg-green-800' : 'bg-green-300 cursor-not-allowed'"
-            [disabled]="!canDeposit(activeLocker)"
-            type="button"
-            (click)="openDepositDialog(activeLocker)">
-            Déposer
           </button>
         </div>
       </div>
@@ -363,48 +349,6 @@
     </div>
   </p-dialog>
 
-  <!-- Dialog Dépôt : demander combien déposer -->
-  <p-dialog
-    header="Dépôt - Casier {{ activeLocker }}"
-    [(visible)]="depositDialogVisible"
-    [style]="{ width: '30vw' }">
-    <div class="flex flex-col gap-4 p-4 text-sm">
-      <p>
-        Il y a
-        <b>{{ depositMax }}</b> stock(s) emprunté(s) non HS pouvant être déposé(s) dans ce casier.
-      </p>
-      <label class="font-semibold">
-        Combien de stocks souhaitez-vous déposer dans ce casier ?
-      </label>
-      <input
-        type="number"
-        class="border border-gray-300 rounded p-2 w-full"
-        [(ngModel)]="depositQuantity"
-        [min]="1"
-        [max]="depositMax"
-        placeholder="Nombre entre 1 et {{ depositMax }}">
-
-      <p class="text-xs text-gray-500">
-        Vous ne pouvez pas dépasser le nombre de stocks empruntés non HS.
-      </p>
-
-      <div class="flex justify-end gap-2 mt-2">
-        <button
-          class="bg-gray-300 hover:bg-gray-400 text-gray-800 rounded px-3 py-2"
-          type="button"
-          (click)="depositDialogVisible = false">
-          Annuler
-        </button>
-        <button
-          class="bg-green-600 hover:bg-green-800 text-white rounded px-3 py-2"
-          type="button"
-          (click)="confirmDepositQuantity()">
-          Valider
-        </button>
-      </div>
-    </div>
-  </p-dialog>
-
   <!-- Dialog rouge : confirmation fermeture casier -->
   <p-dialog
     header="Sécurité casier"
@@ -428,20 +372,33 @@
     </div>
   </p-dialog>
 
-  <!-- Zone de scan plein écran (page entière) -->
-  <div *ngIf="scanDialogVisible" class="fixed inset-0 bg-black/80 z-50 flex flex-col">
-    <div class="p-4 text-base text-gray-100 bg-black/60">
-      <span *ngIf="scanMode === 'withdraw'">
-        Scannez les ID Alitracer des stocks retirés ({{ scannedCount }}/{{ targetScanCount }}).
-      </span>
-      <span *ngIf="scanMode === 'deposit'">
-        Scannez les ID Alitracer des stocks à déposer ({{ scannedCount }}/{{ targetScanCount }}).
-      </span>
-    </div>
-    <div class="flex-1 flex items-center justify-center p-8">
-      <div id="qr-reader" class="w-96 h-96 bg-gray-900 rounded-2xl shadow-2xl border-4 border-yellow-400"></div>
-    </div>
-  </div>
+      <!-- Zone de scan plein écran avec polling douchette -->
+      <div *ngIf="scanDialogVisible" class="fixed inset-0 bg-black/80 z-50 flex flex-col">
+        <div class="p-4 text-base text-gray-100 bg-black/60">
+    <span *ngIf="scanMode === 'withdraw'">
+      ⚡ Scannez avec la douchette les ID Alitracer des stocks retirés ({{ scannedCount }}/{{ targetScanCount }}).
+    </span>
+          <span *ngIf="scanMode === 'deposit'">
+      ⚡ Scannez avec la douchette les ID Alitracer des stocks à déposer ({{ scannedCount }}/{{ targetScanCount }}).
+    </span>
+        </div>
 
-  <p-toast></p-toast>
+        <!-- Message d'attente -->
+        <div class="flex-1 flex items-center justify-center p-8">
+          <div class="bg-gray-900 rounded-2xl shadow-2xl border-4 border-yellow-400 p-12 text-center">
+            <div class="text-white text-xl mb-4">
+              <i class="pi pi-spin pi-spinner" style="font-size: 3rem"></i>
+            </div>
+            <p class="text-white text-lg font-semibold">
+              En attente du scan douchette...
+            </p>
+            <p class="text-gray-400 text-sm mt-2">
+              Scannez l'alitracer du stock
+            </p>
+          </div>
+        </div>
+      </div>
+
+
+      <p-toast></p-toast>
 </div>

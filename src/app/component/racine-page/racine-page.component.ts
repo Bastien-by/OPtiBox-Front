@@ -13,7 +13,9 @@ import {
   faPeopleGroup,
   faList,
   faDoorOpen,
-  faFilePdf
+  faFilePdf,
+  faArrowRightFromBracket,
+  faArrowRightToBracket
 } from '@fortawesome/free-solid-svg-icons';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { StockService } from '../../services/stock.service';
@@ -190,4 +192,6 @@ export class RacinePageComponent implements OnInit {
   protected readonly faList = faList;
   protected readonly faDoorOpen = faDoorOpen;
   protected readonly faFilePdf = faFilePdf;
+  protected readonly faArrowRightFromBracket = faArrowRightFromBracket;
+  protected readonly faArrowRightToBracket = faArrowRightToBracket;
 }

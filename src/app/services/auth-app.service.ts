@@ -23,7 +23,7 @@ export class AuthAppService {
   private currentUserSubject = new BehaviorSubject<AppUser | null>(this.loadUserFromStorage());
   currentUser$ = this.currentUserSubject.asObservable();
 
-  private sessionTTL = 300 * 60 * 1000;
+  private sessionTTL = 120 * 60 * 1000;
 
   private loadUserFromStorage(): AppUser | null {
     const raw = localStorage.getItem(STORAGE_KEY);

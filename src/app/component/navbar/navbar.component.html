@@ -29,9 +29,18 @@
               routerLink="withdraw-deposit"
               routerLinkActive="bg-gray-200"
               class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-              <span class="hidden lg:inline">Retrait/Dépôt</span>
+              <span class="hidden lg:inline">Retrait</span>
               <fa-icon [icon]="faBarcode" class="lg:hidden"></fa-icon>
             </a>
+
+            <a
+            *ngIf="isLoggedIn()"
+            routerLink="deposit"
+            routerLinkActive="bg-gray-200"
+            class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+            <span class="hidden lg:inline">Dépôt</span>
+            <fa-icon [icon]="faBarcode" class="lg:hidden"></fa-icon>
+          </a>
 
             <a
               *ngIf="isLoggedIn() && (isAdmin() || isMaintenance())"

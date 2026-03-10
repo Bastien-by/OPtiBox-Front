@@ -308,7 +308,7 @@
             <fa-icon [icon]="faFileExcel" class="text-green-600 text-3xl"></fa-icon>
             <div class="flex-1">
               <p class="font-bold text-gray-800">{{ file.displayName }}</p>
-              <p class="text-xs text-gray-500">{{ file.recordCount }} contrôles / 29 effectués</p>
+              <p class="text-xs text-gray-500">{{ file.recordCount }} contrôles / {{ totalAvailableStocks }} effectués</p>
               <p class="text-xs text-gray-400">Dernière maj : {{ file.lastUpdate | date: 'dd/MM/yyyy HH:mm' }}</p>
             </div>
           </div>
@@ -498,15 +498,15 @@
   </div>
 </div>
 
-<!-- Zone de scan PLEIN ÉCRAN (caméra) -->
+<!-- Zone de scan PLEIN ÉCRAN (douchette) -->
 <div *ngIf="scanDialogVisible" class="fixed inset-0 bg-black/80 z-50 flex flex-col">
   <!-- Header avec instructions -->
   <div class="p-6 text-lg text-gray-100 bg-black/60 flex justify-between items-center">
     <div>
       <p class="font-bold mb-1" *ngIf="!globalControlMode">📦 Contrôle - Casier {{ activeLocker }}</p>
       <p class="font-bold mb-1" *ngIf="globalControlMode">📦 Contrôle Global - Tous les casiers</p>
-      <p class="text-sm" *ngIf="!globalControlMode">Scannez les ID Alitracer des stocks à contrôler dans ce casier.</p>
-      <p class="text-sm" *ngIf="globalControlMode">Scannez n'importe quel ID Alitracer pour le contrôler.</p>
+      <p class="text-sm" *ngIf="!globalControlMode">⚡ Scannez avec la douchette les ID Alitracer des stocks à contrôler dans ce casier.</p>
+      <p class="text-sm" *ngIf="globalControlMode">⚡ Scannez avec la douchette n'importe quel ID Alitracer pour le contrôler.</p>
     </div>
     <button
       class="bg-red-500 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-lg"
@@ -516,9 +516,19 @@
     </button>
   </div>
 
-  <!-- Zone caméra centrée -->
+  <!-- Message d'attente -->
   <div class="flex-1 flex items-center justify-center p-8">
-    <div id="qr-reader" class="w-96 h-96 bg-gray-900 rounded-2xl shadow-2xl border-4 border-yellow-400"></div>
+    <div class="bg-gray-900 rounded-2xl shadow-2xl border-4 border-yellow-400 p-12 text-center">
+      <div class="text-white text-xl mb-4">
+        <i class="pi pi-spin pi-spinner" style="font-size: 3rem"></i>
+      </div>
+      <p class="text-white text-lg font-semibold">
+        En attente du scan douchette...
+      </p>
+      <p class="text-gray-400 text-sm mt-2">
+        Scannez l'alitracer du stock à contrôler
+      </p>
+    </div>
   </div>
 
   <!-- Liste des stocks (en bas) - affiche uniquement si mode casier spécifique -->
