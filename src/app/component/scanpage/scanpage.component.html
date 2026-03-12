@@ -1,4 +1,5 @@
 <div class="flex flex-col gap-6 p-6 sm:p-8 md:p-10">
+
   <!-- Message si non connecté -->
   <div *ngIf="!isLoggedIn()" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
     <p class="font-bold">Accès au scan interdit</p>
@@ -15,8 +16,305 @@
       Sélectionnez un casier pour voir et gérer ses stocks.
     </h2>
 
-    <!-- Stats rapides -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-white rounded-3xl shadow-xl p-6 mb-4">
+    <!-- Grille des casiers -->
+    <div class="bg-white rounded-3xl shadow-xl p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-bold text-gray-900">Casiers 1-24</h2>
+      </div>
+
+      <div class="flex gap-3 justify-center overflow-x-auto py-4">
+
+        <!-- Colonne 1 : 1,2,3 -->
+        <div class="flex flex-col border border-gray-400 bg-gray-200">
+          <div *ngFor="let num of [1,2,3]" class="flex-1 border-b last:border-b-0 border-gray-400 cursor-pointer" (click)="openLockerDetails(num)">
+            <div class="h-32 w-24 sm:h-36 sm:w-28 flex flex-col items-center justify-center transition-transform transform hover:scale-105 p-1.5"
+                 [ngClass]="{'bg-blue-500 text-black': getLockerState(num) === 'allAvailable', 'bg-red-500 text-white': getLockerState(num) === 'allBorrowed', 'bg-orange-400 text-black': getLockerState(num) === 'mixed', 'bg-gray-300 text-black': getLockerState(num) === 'empty'}">
+              <div class="text-xs sm:text-sm leading-tight text-center">
+                <div class="font-bold mb-0.5">Box {{ num }}</div>
+                <div *ngIf="getStocksByLocker(num).length > 0">
+                  <div>{{ getStocksByLocker(num)[0].product.size }} - {{ getStocksByLocker(num)[0].product.cmu }}</div>
+                  <div class="font-semibold mt-0.5">{{ getLockerRatio(num) }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Colonne 2 : 4,5 -->
+        <div class="flex flex-col border border-gray-400 bg-gray-200">
+          <div *ngFor="let num of [4,5]" class="flex-1 border-b last:border-b-0 border-gray-400 cursor-pointer" (click)="openLockerDetails(num)">
+            <div class="h-40 w-24 sm:h-44 sm:w-28 flex flex-col items-center justify-center transition-transform transform hover:scale-105 p-1.5"
+                 [ngClass]="{'bg-blue-500 text-black': getLockerState(num) === 'allAvailable', 'bg-red-500 text-white': getLockerState(num) === 'allBorrowed', 'bg-orange-400 text-black': getLockerState(num) === 'mixed', 'bg-gray-300 text-black': getLockerState(num) === 'empty'}">
+              <div class="text-xs sm:text-sm leading-tight text-center">
+                <div class="font-bold mb-0.5">Box {{ num }}</div>
+                <div *ngIf="getStocksByLocker(num).length > 0">
+                  <div>{{ getStocksByLocker(num)[0].product.size }} - {{ getStocksByLocker(num)[0].product.cmu }}</div>
+                  <div class="font-semibold mt-0.5">{{ getLockerRatio(num) }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Colonne 3 : 6,7,8 -->
+        <div class="flex flex-col border border-gray-400 bg-gray-200">
+          <div *ngFor="let num of [6,7,8]" class="flex-1 border-b last:border-b-0 border-gray-400 cursor-pointer" (click)="openLockerDetails(num)">
+            <div class="h-32 w-24 sm:h-36 sm:w-28 flex flex-col items-center justify-center transition-transform transform hover:scale-105 p-1.5"
+                 [ngClass]="{'bg-blue-500 text-black': getLockerState(num) === 'allAvailable', 'bg-red-500 text-white': getLockerState(num) === 'allBorrowed', 'bg-orange-400 text-black': getLockerState(num) === 'mixed', 'bg-gray-300 text-black': getLockerState(num) === 'empty'}">
+              <div class="text-xs sm:text-sm leading-tight text-center">
+                <div class="font-bold mb-0.5">Box {{ num }}</div>
+                <div *ngIf="getStocksByLocker(num).length > 0">
+                  <div>{{ getStocksByLocker(num)[0].product.size }} - {{ getStocksByLocker(num)[0].product.cmu }}</div>
+                  <div class="font-semibold mt-0.5">{{ getLockerRatio(num) }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Colonne 4 : 9,10 -->
+        <div class="flex flex-col border border-gray-400 bg-gray-200">
+          <div *ngFor="let num of [9,10]" class="flex-1 border-b last:border-b-0 border-gray-400 cursor-pointer" (click)="openLockerDetails(num)">
+            <div class="h-40 w-24 sm:h-44 sm:w-28 flex flex-col items-center justify-center transition-transform transform hover:scale-105 p-1.5"
+                 [ngClass]="{'bg-blue-500 text-black': getLockerState(num) === 'allAvailable', 'bg-red-500 text-white': getLockerState(num) === 'allBorrowed', 'bg-orange-400 text-black': getLockerState(num) === 'mixed', 'bg-gray-300 text-black': getLockerState(num) === 'empty'}">
+              <div class="text-xs sm:text-sm leading-tight text-center">
+                <div class="font-bold mb-0.5">Box {{ num }}</div>
+                <div *ngIf="getStocksByLocker(num).length > 0">
+                  <div>{{ getStocksByLocker(num)[0].product.size }} - {{ getStocksByLocker(num)[0].product.cmu }}</div>
+                  <div class="font-semibold mt-0.5">{{ getLockerRatio(num) }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Colonne 5 : 11,12,13,14,15 -->
+        <div class="flex flex-col border border-gray-400 bg-gray-200">
+          <div *ngFor="let num of [11,12,13,14,15]" class="flex-1 border-b last:border-b-0 border-gray-400 cursor-pointer" (click)="openLockerDetails(num)">
+            <div class="h-24 w-24 sm:h-26 sm:w-28 flex flex-col items-center justify-center transition-transform transform hover:scale-105 p-1.5"
+                 [ngClass]="{'bg-blue-500 text-black': getLockerState(num) === 'allAvailable', 'bg-red-500 text-white': getLockerState(num) === 'allBorrowed', 'bg-orange-400 text-black': getLockerState(num) === 'mixed', 'bg-gray-300 text-black': getLockerState(num) === 'empty'}">
+              <div class="text-xs sm:text-sm leading-tight text-center">
+                <div class="font-bold mb-0.5">Box {{ num }}</div>
+                <div *ngIf="getStocksByLocker(num).length > 0">
+                  <div>{{ getStocksByLocker(num)[0].product.size }} - {{ getStocksByLocker(num)[0].product.cmu }}</div>
+                  <div class="font-semibold mt-0.5">{{ getLockerRatio(num) }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Colonne 6 : 16,17,18 -->
+        <div class="flex flex-col border border-gray-400 bg-gray-200">
+          <div *ngFor="let num of [16,17,18]" class="flex-1 border-b last:border-b-0 border-gray-400 cursor-pointer" (click)="openLockerDetails(num)">
+            <div class="h-32 w-24 sm:h-36 sm:w-28 flex flex-col items-center justify-center transition-transform transform hover:scale-105 p-1.5"
+                 [ngClass]="{'bg-blue-500 text-black': getLockerState(num) === 'allAvailable', 'bg-red-500 text-white': getLockerState(num) === 'allBorrowed', 'bg-orange-400 text-black': getLockerState(num) === 'mixed', 'bg-gray-300 text-black': getLockerState(num) === 'empty'}">
+              <div class="text-xs sm:text-sm leading-tight text-center">
+                <div class="font-bold mb-0.5">Box {{ num }}</div>
+                <div *ngIf="getStocksByLocker(num).length > 0">
+                  <div>{{ getStocksByLocker(num)[0].product.size }} - {{ getStocksByLocker(num)[0].product.cmu }}</div>
+                  <div class="font-semibold mt-0.5">{{ getLockerRatio(num) }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Colonne 7 : 19,20,21 -->
+        <div class="flex flex-col border border-gray-400 bg-gray-200">
+          <div *ngFor="let num of [19,20,21]" class="flex-1 border-b last:border-b-0 border-gray-400 cursor-pointer" (click)="openLockerDetails(num)">
+            <div class="h-32 w-24 sm:h-36 sm:w-28 flex flex-col items-center justify-center transition-transform transform hover:scale-105 p-1.5"
+                 [ngClass]="{'bg-blue-500 text-black': getLockerState(num) === 'allAvailable', 'bg-red-500 text-white': getLockerState(num) === 'allBorrowed', 'bg-orange-400 text-black': getLockerState(num) === 'mixed', 'bg-gray-300 text-black': getLockerState(num) === 'empty'}">
+              <div class="text-xs sm:text-sm leading-tight text-center">
+                <div class="font-bold mb-0.5">Box {{ num }}</div>
+                <div *ngIf="getStocksByLocker(num).length > 0">
+                  <div>{{ getStocksByLocker(num)[0].product.size }} - {{ getStocksByLocker(num)[0].product.cmu }}</div>
+                  <div class="font-semibold mt-0.5">{{ getLockerRatio(num) }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Colonne 8 : 22,23,24 -->
+        <div class="flex flex-col border border-gray-400 bg-gray-200">
+          <div *ngFor="let num of [22,23,24]" class="flex-1 border-b last:border-b-0 border-gray-400 cursor-pointer" (click)="openLockerDetails(num)">
+            <div class="h-32 w-24 sm:h-36 sm:w-28 flex flex-col items-center justify-center transition-transform transform hover:scale-105 p-1.5"
+                 [ngClass]="{'bg-blue-500 text-black': getLockerState(num) === 'allAvailable', 'bg-red-500 text-white': getLockerState(num) === 'allBorrowed', 'bg-orange-400 text-black': getLockerState(num) === 'mixed', 'bg-gray-300 text-black': getLockerState(num) === 'empty'}">
+              <div class="text-xs sm:text-sm leading-tight text-center">
+                <div class="font-bold mb-0.5">Box {{ num }}</div>
+                <div *ngIf="getStocksByLocker(num).length > 0">
+                  <div>{{ getStocksByLocker(num)[0].product.size }} - {{ getStocksByLocker(num)[0].product.cmu }}</div>
+                  <div class="font-semibold mt-0.5">{{ getLockerRatio(num) }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Légende couleurs -->
+      <div class="flex flex-wrap gap-4 justify-center mt-4 text-xs text-gray-600">
+        <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-blue-500"></span> Tout disponible</span>
+        <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-orange-400"></span> Partiellement disponible</span>
+        <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-red-500"></span> Tout emprunté</span>
+        <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-gray-300 border border-gray-400"></span> Vide</span>
+      </div>
+
+    </div>
+
+    <!-- Dialog DÉTAIL CASIER -->
+    <p-dialog
+      header="Casier {{ activeLocker }}"
+      [(visible)]="lockerDetailsDialogVisible"
+      [style]="{ width: '60vw' }">
+
+      <div *ngIf="activeLocker" class="flex flex-col gap-4 text-sm">
+        <div class="flex justify-between items-center mb-2">
+          <div>
+            <p class="font-semibold">Stocks dans le casier {{ activeLocker }} :</p>
+            <p class="text-xs text-gray-500">Cliquez sur Retirer pour lancer le workflow de scan.</p>
+          </div>
+          <div class="flex gap-2">
+            <button
+              class="font-bold px-3 py-2 rounded-md text-white"
+              [ngClass]="canWithdraw(activeLocker) ? 'bg-blue-500 hover:bg-blue-700' : 'bg-blue-300 cursor-not-allowed'"
+              [disabled]="!canWithdraw(activeLocker)"
+              type="button"
+              (click)="openWithdrawDialog(activeLocker)">
+              Retirer
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="lockerStocks.length > 0; else noStockInLocker" class="flex flex-wrap gap-3">
+          <div
+            *ngFor="let stock of lockerStocks"
+            class="flex items-center gap-3 border rounded px-3 py-2 bg-gray-50 max-w-xs">
+            <img
+              [src]="stock.product.picture ? stock.product.picture : 'assets/images/default_image.jpg'"
+              alt="product image"
+              class="h-10 w-10 rounded-full">
+            <div class="text-xs flex-1">
+              <div><b>ID Alitracer :</b> {{ stock.alitracer }}</div>
+              <div><b>Taille :</b> {{ stock.product.size }}</div>
+              <div><b>CMU :</b> {{ stock.product.cmu }}</div>
+              <div>
+                <b>Dernier contrôle :</b>
+                <span *ngIf="stock.lastCheckDate">{{ stock.lastCheckDate }}</span>
+                <span *ngIf="!stock.lastCheckDate" class="text-gray-400">Aucune date</span>
+              </div>
+              <div>
+                <b>Disp. :</b>
+                <span class="font-semibold" [ngClass]="stock.available ? 'text-green-600' : 'text-orange-600'">
+                  {{ stock.available ? 'Disponible' : 'Emprunté' }}
+                </span>
+              </div>
+              <!-- ✅ Emprunteur via history.user.username -->
+              <div *ngIf="!stock.available">
+                <b>Emprunté par :</b>
+                <span *ngIf="stock.borrowedBy?.username; else noUser">
+                  {{ stock.borrowedBy.username }}
+                </span>
+                <ng-template #noUser>
+                  <span class="text-gray-400">Inconnu</span>
+                </ng-template>
+              </div>
+              <div>
+                <b>Statut :</b>
+                <span [ngClass]="getStatusClass(stock)">
+                  {{ stock.status === 1 ? 'OK' : stock.status === 0 ? 'NOK' : 'HS' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #noStockInLocker>
+          <span class="text-gray-400 text-sm italic">Aucun stock dans ce casier</span>
+        </ng-template>
+      </div>
+    </p-dialog>
+
+    <!-- Dialog Retrait -->
+    <p-dialog
+      header="Retrait - Casier {{ activeLocker }}"
+      [(visible)]="withdrawDialogVisible"
+      [style]="{ width: '30vw' }">
+      <div class="flex flex-col gap-4 p-4 text-sm">
+        <p>Il y a <b>{{ withdrawMax }}</b> stock(s) disponible(s) non HS dans ce casier.</p>
+        <label class="font-semibold">Combien de stocks souhaitez-vous retirer ?</label>
+        <input
+          type="number"
+          class="border border-gray-300 rounded p-2 w-full"
+          [(ngModel)]="withdrawQuantity"
+          [min]="1"
+          [max]="withdrawMax"
+          placeholder="Nombre entre 1 et {{ withdrawMax }}">
+        <p class="text-xs text-gray-500">Vous ne pouvez pas dépasser le nombre de stocks disponibles non HS.</p>
+        <div class="flex justify-end gap-2 mt-2">
+          <button
+            class="bg-gray-300 hover:bg-gray-400 text-gray-800 rounded px-3 py-2"
+            type="button"
+            (click)="withdrawDialogVisible = false">
+            Annuler
+          </button>
+          <button
+            class="bg-blue-500 hover:bg-blue-700 text-white rounded px-3 py-2"
+            type="button"
+            (click)="confirmWithdrawQuantity()">
+            Valider
+          </button>
+        </div>
+      </div>
+    </p-dialog>
+
+    <!-- Dialog rouge : confirmation fermeture casier — SANS croix -->
+    <p-dialog
+      header="Sécurité casier"
+      [(visible)]="lockerCloseDialogVisible"
+      [modal]="true"
+      [closable]="false"
+      [style]="{ width: '35vw' }"
+      [baseZIndex]="11000"
+      [dismissableMask]="false">
+      <div class="bg-red-100 border border-red-300 text-red-800 rounded p-4 text-sm">
+        <p class="font-bold mb-2">Avez-vous bien refermé le casier {{ activeLocker }} ?</p>
+        <p class="mb-4">Vérifiez que le casier est correctement fermé avant de poursuivre.</p>
+        <div class="flex justify-end">
+          <button
+            class="bg-red-500 hover:bg-red-700 text-white font-bold px-4 py-2 rounded"
+            (click)="confirmLockerClosed()">
+            Oui, le casier est fermé
+          </button>
+        </div>
+      </div>
+    </p-dialog>
+
+    <!-- Zone de scan plein écran -->
+    <div *ngIf="scanDialogVisible" class="fixed inset-0 bg-black/80 z-50 flex flex-col">
+      <div class="p-4 text-base text-gray-100 bg-black/60">
+        <span *ngIf="scanMode === 'withdraw'">
+          ⚡ Scannez avec la douchette les ID Alitracer des stocks retirés ({{ scannedCount }}/{{ targetScanCount }}).
+        </span>
+        <span *ngIf="scanMode === 'deposit'">
+          ⚡ Scannez avec la douchette les ID Alitracer des stocks à déposer ({{ scannedCount }}/{{ targetScanCount }}).
+        </span>
+      </div>
+      <div class="flex-1 flex items-center justify-center p-8">
+        <div class="bg-gray-900 rounded-2xl shadow-2xl border-4 border-yellow-400 p-12 text-center">
+          <div class="text-white text-xl mb-4">
+            <i class="pi pi-spin pi-spinner" style="font-size: 3rem"></i>
+          </div>
+          <p class="text-white text-lg font-semibold">En attente du scan douchette...</p>
+          <p class="text-gray-400 text-sm mt-2">Scannez l'alitracer du stock</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats rapides en bas -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-white rounded-3xl shadow-xl p-6 mt-4">
       <div class="text-center">
         <p class="text-3xl font-bold text-green-600">{{ stats.available }}</p>
         <p class="text-gray-600 font-medium">Casiers avec au moins un stock dispo</p>
@@ -31,374 +329,7 @@
       </div>
     </div>
 
-    <!-- Grille des casiers (reprend la logique d'open-locker) -->
-    <div class="bg-white rounded-3xl shadow-xl p-6">
-      <div class="flex justify-between items-center mb  -4">
-        <h2 class="text-2xl font-bold text-gray-900">Casiers 1-24</h2>
-        <div class="flex gap-3">
-        </div>
-      </div>
+    <p-toast></p-toast>
 
-      <div class="flex gap-3 justify-center overflow-x-auto py-4">
-        <!-- Colonne 1 : 1,2,3 -->
-        <div class="flex flex-col border border-gray-400 bg-gray-200">
-          <div
-            *ngFor="let num of [1,2,3]"
-            class="flex-1 border-b last:border-b-0 border-gray-400 cursor-pointer"
-            (click)="openLockerDetails(num)">
-            <div
-              class="h-32 w-24 sm:h-36 sm:w-28 flex flex-col items-center justify-center transition-transform transform hover:scale-105 p-1.5"
-              [ngClass]="{
-          'bg-blue-500 text-black': lockersMap[num]?.hasStock,
-                'bg-gray-300 text-black': !lockersMap[num]?.hasStock
-        }">
-              <div class="text-xs sm:text-sm leading-tight text-center">
-                <div class="font-bold mb-0.5">Box {{ num }}</div>
-                <div *ngIf="getStocksByLocker(num).length > 0">
-                  <div>{{ getStocksByLocker(num)[0].product.size }} - {{ getStocksByLocker(num)[0].product.cmu }}</div>
-                  <div *ngIf="getStocksByLocker(num).length > 1" class="mt-0.5">
-                    ({{ getStocksByLocker(num).length }} unités)
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Colonne 2 : 4,5 -->
-        <div class="flex flex-col border border-gray-400 bg-gray-200">
-          <div
-            *ngFor="let num of [4,5]"
-            class="flex-1 border-b last:border-b-0 border-gray-400 cursor-pointer"
-            (click)="openLockerDetails(num)">
-            <div
-              class="h-40 w-24 sm:h-44 sm:w-28 flex flex-col items-center justify-center transition-transform transform hover:scale-105 p-1.5"
-              [ngClass]="{
-          'bg-blue-500 text-black': lockersMap[num]?.hasStock,
-                'bg-gray-300 text-black': !lockersMap[num]?.hasStock
-        }">
-              <div class="text-xs sm:text-sm leading-tight text-center">
-                <div class="font-bold mb-0.5">Box {{ num }}</div>
-                <div *ngIf="getStocksByLocker(num).length > 0">
-                  <div>{{ getStocksByLocker(num)[0].product.size }} - {{ getStocksByLocker(num)[0].product.cmu }}</div>
-                  <div *ngIf="getStocksByLocker(num).length > 1" class="mt-0.5">
-                    ({{ getStocksByLocker(num).length }} unités)
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Colonne 3 : 6,7,8 -->
-        <div class="flex flex-col border border-gray-400 bg-gray-200">
-          <div
-            *ngFor="let num of [6,7,8]"
-            class="flex-1 border-b last:border-b-0 border-gray-400 cursor-pointer"
-            (click)="openLockerDetails(num)">
-            <div
-              class="h-32 w-24 sm:h-36 sm:w-28 flex flex-col items-center justify-center transition-transform transform hover:scale-105 p-1.5"
-              [ngClass]="{
-          'bg-blue-500 text-black': lockersMap[num]?.hasStock,
-                'bg-gray-300 text-black': !lockersMap[num]?.hasStock
-        }">
-              <div class="text-xs sm:text-sm leading-tight text-center">
-                <div class="font-bold mb-0.5">Box {{ num }}</div>
-                <div *ngIf="getStocksByLocker(num).length > 0">
-                  <div>{{ getStocksByLocker(num)[0].product.size }} - {{ getStocksByLocker(num)[0].product.cmu }}</div>
-                  <div *ngIf="getStocksByLocker(num).length > 1" class="mt-0.5">
-                    ({{ getStocksByLocker(num).length }} unités)
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Colonne 4 : 9,10 -->
-        <div class="flex flex-col border border-gray-400 bg-gray-200">
-          <div
-            *ngFor="let num of [9,10]"
-            class="flex-1 border-b last:border-b-0 border-gray-400 cursor-pointer"
-            (click)="openLockerDetails(num)">
-            <div
-              class="h-40 w-24 sm:h-44 sm:w-28 flex flex-col items-center justify-center transition-transform transform hover:scale-105 p-1.5"
-              [ngClass]="{
-          'bg-blue-500 text-black': lockersMap[num]?.hasStock,
-                'bg-gray-300 text-black': !lockersMap[num]?.hasStock
-        }">
-              <div class="text-xs sm:text-sm leading-tight text-center">
-                <div class="font-bold mb-0.5">Box {{ num }}</div>
-                <div *ngIf="getStocksByLocker(num).length > 0">
-                  <div>{{ getStocksByLocker(num)[0].product.size }} - {{ getStocksByLocker(num)[0].product.cmu }}</div>
-                  <div *ngIf="getStocksByLocker(num).length > 1" class="mt-0.5">
-                    ({{ getStocksByLocker(num).length }} unités)
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Colonne 5 : 11,12,13,14,15 -->
-        <div class="flex flex-col border border-gray-400 bg-gray-200">
-          <div
-            *ngFor="let num of [11,12,13,14,15]"
-            class="flex-1 border-b last:border-b-0 border-gray-400 cursor-pointer"
-            (click)="openLockerDetails(num)">
-            <div
-              class="h-24 w-24 sm:h-26 sm:w-28 flex flex-col items-center justify-center transition-transform transform hover:scale-105 p-1.5"
-              [ngClass]="{
-          'bg-blue-500 text-black': lockersMap[num]?.hasStock,
-                'bg-gray-300 text-black': !lockersMap[num]?.hasStock
-        }">
-              <div class="text-xs sm:text-sm leading-tight text-center">
-                <div class="font-bold mb-0.5">Box {{ num }}</div>
-                <div *ngIf="getStocksByLocker(num).length > 0">
-                  <div>{{ getStocksByLocker(num)[0].product.size }} - {{ getStocksByLocker(num)[0].product.cmu }}</div>
-                  <div *ngIf="getStocksByLocker(num).length > 1" class="mt-0.5">
-                    ({{ getStocksByLocker(num).length }})
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Colonne 6 : 16,17,18 -->
-        <div class="flex flex-col border border-gray-400 bg-gray-200">
-          <div
-            *ngFor="let num of [16,17,18]"
-            class="flex-1 border-b last:border-b-0 border-gray-400 cursor-pointer"
-            (click)="openLockerDetails(num)">
-            <div
-              class="h-32 w-24 sm:h-36 sm:w-28 flex flex-col items-center justify-center transition-transform transform hover:scale-105 p-1.5"
-              [ngClass]="{
-          'bg-blue-500 text-black': lockersMap[num]?.hasStock,
-                'bg-gray-300 text-black': !lockersMap[num]?.hasStock
-        }">
-              <div class="text-xs sm:text-sm leading-tight text-center">
-                <div class="font-bold mb-0.5">Box {{ num }}</div>
-                <div *ngIf="getStocksByLocker(num).length > 0">
-                  <div>{{ getStocksByLocker(num)[0].product.size }} - {{ getStocksByLocker(num)[0].product.cmu }}</div>
-                  <div *ngIf="getStocksByLocker(num).length > 1" class="mt-0.5">
-                    ({{ getStocksByLocker(num).length }} unités)
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Colonne 7 : 19,20,21 -->
-        <div class="flex flex-col border border-gray-400 bg-gray-200">
-          <div
-            *ngFor="let num of [19,20,21]"
-            class="flex-1 border-b last:border-b-0 border-gray-400 cursor-pointer"
-            (click)="openLockerDetails(num)">
-            <div
-              class="h-32 w-24 sm:h-36 sm:w-28 flex flex-col items-center justify-center transition-transform transform hover:scale-105 p-1.5"
-              [ngClass]="{
-          'bg-blue-500 text-black': lockersMap[num]?.hasStock,
-                'bg-gray-300 text-black': !lockersMap[num]?.hasStock
-        }">
-              <div class="text-xs sm:text-sm leading-tight text-center">
-                <div class="font-bold mb-0.5">Box {{ num }}</div>
-                <div *ngIf="getStocksByLocker(num).length > 0">
-                  <div>{{ getStocksByLocker(num)[0].product.size }} - {{ getStocksByLocker(num)[0].product.cmu }}</div>
-                  <div *ngIf="getStocksByLocker(num).length > 1" class="mt-0.5">
-                    ({{ getStocksByLocker(num).length }} unités)
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Colonne 8 : 22,23,24 -->
-        <div class="flex flex-col border border-gray-400 bg-gray-200">
-          <div
-            *ngFor="let num of [22,23,24]"
-            class="flex-1 border-b last:border-b-0 border-gray-400 cursor-pointer"
-            (click)="openLockerDetails(num)">
-            <div
-              class="h-32 w-24 sm:h-36 sm:w-28 flex flex-col items-center justify-center transition-transform transform hover:scale-105 p-1.5"
-              [ngClass]="{
-          'bg-blue-500 text-black': lockersMap[num]?.hasStock,
-                'bg-gray-300 text-black': !lockersMap[num]?.hasStock
-        }">
-              <div class="text-xs sm:text-sm leading-tight text-center">
-                <div class="font-bold mb-0.5">Box {{ num }}</div>
-                <div *ngIf="getStocksByLocker(num).length > 0">
-                  <div>{{ getStocksByLocker(num)[0].product.size }} - {{ getStocksByLocker(num)[0].product.cmu }}</div>
-                  <div *ngIf="getStocksByLocker(num).length > 1" class="mt-0.5">
-                    ({{ getStocksByLocker(num).length }} unités)
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-      <!-- Dialog DÉTAIL CASIER : liste stocks + boutons Retirer / Déposer -->
-  <p-dialog
-    header="Casier {{ activeLocker }}"
-    [(visible)]="lockerDetailsDialogVisible"
-    [style]="{ width: '60vw' }">
-
-    <div *ngIf="activeLocker" class="flex flex-col gap-4 text-sm">
-      <div class="flex justify-between items-center mb-2">
-        <div>
-          <p class="font-semibold">
-            Stocks dans le casier {{ activeLocker }} :
-          </p>
-          <p class="text-xs text-gray-500">
-            Cliquez sur Retirer pour lancer le workflow de scan.
-          </p>
-        </div>
-
-        <div class="flex gap-2">
-          <button
-            class="font-bold px-3 py-2 rounded-md text-white"
-            [ngClass]="canWithdraw(activeLocker) ? 'bg-blue-500 hover:bg-blue-700' : 'bg-blue-300 cursor-not-allowed'"
-            [disabled]="!canWithdraw(activeLocker)"
-            type="button"
-            (click)="openWithdrawDialog(activeLocker)">
-            Retirer
-          </button>
-        </div>
-      </div>
-
-      <!-- Dans le p-dialog "Casier {{ activeLocker }}" -->
-      <div *ngIf="lockerStocks.length > 0; else noStockInLocker" class="flex flex-wrap gap-3">
-        <div
-          *ngFor="let stock of lockerStocks"
-          class="flex items-center gap-3 border rounded px-3 py-2 bg-gray-50 max-w-xs">
-          <img
-            [src]="stock.product.picture ? stock.product.picture : 'assets/images/default_image.jpg'"
-            alt="product image"
-            class="h-10 w-10 rounded-full">
-          <div class="text-xs flex-1">
-            <div><b>ID Alitracer :</b> {{ stock.alitracer }}</div>
-            <div><b>Taille :</b> {{ stock.product.size }}</div>
-            <div><b>CMU :</b> {{ stock.product.cmu }}</div>
-            <!-- Emplacement supprimé comme demandé -->
-            <div>
-              <b>Dernier contrôle :</b>
-              <span *ngIf="stock.lastCheckDate">{{ stock.lastCheckDate }}</span>
-              <span *ngIf="!stock.lastCheckDate" class="text-gray-400">Aucune date</span>
-            </div>
-            <div>
-              <b>Disp. :</b>
-              <span class="font-semibold" [ngClass]="stock.available ? 'text-green-600' : 'text-orange-600'"> {{ stock.available ? 'Disponible' : 'Emprunté' }} </span>
-            </div>
-            <div>
-              <b>Statut :</b>
-              <span [ngClass]="getStatusClass(stock)"> {{ stock.status === 1 ? 'OK' : stock.status === 0 ? 'NOK' : 'HS' }} </span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <ng-template #noStockInLocker>
-        <span class="text-gray-400 text-sm italic">Aucun stock dans ce casier</span>
-      </ng-template>
-    </div>
-  </p-dialog>
-
-  <!-- Dialog Retrait : demander combien retirer -->
-  <p-dialog
-    header="Retrait - Casier {{ activeLocker }}"
-    [(visible)]="withdrawDialogVisible"
-    [style]="{ width: '30vw' }">
-    <div class="flex flex-col gap-4 p-4 text-sm">
-      <p>
-        Il y a
-        <b>{{ withdrawMax }}</b> stock(s) disponible(s) non HS dans ce casier.
-      </p>
-      <label class="font-semibold">
-        Combien de stocks souhaitez-vous retirer ?
-      </label>
-      <input
-        type="number"
-        class="border border-gray-300 rounded p-2 w-full"
-        [(ngModel)]="withdrawQuantity"
-        [min]="1"
-        [max]="withdrawMax"
-        placeholder="Nombre entre 1 et {{ withdrawMax }}">
-
-      <p class="text-xs text-gray-500">
-        Vous ne pouvez pas dépasser le nombre de stocks disponibles non HS.
-      </p>
-
-      <div class="flex justify-end gap-2 mt-2">
-        <button
-          class="bg-gray-300 hover:bg-gray-400 text-gray-800 rounded px-3 py-2"
-          type="button"
-          (click)="withdrawDialogVisible = false">
-          Annuler
-        </button>
-        <button
-          class="bg-blue-500 hover:bg-blue-700 text-white rounded px-3 py-2"
-          type="button"
-          (click)="confirmWithdrawQuantity()">
-          Valider
-        </button>
-      </div>
-    </div>
-  </p-dialog>
-
-  <!-- Dialog rouge : confirmation fermeture casier -->
-  <p-dialog
-    header="Sécurité casier"
-    [(visible)]="lockerCloseDialogVisible"
-    [modal]="true"
-    [style]="{ width: '35vw' }"
-    [baseZIndex]="11000"
-    [dismissableMask]="false">
-    <div class="bg-red-100 border border-red-300 text-red-800 rounded p-4 text-sm">
-      <p class="font-bold mb-2">Avez-vous bien refermé le casier {{ activeLocker }} ?</p>
-      <p class="mb-4">
-        Vérifiez que le casier est correctement fermé avant de poursuivre.
-      </p>
-      <div class="flex justify-end">
-        <button
-          class="bg-red-500 hover:bg-red-700 text-white font-bold px-4 py-2 rounded"
-          (click)="confirmLockerClosed()">
-          Oui, le casier est fermé
-        </button>
-      </div>
-    </div>
-  </p-dialog>
-
-      <!-- Zone de scan plein écran avec polling douchette -->
-      <div *ngIf="scanDialogVisible" class="fixed inset-0 bg-black/80 z-50 flex flex-col">
-        <div class="p-4 text-base text-gray-100 bg-black/60">
-    <span *ngIf="scanMode === 'withdraw'">
-      ⚡ Scannez avec la douchette les ID Alitracer des stocks retirés ({{ scannedCount }}/{{ targetScanCount }}).
-    </span>
-          <span *ngIf="scanMode === 'deposit'">
-      ⚡ Scannez avec la douchette les ID Alitracer des stocks à déposer ({{ scannedCount }}/{{ targetScanCount }}).
-    </span>
-        </div>
-
-        <!-- Message d'attente -->
-        <div class="flex-1 flex items-center justify-center p-8">
-          <div class="bg-gray-900 rounded-2xl shadow-2xl border-4 border-yellow-400 p-12 text-center">
-            <div class="text-white text-xl mb-4">
-              <i class="pi pi-spin pi-spinner" style="font-size: 3rem"></i>
-            </div>
-            <p class="text-white text-lg font-semibold">
-              En attente du scan douchette...
-            </p>
-            <p class="text-gray-400 text-sm mt-2">
-              Scannez l'alitracer du stock
-            </p>
-          </div>
-        </div>
-      </div>
-
-
-      <p-toast></p-toast>
+  </div>
 </div>

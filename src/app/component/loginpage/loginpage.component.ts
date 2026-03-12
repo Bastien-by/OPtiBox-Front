@@ -84,7 +84,7 @@ export class LoginpageComponent implements OnInit, OnDestroy {
         console.error('Erreur poll:', err);
       });
 
-    }, 500);  // ✅ 500
+    }, 2000);  // ✅ 2000
   }
 
   private stopPolling(): void {
