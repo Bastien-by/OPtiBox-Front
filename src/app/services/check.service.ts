@@ -82,7 +82,7 @@ export class CheckService {
     console.log(check);
     return this.httpClient.post('api/checks', check).toPromise(); // ou firstValueFrom
   }
-  
+
 
   async getChecks() {
     this.checksArray = await firstValueFrom(this.httpClient.get<any>('api/checks'));

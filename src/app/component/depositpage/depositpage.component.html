@@ -76,6 +76,93 @@
   </div>
 </div>
 
+<!-- Dialog : CONTRÔLE DU PRODUIT (OK / NOK / HS) -->
+<p-dialog
+  header="Contrôle du produit"
+  [(visible)]="checkDialogVisible"
+  [modal]="true"
+  [closable]="false"
+  [dismissableMask]="false"
+  [style]="{ width: '45vw', maxWidth: '600px' }"
+  [baseZIndex]="10000">
+
+  <ng-container *ngIf="selectedStockForCheck">
+    <div class="flex flex-col md:flex-row md:items-start gap-6 mb-6">
+      <img
+        class="h-32 w-32 object-cover rounded"
+        [src]="selectedStockForCheck.product.picture || 'assets/images/default_image.jpg'"
+        alt="Product Image">
+
+      <div class="flex-1 text-sm">
+        <p class="text-lg font-bold mb-1">
+          {{ selectedStockForCheck.product.title }}
+        </p>
+        <p class="text-gray-600 mb-2">
+          ID Alitracer : {{ selectedStockForCheck.alitracer }} •
+          Casier {{ selectedStockForCheck.lockerNumber }}
+        </p>
+
+        <div class="grid grid-cols-2 gap-x-6 mt-2">
+          <div>
+            <div class="text-gray-500">Type</div>
+            <div class="text-black">{{ selectedStockForCheck.product.type }}</div>
+
+            <div class="text-gray-500 mt-2">Marque</div>
+            <div class="text-black">{{ selectedStockForCheck.product.brand }}</div>
+          </div>
+          <div>
+            <div class="text-gray-500">Taille</div>
+            <div class="text-black">{{ selectedStockForCheck.product.size }}</div>
+
+            <div class="text-gray-500 mt-2">CMU</div>
+            <div class="text-black">{{ selectedStockForCheck.product.cmu }}</div>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <div class="text-gray-500">Statut actuel</div>
+          <div class="text-black" [ngClass]="getStatusClassFromStock(selectedStockForCheck)">
+            {{ getStatusLabelFromStock(selectedStockForCheck) }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Commentaire -->
+    <div class="mb-4 text-sm">
+      <label class="block text-gray-700 font-bold mb-2">Commentaire (optionnel)</label>
+      <textarea
+        class="border border-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm rounded-md"
+        [(ngModel)]="checkComment"
+        rows="3"
+        placeholder="Analyse visuelle du produit">
+      </textarea>
+    </div>
+
+    <!-- Boutons OK / NOK / HS -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-2">
+      <button
+        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded text-lg"
+        type="button"
+        (click)="confirmCheck(1)">
+        OK
+      </button>
+      <button
+        class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded text-lg"
+        type="button"
+        (click)="confirmCheck(0)">
+        NOK
+      </button>
+      <button
+        class="bg-red-500 hover:bg-red-700 text-white font-bold py-3 px-4 rounded text-lg"
+        type="button"
+        (click)="confirmCheck(2)">
+        HS
+      </button>
+    </div>
+  </ng-container>
+</p-dialog>
+
 <!-- Dialog : Rangement par casier -->
 <p-dialog
   header="Rangement - Casier {{ currentLocker }}"
@@ -87,7 +174,6 @@
   [dismissableMask]="false">
 
   <div class="flex flex-col gap-4 p-4">
-    <!-- Instruction -->
     <div class="bg-blue-50 border border-blue-200 rounded p-4">
       <p class="font-bold text-lg mb-2">
         Veuillez ranger les outils suivants dans le casier {{ currentLocker }} :
@@ -95,11 +181,18 @@
       <ul class="list-disc list-inside space-y-1 text-sm">
         <li *ngFor="let tool of currentLockerTools" class="font-mono">
           {{ tool.alitracer }} ({{ tool.product.size }} - {{ tool.product.cmu }})
+          <span class="ml-2 text-xs"
+                [ngClass]="{
+                  'text-blue-700': tool.status === 1,
+                  'text-orange-700': tool.status === 0,
+                  'text-red-700': tool.status === 2
+                }">
+            [{{ getStatusLabelFromStock(tool) }}]
+          </span>
         </li>
       </ul>
     </div>
 
-    <!-- Avertissement fermeture -->
     <div class="bg-orange-50 border border-orange-200 rounded p-4">
       <p class="font-bold text-orange-800">⚠️ Fermez bien le casier après avoir rangé</p>
       <p class="text-sm text-gray-600 mt-1">
@@ -107,7 +200,6 @@
       </p>
     </div>
 
-    <!-- Bouton fermer casier -->
     <button
       class="bg-red-600 hover:bg-red-800 text-white font-bold px-6 py-3 rounded-lg w-full text-lg"
       type="button"

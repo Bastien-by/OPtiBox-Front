@@ -96,6 +96,15 @@
               <fa-icon [icon]="faPeopleGroup" class="lg:hidden"></fa-icon>
             </a>
 
+            <a
+              *ngIf="isLoggedIn() && isAdmin()"
+              routerLink="lockers"
+              routerLinkActive="bg-gray-200"
+              class="text-gray-500 hover:bg-gray-200 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+              <span class="hidden lg:inline">Casiers</span>
+              <fa-icon [icon]="faPeopleGroup" class="lg:hidden"></fa-icon>
+            </a>
+
           </div>
 
         </div>

@@ -9,65 +9,27 @@ import { ProductpageComponent } from './component/productpage/productpage.compon
 import { StockpageComponent } from './component/stockpage/stockpage.component';
 import { UserpageComponent } from './component/userpage/userpage.component';
 import { AuthGuard } from './auth.guard';
-import {DepositpageComponent} from "./component/depositpage/depositpage.component";
+import { DepositpageComponent } from './component/depositpage/depositpage.component';
+import { LockerpageComponent } from './component/lockerpage/lockerpage.component';
 
 export const routes: Routes = [
-  // ✅ Route par défaut → racine (page d'accueil publique)
+  // Route par défaut → login
   { path: '', redirectTo: '/login', pathMatch: 'full' },
-
-  // ✅ Page racine (accueil, SANS guard)
+  // Pages publiques (SANS guard)
   { path: 'racine', component: RacinePageComponent },
-
-  // ✅ Page login (SANS guard)
-  { path: 'login', component: LoginpageComponent },
-
-  // ✅ Pages protégées (AVEC guard)
-  {
-    path: 'scanpage',
-    component: ScanpageComponent,
-    canActivate: [AuthGuard]
-  },// ✅ Pages protégées (AVEC guard)
-  {
-    path: 'deposit',
-    component: DepositpageComponent,
-    canActivate: [AuthGuard]
-  },
-  {
-    path: 'withdraw-deposit',
-    component: ScanpageComponent,
-    canActivate: [AuthGuard]
-  },
-  {
-    path: 'check',
-    component: CheckpageComponent,
-    canActivate: [AuthGuard]
-  },
-  {
-    path: 'history',
-    component: HistorypageComponent,
-    canActivate: [AuthGuard]
-  },
-  {
-    path: 'procedure',
-    component: ProcedurepageComponent,
-    canActivate: [AuthGuard]
-  },
-  {
-    path: 'product',
-    component: ProductpageComponent,
-    canActivate: [AuthGuard]
-  },
-  {
-    path: 'stock',
-    component: StockpageComponent,
-    canActivate: [AuthGuard]
-  },
-  {
-    path: 'user',
-    component: UserpageComponent,
-    canActivate: [AuthGuard]
-  },
-
-  // ✅ Wildcard (404) → redirige vers racine
+  { path: 'login',  component: LoginpageComponent  },
+  // Pages protégées (AVEC guard)
+  { path: 'scanpage',        component: ScanpageComponent,      canActivate: [AuthGuard] },
+  { path: 'deposit',         component: DepositpageComponent,   canActivate: [AuthGuard] },
+  { path: 'withdraw-deposit',component: ScanpageComponent,      canActivate: [AuthGuard] },
+  { path: 'check',           component: CheckpageComponent,     canActivate: [AuthGuard] },
+  { path: 'history',         component: HistorypageComponent,   canActivate: [AuthGuard] },
+  { path: 'procedure',       component: ProcedurepageComponent, canActivate: [AuthGuard] },
+  { path: 'product',         component: ProductpageComponent,   canActivate: [AuthGuard] },
+  { path: 'stock',           component: StockpageComponent,     canActivate: [AuthGuard] },
+  { path: 'user',            component: UserpageComponent,      canActivate: [AuthGuard] },
+  // Page casiers — admin uniquement (guard route + vérification isAdmin() dans le composant)
+  { path: 'lockers',         component: LockerpageComponent,    canActivate: [AuthGuard] },
+  // Wildcard (404)
   { path: '**', redirectTo: '/racine' }
 ];
