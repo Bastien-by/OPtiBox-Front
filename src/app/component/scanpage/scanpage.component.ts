@@ -81,6 +81,7 @@ export class ScanpageComponent implements OnInit, OnDestroy {
 
   // ── Fermeture casier ──────────────────────────────────────────────────────
   lockerCloseDialogVisible = false;
+  safetyDialogVisible       = false;  // popup sécurité avant scan retrait
   private lockedFlow: 'withdraw' | 'deposit' | null = null;
 
   // ── Scan douchette ────────────────────────────────────────────────────────
@@ -90,8 +91,12 @@ export class ScanpageComponent implements OnInit, OnDestroy {
   scannedCount      = 0;
   expectedAlitracers: string[] = [];
 
+  /** Saisie manuelle : 4 derniers chiffres de l'alitracer */
+  manualSuffix    = '';
+  manualScanError = '';
+
   private pollingInterval: any;
-  private isProcessing = false;
+  protected isProcessing = false;
 
   // ── Modèles métier ────────────────────────────────────────────────────────
   stock: any   = { product: { title: '', type: '', size: '', cmu: '', location: '', picture: '', alitracer: '' }, available: null, status: null, creationDate: null };
@@ -364,13 +369,20 @@ export class ScanpageComponent implements OnInit, OnDestroy {
     }
 
     if (this.lockedFlow === 'withdraw') {
-      this.scanMode       = 'withdraw';
-      this.targetScanCount = this.withdrawQuantity;
-      this.scannedCount   = 0;
-      this.scanDialogVisible = true;
-      setTimeout(() => this.startPolling(), 0);
+      // Affiche le popup de sécurité avant de démarrer le scan
+      this.safetyDialogVisible = true;
     }
     if (this.lockedFlow === 'deposit') this.lockedFlow = null;
+  }
+
+  /** Appelée quand l'opérateur confirme avoir lu le message de sécurité. */
+  confirmSafety(): void {
+    this.safetyDialogVisible = false;
+    this.scanMode            = 'withdraw';
+    this.targetScanCount     = this.withdrawQuantity;
+    this.scannedCount        = 0;
+    this.scanDialogVisible   = true;
+    setTimeout(() => this.startPolling(), 0);
   }
 
   // ── Polling douchette ─────────────────────────────────────────────────────
@@ -386,6 +398,24 @@ export class ScanpageComponent implements OnInit, OnDestroy {
         }
       }).catch(() => {});
     }, 2000);
+  }
+
+  /**
+   * Reconstruit l'alitracer complet depuis les 4 derniers chiffres saisis
+   * et déclenche le même traitement qu'un scan douchette.
+   * Format attendu : L0000000XXXX (longueur 12)
+   */
+  submitManualScan(): void {
+    const suffix = this.manualSuffix.trim();
+    if (!/^\d{4}$/.test(suffix)) {
+      this.manualScanError = 'Saisissez exactement 4 chiffres.';
+      return;
+    }
+    this.manualScanError = '';
+    const alitracer = 'L0000000' + suffix;  // reconstitue L0000000XXXX
+    this.manualSuffix = '';
+    this.isProcessing = true;
+    this.handleScannedCode(alitracer);
   }
 
   private stopPolling(): void {

@@ -48,10 +48,6 @@
                         <div class="text-black">{{ product.brand }}</div>
                       </div>
                       <div class="mt-4">
-                        <div class="text-gray-500">Emplacement</div>
-                        <div class="text-black">{{ product.location }}</div>
-                      </div>
-                      <div class="mt-4">
                         <div class="text-gray-500">Charge maximale d’utilisation</div>
                         <div class="text-black">{{ product.cmu }}</div>
                       </div>
@@ -97,10 +93,6 @@
           <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProduct.cmu" placeholder="Cmu">
         </div>
         <div class="flex flex-row gap-3">
-          <label class="text-gray-700 w-40">Localisation *</label>
-          <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProduct.location" placeholder="Localisation">
-        </div>
-        <div class="flex flex-row gap-3">
           <label class="text-gray-700 w-40">Marque *</label>
           <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProduct.brand" placeholder="Marque">
         </div>
@@ -144,10 +136,6 @@
         <div class="flex flex-row gap-3">
             <label class="text-gray-700 w-40">Cmu *</label>
             <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="product.cmu" placeholder="Cmu">
-        </div>
-        <div class="flex flex-row gap-3">
-            <label class="text-gray-700 w-40">Localisation *</label>
-            <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="product.location" placeholder="Localisation">
         </div>
         <div class="flex flex-row gap-3">
           <label class="text-gray-700 w-40">Marque *</label>

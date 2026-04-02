@@ -4,7 +4,7 @@ import { RacinePageComponent } from './component/racine-page/racine-page.compone
 import { ScanpageComponent } from './component/scanpage/scanpage.component';
 import { CheckpageComponent } from './component/checkpage/checkpage.component';
 import { HistorypageComponent } from './component/historypage/historypage.component';
-import { ProcedurepageComponent } from './component/procedurepage/procedurepage.component';
+import { ProcedurePageComponent } from './component/procedurepage/procedurepage.component';
 import { ProductpageComponent } from './component/productpage/productpage.component';
 import { StockpageComponent } from './component/stockpage/stockpage.component';
 import { UserpageComponent } from './component/userpage/userpage.component';
@@ -24,7 +24,7 @@ export const routes: Routes = [
   { path: 'withdraw-deposit',component: ScanpageComponent,      canActivate: [AuthGuard] },
   { path: 'check',           component: CheckpageComponent,     canActivate: [AuthGuard] },
   { path: 'history',         component: HistorypageComponent,   canActivate: [AuthGuard] },
-  { path: 'procedure',       component: ProcedurepageComponent, canActivate: [AuthGuard] },
+  { path: 'procedures',      component: ProcedurePageComponent, canActivate: [AuthGuard] },
   { path: 'product',         component: ProductpageComponent,   canActivate: [AuthGuard] },
   { path: 'stock',           component: StockpageComponent,     canActivate: [AuthGuard] },
   { path: 'user',            component: UserpageComponent,      canActivate: [AuthGuard] },

@@ -1,35 +1,27 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive } from "@angular/router";
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { FaIconComponent } from "@fortawesome/angular-fontawesome";
-import { faHouse } from "@fortawesome/free-solid-svg-icons";
-import { faBarcode } from "@fortawesome/free-solid-svg-icons";
-import { faListCheck } from "@fortawesome/free-solid-svg-icons";
-import { faClockRotateLeft } from "@fortawesome/free-solid-svg-icons";
-import { faBox } from "@fortawesome/free-solid-svg-icons";
-import { faList } from "@fortawesome/free-solid-svg-icons";
-import { faBoxesStacked } from "@fortawesome/free-solid-svg-icons";
-import { faPeopleGroup } from "@fortawesome/free-solid-svg-icons";
-import { faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
-import { faCircleUser } from "@fortawesome/free-solid-svg-icons";
-import { faDoorOpen } from "@fortawesome/free-solid-svg-icons";
-import { faSignInAlt  } from "@fortawesome/free-solid-svg-icons";
-import { firstValueFrom, Subscription } from 'rxjs';
+import { FormsModule } from '@angular/forms';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import {
+  faHouse, faBarcode, faListCheck, faClockRotateLeft,
+  faBox, faList, faBoxesStacked, faPeopleGroup,
+  faSignOutAlt, faCircleUser, faSignInAlt, faDoorOpen
+} from '@fortawesome/free-solid-svg-icons';
 import { ToastModule } from 'primeng/toast';
+import { DialogModule } from 'primeng/dialog';
+import { MessageService } from 'primeng/api';
 import { AuthAppService } from '../../services/auth-app.service';
 import { UserService } from '../../services/user.service';
 import { ScanService } from '../../services/scan.service';
-import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
   imports: [
-    RouterLink,
-    RouterLinkActive,
-    CommonModule,
-    FaIconComponent,
-    ToastModule
+    RouterLink, RouterLinkActive,
+    CommonModule, FormsModule,
+    FaIconComponent, ToastModule, DialogModule
   ],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css',
@@ -37,8 +29,11 @@ import { MessageService } from 'primeng/api';
 })
 export class NavbarComponent implements OnInit, OnDestroy {
 
-  private scanSubscription?: Subscription;
-  private scanLocked = false;
+  // ── Login dialog ──────────────────────────────────────────────────────────
+  loginDialogVisible = false;
+  loginToken         = '';
+  loginError         = '';
+  loginLoading       = false;
 
   constructor(
     private authApp: AuthAppService,
@@ -48,60 +43,85 @@ export class NavbarComponent implements OnInit, OnDestroy {
     private router: Router
   ) {}
 
-  ngOnInit(): void {
+  ngOnInit(): void {}
+  ngOnDestroy(): void {}
+
+  // ── Auth ──────────────────────────────────────────────────────────────────
+
+  isLoggedIn()    { return this.authApp.isLoggedIn(); }
+  isAdmin()       { return this.authApp.isAdmin(); }
+  isMaintenance() { return this.authApp.isMaintenance(); }
+  isOperator()    { return this.authApp.isOperator(); }
+  getUsername()   { return this.authApp.getUsername(); }
+
+  // ── Login dialog ──────────────────────────────────────────────────────────
+
+  openLoginDialog(): void {
+    this.loginToken   = '';
+    this.loginError   = '';
+    this.loginLoading = false;
+    this.loginDialogVisible = true;
   }
 
-  ngOnDestroy(): void {
+  async submitLogin(): Promise<void> {
+    if (!this.loginToken.trim()) {
+      this.loginError = 'Veuillez saisir votre identifiant.';
+      return;
+    }
+
+    this.loginError   = '';
+    this.loginLoading = true;
+
+    try {
+      const success = await this.authApp.authenticate(this.loginToken.trim());
+
+      if (success) {
+        this.loginDialogVisible = false;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Connexion réussie',
+          detail: `Bienvenue, ${this.getUsername()} !`
+        });
+        this.router.navigate(['/racine']);
+      } else {
+        this.loginError = 'Identifiant non reconnu.';
+      }
+    } catch {
+      this.loginError = 'Erreur de connexion. Réessayez.';
+    } finally {
+      this.loginLoading = false;
+    }
   }
 
-  /* ------- Auth OptiBox globale ------- */
-
-  isLoggedIn(): boolean {
-    return this.authApp.isLoggedIn();
+  onEnterKey(event: KeyboardEvent): void {
+    if (event.key === 'Enter') this.submitLogin();
   }
 
-  isAdmin(): boolean {
-    return this.authApp.isAdmin();
-  }
-
-  isMaintenance(): boolean {
-    return this.authApp.isMaintenance();
-  }
-
-  isOperator(): boolean {
-    return this.authApp.isOperator();
-  }
-
-  getUsername(): string {
-    return this.authApp.getUsername();
-  }
+  // ── Logout ────────────────────────────────────────────────────────────────
 
   logout(): void {
     const username = this.getUsername();
     this.authApp.logout();
-
     this.messageService.add({
-      severity: 'error',
+      severity: 'info',
       summary: 'Déconnexion',
       detail: username ? `Au revoir, ${username}` : 'Vous êtes déconnecté'
     });
-    // ✅ Redirige vers login
-    setTimeout(() => {
-      this.router.navigate(['/login']);
-    }, 1500);  // 1.5s pour lire le toast
+    setTimeout(() => this.router.navigate(['/login']), 1500);
   }
 
+  // ── Icônes ────────────────────────────────────────────────────────────────
 
-
-  protected readonly faHouse = faHouse;
-  protected readonly faBarcode = faBarcode;
-  protected readonly faListCheck = faListCheck;
+  protected readonly faHouse           = faHouse;
+  protected readonly faBarcode         = faBarcode;
+  protected readonly faListCheck       = faListCheck;
   protected readonly faClockRotateLeft = faClockRotateLeft;
-  protected readonly faBox = faBox;
-  protected readonly faList = faList;
-  protected readonly faBoxesStacked = faBoxesStacked;
-  protected readonly faPeopleGroup = faPeopleGroup;
-  protected readonly faSignOutAlt = faSignOutAlt;
-  protected readonly faCircleUser = faCircleUser;
-  protected readonly faSignInAlt  = faSignInAlt ;
+  protected readonly faBox             = faBox;
+  protected readonly faList            = faList;
+  protected readonly faBoxesStacked    = faBoxesStacked;
+  protected readonly faPeopleGroup     = faPeopleGroup;
+  protected readonly faSignOutAlt      = faSignOutAlt;
+  protected readonly faCircleUser      = faCircleUser;
+  protected readonly faSignInAlt       = faSignInAlt;
+  protected readonly faDoorOpen        = faDoorOpen;
 }

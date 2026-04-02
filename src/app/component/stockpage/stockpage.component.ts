@@ -32,7 +32,7 @@ import { QRCodeModule } from 'angularx-qrcode';
 export class StockpageComponent implements OnInit {
 
   stock: any = {
-    product: { id: null, title: '', size: '', cmu: '', location: '', picture: '' },
+    product: { id: null, title: '', size: '', cmu: '', picture: '' },
     available: null,
     status: null,
     creationDate: null,

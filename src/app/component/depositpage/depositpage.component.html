@@ -5,7 +5,6 @@
     <p>Vous devez être connecté avec votre badge pour effectuer un dépôt.</p>
   </div>
 
-  <!-- Contenu seulement si connecté -->
   <div *ngIf="isLoggedIn()">
     <h1 class="text-2xl font-bold py-3 flex items-center gap-3">
       <fa-icon [icon]="faBoxOpen"></fa-icon>
@@ -15,7 +14,6 @@
       Scannez tous les outils que vous souhaitez déposer, puis validez.
     </h2>
 
-    <!-- Bouton démarrer scan -->
     <div class="bg-white rounded-3xl shadow-xl p-6">
       <button
         class="bg-green-600 hover:bg-green-800 text-white px-8 py-4 rounded-xl font-bold text-lg w-full"
@@ -27,8 +25,12 @@
   </div>
 </div>
 
-<!-- Zone de scan PLEIN ÉCRAN (douchette) -->
+
+<!-- ════════════════════════════════════════════════
+     ZONE DE SCAN PLEIN ÉCRAN
+     ════════════════════════════════════════════════ -->
 <div *ngIf="scanDialogVisible" class="fixed inset-0 bg-black/80 z-50 flex flex-col">
+
   <!-- Header avec instructions + bouton arrêter -->
   <div class="p-6 text-lg text-gray-100 bg-black/60 flex justify-between items-center">
     <div>
@@ -43,18 +45,40 @@
     </button>
   </div>
 
-  <!-- Message d'attente centré -->
+  <!-- Zone centrale : attente + saisie manuelle -->
   <div class="flex-1 flex items-center justify-center p-8">
-    <div class="bg-gray-900 rounded-2xl shadow-2xl border-4 border-yellow-400 p-12 text-center">
-      <div class="text-white text-xl mb-4">
-        <i class="pi pi-spin pi-spinner" style="font-size: 3rem"></i>
+    <div class="bg-gray-900 rounded-2xl shadow-2xl border-4 border-yellow-400 p-10 text-center w-full max-w-sm">
+      <i class="pi pi-spin pi-spinner text-white mb-4" style="font-size: 3rem"></i>
+      <p class="text-white text-lg font-semibold mb-1">En attente du scan douchette...</p>
+      <p class="text-gray-400 text-sm mb-6">Scannez l'alitracer de chaque outil à déposer</p>
+
+      <!-- Saisie manuelle : 4 derniers chiffres de l'ID Alitracer -->
+      <div class="border-t border-gray-600 pt-5 mt-2">
+        <p class="text-gray-300 text-xs mb-2 font-medium">
+          Ou saisissez les <span class="text-yellow-300 font-bold">4 derniers chiffres</span> de l'ID Alitracer
+        </p>
+        <p class="text-gray-500 text-xs mb-3 italic">L000000<span class="text-yellow-300 font-bold">XXXX</span></p>
+        <div class="flex gap-2">
+          <input
+            type="text"
+            maxlength="4"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            class="flex-1 bg-gray-800 border border-gray-600 text-white text-center text-xl font-mono rounded-lg px-3 py-2 focus:outline-none focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 placeholder-gray-600"
+            placeholder="0000"
+            [(ngModel)]="manualSuffix"
+            (keydown.enter)="submitManualScan()"
+            [disabled]="isProcessing">
+          <button
+            type="button"
+            (click)="submitManualScan()"
+            [disabled]="isProcessing || manualSuffix.length !== 4"
+            class="bg-yellow-500 hover:bg-yellow-400 disabled:bg-gray-600 text-black font-bold px-4 rounded-lg transition">
+            ↵
+          </button>
+        </div>
+        <p *ngIf="manualScanError" class="text-red-400 text-xs mt-2">{{ manualScanError }}</p>
       </div>
-      <p class="text-white text-lg font-semibold">
-        En attente du scan douchette...
-      </p>
-      <p class="text-gray-400 text-sm mt-2">
-        Scannez l'alitracer de chaque outil à déposer
-      </p>
     </div>
   </div>
 
@@ -76,6 +100,7 @@
   </div>
 </div>
 
+
 <!-- Dialog : CONTRÔLE DU PRODUIT (OK / NOK / HS) -->
 <p-dialog
   header="Contrôle du produit"
@@ -94,9 +119,7 @@
         alt="Product Image">
 
       <div class="flex-1 text-sm">
-        <p class="text-lg font-bold mb-1">
-          {{ selectedStockForCheck.product.title }}
-        </p>
+        <p class="text-lg font-bold mb-1">{{ selectedStockForCheck.product.title }}</p>
         <p class="text-gray-600 mb-2">
           ID Alitracer : {{ selectedStockForCheck.alitracer }} •
           Casier {{ selectedStockForCheck.lockerNumber }}
@@ -106,14 +129,12 @@
           <div>
             <div class="text-gray-500">Type</div>
             <div class="text-black">{{ selectedStockForCheck.product.type }}</div>
-
             <div class="text-gray-500 mt-2">Marque</div>
             <div class="text-black">{{ selectedStockForCheck.product.brand }}</div>
           </div>
           <div>
             <div class="text-gray-500">Taille</div>
             <div class="text-black">{{ selectedStockForCheck.product.size }}</div>
-
             <div class="text-gray-500 mt-2">CMU</div>
             <div class="text-black">{{ selectedStockForCheck.product.cmu }}</div>
           </div>
@@ -128,7 +149,6 @@
       </div>
     </div>
 
-    <!-- Commentaire -->
     <div class="mb-4 text-sm">
       <label class="block text-gray-700 font-bold mb-2">Commentaire (optionnel)</label>
       <textarea
@@ -139,29 +159,14 @@
       </textarea>
     </div>
 
-    <!-- Boutons OK / NOK / HS -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-2">
-      <button
-        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded text-lg"
-        type="button"
-        (click)="confirmCheck(1)">
-        OK
-      </button>
-      <button
-        class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded text-lg"
-        type="button"
-        (click)="confirmCheck(0)">
-        NOK
-      </button>
-      <button
-        class="bg-red-500 hover:bg-red-700 text-white font-bold py-3 px-4 rounded text-lg"
-        type="button"
-        (click)="confirmCheck(2)">
-        HS
-      </button>
+      <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded text-lg" type="button" (click)="confirmCheck(1)">OK</button>
+      <button class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded text-lg" type="button" (click)="confirmCheck(0)">NOK</button>
+      <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-3 px-4 rounded text-lg" type="button" (click)="confirmCheck(2)">HS</button>
     </div>
   </ng-container>
 </p-dialog>
+
 
 <!-- Dialog : Rangement par casier -->
 <p-dialog
@@ -183,9 +188,9 @@
           {{ tool.alitracer }} ({{ tool.product.size }} - {{ tool.product.cmu }})
           <span class="ml-2 text-xs"
                 [ngClass]="{
-                  'text-blue-700': tool.status === 1,
+                  'text-blue-700':   tool.status === 1,
                   'text-orange-700': tool.status === 0,
-                  'text-red-700': tool.status === 2
+                  'text-red-700':    tool.status === 2
                 }">
             [{{ getStatusLabelFromStock(tool) }}]
           </span>

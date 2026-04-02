@@ -24,7 +24,8 @@
       <div class="flex flex-wrap justify-between items-center mb-4 gap-3">
         <h2 class="text-2xl font-bold text-gray-900">Casiers 1–24</h2>
 
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3">
+
           <!-- Barre de progression pendant l'ouverture -->
           <span *ngIf="lockerOpenProgress"
                 class="flex items-center gap-2 text-sm font-semibold text-green-700 bg-green-50 border border-green-200 px-3 py-1.5 rounded-lg">
@@ -32,6 +33,18 @@
             Ouverture en cours {{ lockerOpenProgress }}
           </span>
 
+          <!-- Tout Contrôler (INDIVIDUAL — visible par tous les connectés) -->
+          <button
+            class="flex items-center gap-2 px-5 py-2 rounded-xl font-bold text-sm transition text-white"
+            [ngClass]="lockerOpenProgress ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-700'"
+            [disabled]="!!lockerOpenProgress"
+            type="button"
+            (click)="startTotalControl()">
+            <fa-icon [icon]="faBoxesStacked"></fa-icon>
+            Tout Contrôler
+          </button>
+
+          <!-- Contrôle Réglementaire (admin / maintenance uniquement) -->
           <button
             *ngIf="isLoggedIn() && (isAdmin() || isMaintenance())"
             class="flex items-center gap-2 px-5 py-2 rounded-xl font-bold text-sm transition text-white"
@@ -77,7 +90,7 @@
         </div>
       </div>
 
-      <!-- Grille physique des casiers — rendue uniquement quand toutes les données sont prêtes -->
+      <!-- Grille physique des casiers -->
       <div *ngIf="dataReady" class="flex gap-3 justify-center overflow-x-auto py-4">
 
         <!-- Colonne 1 : 1, 2, 3 -->
@@ -265,6 +278,29 @@
         </div>
 
       </div><!-- /grille -->
+
+      <!-- ── Stocks hors casier (retirés) ──────────────────────────────────── -->
+      <div *ngIf="dataReady && stocksWithoutLocker.length > 0"
+           class="mt-6 border-t border-gray-200 pt-4">
+        <p class="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-2">
+          <fa-icon [icon]="faBoxesStacked" class="text-gray-400"></fa-icon>
+          Stocks hors casier ({{ stocksWithoutLocker.length }}) —
+          <span class="font-normal text-gray-400">inclus automatiquement dans "Tout Contrôler"</span>
+        </p>
+        <div class="flex flex-wrap gap-2">
+          <span *ngFor="let stock of stocksWithoutLocker"
+                class="text-xs font-mono px-3 py-1.5 rounded-full border font-semibold"
+                [ngClass]="{
+                  'bg-blue-50 text-blue-700 border-blue-200': isStockCheckedThisMonth(stock),
+                  'bg-gray-100 text-gray-600 border-gray-300': !isStockCheckedThisMonth(stock)
+                }">
+            {{ stock.alitracer }}
+            <span class="ml-1 font-normal opacity-70">{{ stock.product.size }} – {{ stock.product.cmu }}</span>
+            <span *ngIf="isStockCheckedThisMonth(stock)" class="ml-1">✅</span>
+          </span>
+        </div>
+      </div>
+
     </div><!-- /bloc 1 -->
 
 
@@ -322,7 +358,7 @@
 
 
     <!-- ════════════════════════════════════════════════
-         BLOC 3 — Stats rapides (en bas)
+         BLOC 3 — Stats rapides
          ════════════════════════════════════════════════ -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-white rounded-3xl shadow-xl p-6">
       <div class="text-center">
@@ -364,7 +400,7 @@
             type="button"
             (click)="startScanControl()">
             <fa-icon [icon]="faUser"></fa-icon>
-            Contrôle Individuel
+            Contrôle
           </button>
         </div>
 
@@ -399,17 +435,14 @@
                 <span *ngIf="stock.lastCheckDate"> {{ stock.lastCheckDate }}</span>
                 <span *ngIf="!stock.lastCheckDate" class="text-gray-400"> Jamais contrôlé</span>
               </div>
-
-              <!-- Statut contrôle individuel (affichage uniquement) -->
               <div class="mt-1 flex items-center gap-1">
                 <span class="inline-flex items-center gap-1 bg-blue-100 text-blue-700 text-xs font-semibold px-1.5 py-0.5 rounded">
-                  <fa-icon [icon]="faUser" class="text-xs"></fa-icon> Individuel
+                   Statut
                 </span>
-                <span *ngIf="isStockCheckedThisMonth(stock)"  class="text-blue-600 font-bold">✅ Effectué ce mois</span>
-                <span *ngIf="!isStockCheckedThisMonth(stock)" class="text-gray-400">—</span>
+                <span [ngClass]="getStatusClass(stock)">
+                  {{ stock.status === 1 ? 'OK' : stock.status === 0 ? 'NOK' : 'HS' }}
+                </span>
               </div>
-
-              <!-- Statut contrôle réglementaire (pilote ratio + Excel) -->
               <div class="mt-0.5 flex items-center gap-1">
                 <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-semibold px-1.5 py-0.5 rounded">
                   <fa-icon [icon]="faShieldAlt" class="text-xs"></fa-icon> Réglementaire
@@ -429,7 +462,7 @@
 
 
     <!-- ════════════════════════════════════════════════
-         DIALOG — Détail d'une ANNÉE (mois + fichiers Excel)
+         DIALOG — Détail d'une ANNÉE
          ════════════════════════════════════════════════ -->
     <p-dialog
       [header]="'Contrôles réglementaires — ' + selectedYear"
@@ -443,16 +476,15 @@
           Fichiers de contrôle <b>réglementaire</b> disponibles pour <b>{{ selectedYear }}</b>.
           Cliquez sur un mois pour télécharger le fichier Excel.
         </p>
-
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           <div
             *ngFor="let monthData of getMonthsForYear(selectedYear)"
             class="border-2 rounded-xl p-4 transition-all"
             [ngClass]="{
               'border-green-400 bg-green-50 hover:shadow-md cursor-pointer hover:-translate-y-0.5 transform': monthData.file,
-              'border-blue-300 bg-blue-50': monthData.isCurrent && !monthData.file,
-              'border-gray-200 bg-gray-50': !monthData.file && !monthData.isCurrent,
-              'opacity-40': monthData.isPast && !monthData.file
+              'border-blue-300 bg-blue-50':  monthData.isCurrent && !monthData.file,
+              'border-gray-200 bg-gray-50':  !monthData.file && !monthData.isCurrent,
+              'opacity-40':                  monthData.isPast && !monthData.file
             }"
             (click)="monthData.file ? downloadMonthlyExcel(monthData.filename) : null">
 
@@ -469,7 +501,6 @@
                 Dispo
               </span>
             </div>
-
             <p class="font-bold text-sm"
                [ngClass]="monthData.file ? 'text-gray-800' : 'text-gray-400'">
               {{ monthData.name }}
@@ -489,7 +520,7 @@
          DIALOG — Contrôle OK / NOK / HS
          ════════════════════════════════════════════════ -->
     <p-dialog
-      [header]="pendingCheckType === 'REGULATORY' ? 'Contrôle Réglementaire' : 'Contrôle Individuel'"
+      [header]="pendingCheckType === 'REGULATORY' ? 'Contrôle Réglementaire' : isTotalControlMode ? 'Tout Contrôler' : 'Contrôle Individuel'"
       [(visible)]="checkDialogVisible"
       [modal]="true"
       [closable]="true"
@@ -502,9 +533,14 @@
         <!-- Badge type + rappel impact -->
         <div class="mb-4 flex flex-wrap items-center gap-2">
           <span class="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full"
-                [ngClass]="pendingCheckType === 'REGULATORY' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'">
-            <fa-icon [icon]="pendingCheckType === 'REGULATORY' ? faShieldAlt : faUser" class="text-xs"></fa-icon>
-            {{ pendingCheckType === 'REGULATORY' ? 'Contrôle Réglementaire' : 'Contrôle Individuel' }}
+                [ngClass]="pendingCheckType === 'REGULATORY'
+                  ? 'bg-green-100 text-green-700'
+                  : isTotalControlMode
+                    ? 'bg-purple-100 text-purple-700'
+                    : 'bg-blue-100 text-blue-700'">
+            <fa-icon [icon]="pendingCheckType === 'REGULATORY' ? faShieldAlt : isTotalControlMode ? faBoxesStacked : faUser"
+                     class="text-xs"></fa-icon>
+            {{ pendingCheckType === 'REGULATORY' ? 'Contrôle Réglementaire' : isTotalControlMode ? 'Tout Contrôler' : 'Contrôle Individuel' }}
           </span>
           <span *ngIf="pendingCheckType !== 'REGULATORY'" class="text-xs text-gray-400 italic">
             Ce contrôle ne modifie pas le ratio ni le fichier Excel mensuel.
@@ -522,7 +558,8 @@
             <p class="text-lg font-bold mb-1">{{ selectedStockForCheck.product.title }}</p>
             <p class="text-gray-600 mb-2">
               ID Alitracer : {{ selectedStockForCheck.alitracer }} •
-              Casier {{ selectedStockForCheck.lockerNumber }}
+              <span *ngIf="selectedStockForCheck.lockerNumber">Casier {{ selectedStockForCheck.lockerNumber }}</span>
+              <span *ngIf="!selectedStockForCheck.lockerNumber" class="text-orange-500 font-semibold">Hors casier</span>
             </p>
             <div class="grid grid-cols-2 gap-x-6 mt-2">
               <div>
@@ -579,21 +616,28 @@
       [dismissableMask]="false">
 
       <div class="bg-red-100 border border-red-300 text-red-800 rounded p-4 text-sm">
-        <p class="font-bold mb-2" *ngIf="!globalControlMode">
+
+        <!-- Titre selon le mode -->
+        <p class="font-bold mb-2" *ngIf="!globalControlMode && !isTotalControlMode">
           Avez-vous bien refermé le casier {{ activeLocker }} ?
         </p>
         <p class="font-bold mb-2" *ngIf="globalControlMode">
-          Avez-vous bien refermé tous les casiers contrôlés ?
+          Avez-vous bien refermé tous les casiers contrôlés (réglementaire) ?
         </p>
-        <p class="mb-4" *ngIf="!globalControlMode">
+        <p class="font-bold mb-2" *ngIf="isTotalControlMode && !globalControlMode">
+          Avez-vous bien refermé tous les casiers (Tout Contrôler) ?
+        </p>
+
+        <!-- Texte explicatif -->
+        <p class="mb-4" *ngIf="!globalControlMode && !isTotalControlMode">
           Vérifiez que le casier est correctement fermé avant de terminer le contrôle individuel.
         </p>
-        <p class="mb-4" *ngIf="globalControlMode">
+        <p class="mb-4" *ngIf="globalControlMode || isTotalControlMode">
           Assurez-vous que les {{ lockersOpenedForControl.length }} casier(s) ouverts sont bien fermés.
         </p>
 
-        <!-- Liste casiers ouverts (mode réglementaire) -->
-        <div *ngIf="globalControlMode && lockersOpenedForControl.length > 0" class="mb-3">
+        <!-- Liste des casiers ouverts -->
+        <div *ngIf="(globalControlMode || isTotalControlMode) && lockersOpenedForControl.length > 0" class="mb-3">
           <p class="text-xs font-bold mb-1">Casiers ouverts lors de ce contrôle :</p>
           <div class="flex flex-wrap gap-1">
             <span *ngFor="let n of lockersOpenedForControl"
@@ -606,8 +650,8 @@
         <div class="flex justify-end">
           <button class="bg-red-500 hover:bg-red-700 text-white font-bold px-4 py-2 rounded transition"
                   (click)="confirmLockerClosed()">
-            <span *ngIf="!globalControlMode">Oui, le casier est fermé</span>
-            <span *ngIf="globalControlMode">Oui, tous les casiers sont fermés</span>
+            <span *ngIf="!globalControlMode && !isTotalControlMode">Oui, le casier est fermé</span>
+            <span *ngIf="globalControlMode || isTotalControlMode">Oui, tous les casiers sont fermés</span>
           </button>
         </div>
       </div>
@@ -628,22 +672,32 @@
   <div class="p-6 text-gray-100 bg-black/60 flex justify-between items-center">
     <div>
       <div class="flex items-center gap-2 mb-1">
-        <span *ngIf="!globalControlMode"
+        <span *ngIf="!globalControlMode && !isTotalControlMode"
               class="text-xs bg-blue-500 text-white font-bold px-2 py-0.5 rounded-full">
           INDIVIDUEL
+        </span>
+        <span *ngIf="isTotalControlMode && !globalControlMode"
+              class="text-xs bg-purple-500 text-white font-bold px-2 py-0.5 rounded-full">
+          TOUT CONTRÔLER
         </span>
         <span *ngIf="globalControlMode"
               class="text-xs bg-green-500 text-white font-bold px-2 py-0.5 rounded-full">
           RÉGLEMENTAIRE
         </span>
         <p class="font-bold text-lg">
-          <span *ngIf="!globalControlMode">📦 Contrôle Individuel — Casier {{ activeLocker }}</span>
+          <span *ngIf="!globalControlMode && !isTotalControlMode">📦 Contrôle Individuel — Casier {{ activeLocker }}</span>
+          <span *ngIf="isTotalControlMode && !globalControlMode">📦 Tout Contrôler — Tous les stocks</span>
           <span *ngIf="globalControlMode">🛡️ Contrôle Réglementaire Global</span>
         </p>
       </div>
-      <p class="text-sm text-gray-300" *ngIf="!globalControlMode">
+      <p class="text-sm text-gray-300" *ngIf="!globalControlMode && !isTotalControlMode">
         Scannez les alitracers du casier {{ activeLocker }}.
         <span class="text-blue-300">Ce contrôle ne modifie pas le ratio ni l'Excel.</span>
+      </p>
+      <p class="text-sm text-gray-300" *ngIf="isTotalControlMode && !globalControlMode">
+        Scannez tous les stocks (casiers + hors casier).
+        Restant : <b class="text-yellow-300">{{ expectedAlitracers.length }}</b> stock(s).
+        <span class="text-purple-300 ml-1">Ne modifie pas le ratio ni l'Excel.</span>
       </p>
       <p class="text-sm text-gray-300" *ngIf="globalControlMode">
         Scannez les stocks non encore contrôlés réglementairement ce mois-ci.
@@ -659,16 +713,48 @@
 
   <!-- Zone d'attente -->
   <div class="flex-1 flex items-center justify-center p-8">
-    <div class="bg-gray-900 rounded-2xl shadow-2xl border-4 p-12 text-center"
-         [ngClass]="globalControlMode ? 'border-green-400' : 'border-yellow-400'">
+    <div class="bg-gray-900 rounded-2xl shadow-2xl border-4 p-10 text-center w-full max-w-sm"
+         [ngClass]="{
+           'border-green-400':  globalControlMode,
+           'border-purple-400': isTotalControlMode && !globalControlMode,
+           'border-yellow-400': !globalControlMode && !isTotalControlMode
+         }">
       <i class="pi pi-spin pi-spinner text-white mb-4" style="font-size: 3rem"></i>
-      <p class="text-white text-lg font-semibold">En attente du scan douchette…</p>
-      <p class="text-gray-400 text-sm mt-2">Scannez l'alitracer du stock à contrôler</p>
+      <p class="text-white text-lg font-semibold mb-1">En attente du scan douchette…</p>
+      <p class="text-gray-400 text-sm mb-6">Scannez l'alitracer du stock à contrôler</p>
+
+      <!-- Saisie manuelle -->
+      <div class="border-t border-gray-600 pt-5 mt-2">
+        <p class="text-gray-300 text-xs mb-2 font-medium">
+          Ou saisissez les <span class="text-yellow-300 font-bold">4 derniers chiffres</span> de l'ID Alitracer
+        </p>
+        <p class="text-gray-500 text-xs mb-3 italic">L000000<span class="text-yellow-300 font-bold">XXXX</span></p>
+        <div class="flex gap-2">
+          <input
+            type="text"
+            maxlength="4"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            class="flex-1 bg-gray-800 border border-gray-600 text-white text-center text-xl font-mono rounded-lg px-3 py-2 focus:outline-none focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 placeholder-gray-600"
+            placeholder="0000"
+            [(ngModel)]="manualSuffix"
+            (keydown.enter)="submitManualScan()"
+            [disabled]="isProcessing">
+          <button
+            type="button"
+            (click)="submitManualScan()"
+            [disabled]="isProcessing || manualSuffix.length !== 4"
+            class="bg-yellow-500 hover:bg-yellow-400 disabled:bg-gray-600 text-black font-bold px-4 rounded-lg transition">
+            ↵
+          </button>
+        </div>
+        <p *ngIf="manualScanError" class="text-red-400 text-xs mt-2">{{ manualScanError }}</p>
+      </div>
     </div>
   </div>
 
-  <!-- Stocks du casier (mode individuel) -->
-  <div class="p-6 bg-black/60" *ngIf="!globalControlMode && activeLocker">
+  <!-- Stocks restants — mode individuel (casier unique) -->
+  <div class="p-6 bg-black/60" *ngIf="!globalControlMode && !isTotalControlMode && activeLocker">
     <p class="text-gray-200 font-semibold mb-3">
       Stocks du casier {{ activeLocker }}
       <span class="ml-2 text-xs text-blue-300 font-normal italic">(contrôle individuel — ratio inchangé)</span>
@@ -686,7 +772,24 @@
     </div>
   </div>
 
-  <!-- Stocks restants (mode réglementaire) -->
+  <!-- Stocks restants — mode Tout Contrôler -->
+  <div class="p-6 bg-black/60" *ngIf="isTotalControlMode && !globalControlMode">
+    <p class="text-gray-200 font-semibold mb-3">
+      Stocks restants à contrôler ({{ expectedAlitracers.length }})
+      <span class="ml-2 text-xs text-purple-300 font-normal italic">(individuel — ratio inchangé)</span>
+    </p>
+    <div class="flex flex-wrap gap-2">
+      <span *ngFor="let alitracer of expectedAlitracers"
+            class="bg-purple-500 text-white text-xs font-mono px-3 py-1 rounded-full font-bold">
+        {{ alitracer }}
+      </span>
+      <span *ngIf="expectedAlitracers.length === 0" class="text-green-400 font-bold text-sm">
+        ✅ Tous les stocks ont été contrôlés !
+      </span>
+    </div>
+  </div>
+
+  <!-- Stocks restants — mode réglementaire -->
   <div class="p-6 bg-black/60" *ngIf="globalControlMode">
     <p class="text-gray-200 font-semibold mb-3">
       Stocks réglementaires restants ({{ expectedAlitracers.length }})
@@ -702,5 +805,71 @@
       </span>
     </div>
   </div>
+
+  <!-- ════════════════════════════════════════════════
+     DIALOG — Avertissement destruction stock HS
+     ════════════════════════════════════════════════ -->
+  <p-dialog
+    header="⚠️ Stock mis Hors Service"
+    [(visible)]="hsWarningDialogVisible"
+    [modal]="true"
+    [closable]="false"
+    [dismissableMask]="false"
+    [style]="{ width: '40vw', maxWidth: '560px' }"
+    [baseZIndex]="12000">
+
+    <div *ngIf="hsWarningStock" class="flex flex-col gap-4">
+
+      <!-- Identité du stock HS -->
+      <div class="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+        <img
+          [src]="hsWarningStock.product.picture || 'assets/images/default_image.jpg'"
+          alt="product"
+          class="h-12 w-12 rounded-full object-cover flex-shrink-0 border-2 border-red-300">
+        <div class="text-sm">
+          <p class="font-bold text-red-800">{{ hsWarningStock.product.title }}</p>
+          <p class="text-red-600">Alitracer : <span class="font-mono font-bold">{{ hsWarningStock.alitracer }}</span></p>
+          <p class="text-red-600">Taille : {{ hsWarningStock.product.size }} — CMU : {{ hsWarningStock.product.cmu }}</p>
+        </div>
+      </div>
+
+      <!-- Message principal -->
+      <div class="bg-yellow-50 border border-yellow-300 rounded-xl px-5 py-4 text-sm text-yellow-900">
+        <p class="font-bold text-base mb-2 flex items-center gap-2">
+          <span class="text-xl">🗑️</span>
+          Action requise — Destruction obligatoire
+        </p>
+        <p class="mb-3">
+          Ce stock a été marqué <span class="font-bold text-red-600">Hors Service (HS)</span> et a été
+          automatiquement retiré de son casier.
+        </p>
+        <p class="mb-3 font-semibold">
+          Veuillez <span class="text-red-700 underline">détruire l'objet HS</span> et le déposer dans
+          la <span class="text-red-700 font-bold">boîte rouge</span> prévue à cet effet.
+        </p>
+        <p class="text-xs text-yellow-700 border-t border-yellow-200 pt-3 mt-2">
+          Pour plus d'informations, consultez les
+          <a routerLink="/procedures"
+             class="text-blue-600 underline font-semibold hover:text-blue-800"
+             (click)="closeHsWarning()">
+            procédures de destruction
+          </a>
+          dans la page Procédures.
+        </p>
+      </div>
+
+      <!-- Bouton confirmation -->
+      <div class="flex justify-end pt-2">
+        <button
+          class="flex items-center gap-2 bg-red-600 hover:bg-red-800 text-white font-bold px-6 py-3 rounded-xl transition text-sm"
+          type="button"
+          (click)="closeHsWarning()">
+          ✅ Compris — l'objet sera détruit
+        </button>
+      </div>
+
+    </div>
+  </p-dialog>
+
 
 </div><!-- /scan fullscreen -->

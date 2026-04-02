@@ -45,7 +45,6 @@
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">CMU</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID Alitracer(s)</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Emplacement</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Disponibilité</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Création</th>
@@ -73,7 +72,6 @@
               </div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">{{ s.reference }}</td>
-            <td class="px-6 py-4 whitespace-nowrap">{{ s.product.location }}</td>
             <td class="px-6 py-4 whitespace-nowrap">{{ s.available ? 'Disponible' : 'Indisponible' }}</td>
             <td class="px-6 py-4 whitespace-nowrap">{{ s.status === 0 ? 'NOK' : s.status === 1 ? 'OK' : 'HS' }}</td>
             <td class="px-6 py-4 whitespace-nowrap">{{ s.creationDate | date:'dd/MM/yyyy' }}</td>
@@ -109,7 +107,6 @@
           <div>
             <p><b>Taille :</b> {{ selectedProductForCreate.size }}</p>
             <p><b>CMU :</b> {{ selectedProductForCreate.cmu }}</p>
-            <p><b>Emplacement :</b> {{ selectedProductForCreate.location }}</p>
           </div>
         </div>
 

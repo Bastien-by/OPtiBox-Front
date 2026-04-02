@@ -48,7 +48,7 @@ export class DepositpageComponent implements OnInit, OnDestroy {
   scannedTools: Stock[] = [];
 
   private pollingInterval: any;
-  private isProcessing = false;
+  protected isProcessing = false;
 
   lockerDialogVisible = false;
   currentLocker: number | null = null;
@@ -59,6 +59,10 @@ export class DepositpageComponent implements OnInit, OnDestroy {
   checkDialogVisible = false;
   selectedStockForCheck: Stock | null = null;
   checkComment = '';
+
+  /** Saisie manuelle : 4 derniers chiffres de l'alitracer */
+  manualSuffix    = '';
+  manualScanError = '';
 
   faBarcode = faBarcode; faStop = faStop; faBoxOpen = faBoxOpen; faDoorClosed = faDoorClosed;
 
@@ -113,6 +117,24 @@ export class DepositpageComponent implements OnInit, OnDestroy {
         }
       } catch { this.isProcessing = false; }
     }, 1250);
+  }
+
+  /**
+   * Reconstruit l'alitracer complet depuis les 4 derniers chiffres saisis
+   * et déclenche le même traitement qu'un scan douchette.
+   * Format attendu : L0000000XXXX (longueur 12)
+   */
+  submitManualScan(): void {
+    const suffix = this.manualSuffix.trim();
+    if (!/^\d{4}$/.test(suffix)) {
+      this.manualScanError = 'Saisissez exactement 4 chiffres.';
+      return;
+    }
+    this.manualScanError = '';
+    const alitracer = 'L000000' + suffix;  // reconstitue L0000000XXXX
+    this.manualSuffix = '';
+    this.isProcessing = true;
+    this.handleScannedCode(alitracer);
   }
 
   private stopPolling(): void {

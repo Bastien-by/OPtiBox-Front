@@ -1,161 +1,245 @@
 <div class="flex flex-col gap-6 p-6 sm:p-8 md:p-10">
+  <div *ngIf="!isLoggedIn()" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+    <p class="font-bold">Accès aux procédures interdit</p>
+    <p>Vous devez être connecté avec votre badge pour consulter les procédures.</p>
+  </div>
+
+  <div *ngIf="isLoggedIn()">
     <div>
-        <h1 class="text-2xl font-bold py-3">
-            Procédures de contrôle
-        </h1>
-        <h2 class="text-xl">
-            Consignes de contrôle des moyens de levage.
-        </h2>
+      <h1 class="text-2xl font-bold py-3">
+        <fa-icon [icon]="faClipboardList"></fa-icon>
+        Procédures de contrôle
+      </h1>
+      <h2 class="text-xl">
+        Consignes de contrôle des moyens de levage.
+      </h2>
     </div>
 
     <div class="border-b-2 border-gray-200"></div>
 
-    <!-- Procédure 1 : anneaux de levage articulés -->
-    <section class="rounded shadow-xl bg-white p-6 grid gap-6 md:grid-cols-2">
-        <div class="flex flex-col items-center">
-            <img
-                    src="assets/images/procedures/anneau-articule-controle.png"
-                    alt="Contrôle des anneaux de levage articulés"
-                    class="procedure-image mb-4 object-contain max-h-80"
-            />
-            <p class="text-sm text-gray-500 text-center">
-                Schéma de contrôle – anneaux de levage articulés
-            </p>
+    <div>
+      <button
+        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        (click)="showCreateDialog()">
+        Créer une procédure
+      </button>
+    </div>
+
+    <div class="rounded overflow-auto p-5 gap-3">
+      <div *ngIf="procedureService.getAllProcedures().length === 0" class="text-center text-gray-500">
+        <p>Aucune procédure n'a été ajoutée</p>
+      </div>
+
+      <div *ngFor="let proc of procedureService.getAllProcedures()" class="mb-6 bg-white rounded shadow-xl p-4">
+        <div class="flex flex-col md:flex-row gap-4">
+          <div class="md:w-1/3 flex-shrink-0">
+            <div class="w-full h-72 md:h-80 flex items-center justify-center bg-gray-50 rounded overflow-hidden p-4">
+              <img
+                class="w-auto h-auto max-w-full max-h-full object-contain"
+                [src]="proc.picture ? proc.picture : 'assets/images/default_image.jpg'"
+                [alt]="proc.title">
+            </div>
+          </div>
+
+          <div class="md:w-2/3">
+            <div class="flex justify-between items-start gap-4">
+              <div>
+                <div class="inline-block bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full mb-2">
+                  {{ proc.category }}
+                </div>
+                <div class="text-gray-400 text-sm mb-2">{{ formatDate(proc.createdAt) }}</div>
+                <h3 class="text-xl font-bold">{{ proc.title }}</h3>
+                <p class="text-gray-600 mt-2">{{ proc.subtitle }}</p>
+              </div>
+
+              <div class="flex gap-2">
+                <div
+                  class="bg-blue-500 hover:bg-blue-800 text-white rounded-full p-button p-3 m-2 cursor-pointer"
+                  (click)="showDialog(proc, 1)">
+                  <i class="pi pi-pencil"></i>
+                </div>
+                <div
+                  class="bg-red-500 hover:bg-red-800 text-white rounded-full p-button p-3 m-2 cursor-pointer"
+                  (click)="showDialog(proc, 2)">
+                  <i class="pi pi-trash"></i>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="proc.warning" class="mt-4 bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded">
+              {{ proc.warning }}
+            </div>
+
+            <div *ngIf="proc.steps?.length" class="mt-4">
+              <div class="font-semibold mb-2">Étapes de contrôle</div>
+              <ol class="list-decimal list-inside text-gray-700 space-y-1">
+                <li *ngFor="let step of proc.steps">{{ step }}</li>
+              </ol>
+            </div>
+
+            <div *ngIf="proc.questions?.length" class="mt-4">
+              <div class="font-semibold mb-2">Questions à se poser</div>
+              <ul class="list-disc list-inside text-gray-700 space-y-1">
+                <li *ngFor="let q of proc.questions">{{ q }}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dialog création -->
+    <p-dialog header="Créer une procédure" [(visible)]="dialogCreateVisible" [style]="{ width: '50vw' }">
+      <div class="flex flex-col gap-3 p-5">
+        <h2 class="text-xl">Veuillez renseigner les informations de la procédure</h2>
+        <p>Les champs suivis d'une étoile (*) sont obligatoires</p>
+
+        <div class="flex flex-row gap-3">
+          <label class="text-gray-700 w-40">Titre *</label>
+          <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="procedure.title" placeholder="Titre">
         </div>
 
-        <div class="flex flex-col gap-4">
-            <div>
-                <h3 class="text-lg font-semibold mb-2">
-                    Comment contrôler un anneau de levage articulé ?
-                </h3>
-                <p class="text-sm text-gray-700">
-                    Avant chaque utilisation, vérifier l’état général de l’anneau, de l’axe de fixation et de l’articulation, ainsi que la lisibilité du marquage.
-                </p>
-            </div>
-
-            <div>
-                <h4 class="font-semibold text-sm mb-1">Étapes de contrôle</h4>
-                <ol class="list-decimal list-inside space-y-1 text-sm">
-                    <li>Inspecter l’anneau : fissures, déformations, arrêtes vives, corrosion ou usure excessive.</li>
-                    <li>Contrôler l’articulation : liberté de rotation / orientation, absence de point dur ou de jeu anormal.</li>
-                    <li>Vérifier la vis/axe de fixation : filetage non endommagé, longueur correcte, bon serrage.</li>
-                    <li>Contrôler le marquage : CMU, classe, fabricant, angle d’utilisation et identification lisibles.</li>
-                    <li>S’assurer que l’anneau est adapté au mode de prise (angle, type de levage, charge à lever).</li>
-                </ol>
-            </div>
-
-            <div>
-                <h4 class="font-semibold text-sm mb-1">Questions à se poser</h4>
-                <ul class="list-disc list-inside space-y-1 text-sm">
-                    <li>L’anneau présente‑t‑il des fissures, coups, déformations ou traces de corrosion importantes ?</li>
-                    <li>L’articulation tourne‑t‑elle librement sans jeu excessif ni blocage ?</li>
-                    <li>La vis/axe de fixation est‑il en bon état, correctement serré et adapté au filetage de la pièce ?</li>
-                    <li>La CMU et les angles d’utilisation indiqués sont‑ils connus et compatibles avec le levage prévu ?</li>
-                </ul>
-            </div>
-
-            <div class="mt-2 border border-gray-200 rounded p-3 bg-gray-50 text-sm text-gray-700">
-                Si un défaut est constaté (fissure, déformation, jeu important, marquage illisible), mettre l’anneau hors service et prévenir le responsable.
-            </div>
-        </div>
-    </section>
-
-    <!-- Procédure 2 : élingues acier -->
-    <section class="rounded shadow-xl bg-white p-6 grid gap-6 md:grid-cols-2">
-        <div class="flex flex-col items-center">
-            <img
-                    src="assets/images/procedures/elingues-acier-controle.png"
-                    alt="Contrôle des élingues en acier"
-                    class="procedure-image mb-4 object-contain max-h-80"
-            />
-            <p class="text-sm text-gray-500 text-center">
-                Schéma de contrôle – élingues en acier
-            </p>
+        <div class="flex flex-row gap-3">
+          <label class="text-gray-700 w-40">Sous-titre</label>
+          <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="procedure.subtitle" placeholder="Sous-titre">
         </div>
 
-        <div class="flex flex-col gap-4">
-            <div>
-                <h3 class="text-lg font-semibold mb-2">
-                    Comment contrôler les élingues en acier ?
-                </h3>
-                <p class="text-sm text-gray-700">
-                    Avant chaque utilisation, effectuer un contrôle visuel et fonctionnel complet de l’élingue.
-                </p>
-            </div>
-
-            <div>
-                <h4 class="font-semibold text-sm mb-1">Étapes de contrôle</h4>
-                <ol class="list-decimal list-inside space-y-1 text-sm">
-                    <li>Vérifier l’absence de fils cassés, corrosion, écrasement ou torsion.</li>
-                    <li>Contrôler les boucles et manchons : fissures, déformations, usure.</li>
-                    <li>Vérifier l’étiquette : CMU, identification, lisibilité.</li>
-                    <li>Contrôler les crochets et accessoires (verrouillage, déformation).</li>
-                </ol>
-            </div>
-
-            <div>
-                <h4 class="font-semibold text-sm mb-1">Questions à se poser</h4>
-                <ul class="list-disc list-inside space-y-1 text-sm">
-                    <li>Vois‑tu des fils cassés ou zones corrodées ?</li>
-                    <li>Les extrémités/moyens d’accrochage sont‑ils déformés ?</li>
-                    <li>L’étiquette de charge maximale est‑elle présente et lisible ?</li>
-                    <li>L’élingue est‑elle adaptée à la charge à lever ?</li>
-                </ul>
-            </div>
-
-            <div class="mt-2 border border-gray-200 rounded p-3 bg-gray-50 text-sm text-gray-700">
-                Si un défaut critique est constaté, mettre l’élingue hors service et prévenir le responsable.
-            </div>
-        </div>
-    </section>
-
-    <!-- Procédure 3 : élingues textiles -->
-    <section class="rounded shadow-xl bg-white p-6 grid gap-6 md:grid-cols-2">
-        <div class="flex flex-col items-center">
-            <img
-                    src="assets/images/procedures/elingues-textiles-controle.png"
-                    alt="Contrôle des élingues textiles"
-                    class="procedure-image mb-4 object-contain max-h-80"
-            />
-            <p class="text-sm text-gray-500 text-center">
-                Schéma de contrôle – élingues textile
-            </p>
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <label class="text-gray-700 w-40">Étapes</label>
+            <button class="bg-green-500 hover:bg-green-700 text-white text-xs px-3 py-1 rounded" type="button" (click)="addStep(procedure)">
+              + Ajouter
+            </button>
+          </div>
+          <div *ngFor="let step of procedure.steps; let i = index; trackBy: trackByIndex" class="flex gap-2 items-center">
+            <input
+              class="border border-gray-300 p-2 w-full"
+              type="text"
+              [value]="step"
+              (input)="updateStep(procedure, i, $any($event.target).value)"
+              placeholder="Étape">
+            <button type="button" class="text-red-500" (click)="removeStep(procedure, i)">x</button>
+          </div>
         </div>
 
-        <div class="flex flex-col gap-4">
-            <div>
-                <h3 class="text-lg font-semibold mb-2">
-                    Comment contrôler les élingues textiles ?
-                </h3>
-                <p class="text-sm text-gray-700">
-                    Avant chaque utilisation, réaliser un contrôle visuel minutieux de toute la longueur de l’élingue textile.
-                </p>
-            </div>
-
-            <div>
-                <h4 class="font-semibold text-sm mb-1">Étapes de contrôle</h4>
-                <ol class="list-decimal list-inside space-y-1 text-sm">
-                    <li>Dérouler complètement l’élingue et vérifier l’absence de coupures, déchirures ou fils tirés.</li>
-                    <li>Contrôler les zones de contact : abrasions, brûlures, traces de produits chimiques ou de chaleur.</li>
-                    <li>Inspecter les boucles et renforts : usure, déformation, coutures abîmées ou manquantes.</li>
-                    <li>Vérifier l’étiquette : charge maximale d’utilisation (CMU), marquage et lisibilité.</li>
-                    <li>Écarter immédiatement toute élingue présentant un défaut critique ou une étiquette illisible.</li>
-                </ol>
-            </div>
-
-            <div>
-                <h4 class="font-semibold text-sm mb-1">Questions à se poser</h4>
-                <ul class="list-disc list-inside space-y-1 text-sm">
-                    <li>Vois‑tu des coupures, déchirures, accrocs ou zones fortement abrasées ?</li>
-                    <li>Des traces de chaleur ou de produits chimiques sont‑elles visibles sur la sangle ?</li>
-                    <li>Les coutures et renforts sont‑ils intacts et non décousus ?</li>
-                    <li>L’étiquette de CMU est‑elle présente, lisible et adaptée à la charge à lever ?</li>
-                </ul>
-            </div>
-
-            <div class="mt-2 border border-gray-200 rounded p-3 bg-gray-50 text-sm text-gray-700">
-                En cas de doute sur l’état d’une élingue textile, la mettre hors service et prévenir le responsable avant toute utilisation.
-            </div>
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <label class="text-gray-700 w-40">Questions</label>
+            <button class="bg-green-500 hover:bg-green-700 text-white text-xs px-3 py-1 rounded" type="button" (click)="addQuestion(procedure)">
+              + Ajouter
+            </button>
+          </div>
+          <div *ngFor="let q of procedure.questions; let i = index; trackBy: trackByIndex" class="flex gap-2 items-center">
+            <input
+              class="border border-gray-300 p-2 w-full"
+              type="text"
+              [value]="q"
+              (input)="updateQuestion(procedure, i, $any($event.target).value)"
+              placeholder="Question">
+            <button type="button" class="text-red-500" (click)="removeQuestion(procedure, i)">x</button>
+          </div>
         </div>
-    </section>
+
+        <div class="flex flex-row gap-3">
+          <label class="text-gray-700 w-40">Image</label>
+          <input class="border border-gray-300 p-2 w-full" type="file" (change)="onFileSelected($event, procedure)" accept="image/*">
+        </div>
+
+        <img
+          *ngIf="procedure.picture"
+          [src]="procedure.picture"
+          alt="Aperçu"
+          class="h-48 w-full object-contain mx-auto">
+        <img
+          *ngIf="!procedure.picture"
+          src="assets/images/default_image.jpg"
+          alt="Aucune image"
+          class="h-48 w-full object-contain mx-auto">
+
+        <button class="bg-blue-500 text-white rounded shadow p-3" (click)="addProcedure()">Créer</button>
+      </div>
+    </p-dialog>
+
+    <!-- Dialog modification -->
+    <p-dialog header="Modifier une procédure" [(visible)]="dialog1Visible" [style]="{ width: '50vw' }">
+      <div class="flex flex-col gap-3 p-5">
+        <h1 class="text-2xl font-bold py-3">Procédure n° {{ selectedProcedure.id }}</h1>
+
+        <div class="flex flex-row gap-3">
+          <label class="text-gray-700 w-40">Titre *</label>
+          <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProcedure.title" placeholder="Titre">
+        </div>
+
+        <div class="flex flex-row gap-3">
+          <label class="text-gray-700 w-40">Sous-titre</label>
+          <input class="border border-gray-300 p-2 w-full" type="text" [(ngModel)]="selectedProcedure.subtitle" placeholder="Sous-titre">
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <label class="text-gray-700 w-40">Étapes</label>
+            <button class="bg-green-500 hover:bg-green-700 text-white text-xs px-3 py-1 rounded" type="button" (click)="addStep(selectedProcedure)">
+              + Ajouter
+            </button>
+          </div>
+          <div *ngFor="let step of selectedProcedure.steps; let i = index; trackBy: trackByIndex" class="flex gap-2 items-center">
+            <input
+              class="border border-gray-300 p-2 w-full"
+              type="text"
+              [value]="step"
+              (input)="updateStep(selectedProcedure, i, $any($event.target).value)"
+              placeholder="Étape">
+            <button type="button" class="text-red-500" (click)="removeStep(selectedProcedure, i)">x</button>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <label class="text-gray-700 w-40">Questions</label>
+            <button class="bg-green-500 hover:bg-green-700 text-white text-xs px-3 py-1 rounded" type="button" (click)="addQuestion(selectedProcedure)">
+              + Ajouter
+            </button>
+          </div>
+          <div *ngFor="let q of selectedProcedure.questions; let i = index; trackBy: trackByIndex" class="flex gap-2 items-center">
+            <input
+              class="border border-gray-300 p-2 w-full"
+              type="text"
+              [value]="q"
+              (input)="updateQuestion(selectedProcedure, i, $any($event.target).value)"
+              placeholder="Question">
+            <button type="button" class="text-red-500" (click)="removeQuestion(selectedProcedure, i)">x</button>
+          </div>
+        </div>
+
+        <div class="flex flex-row gap-3">
+          <label class="text-gray-700 w-40">Image</label>
+          <input class="border border-gray-300 p-2 w-full" type="file" (change)="onFileSelected($event, selectedProcedure)" accept="image/*">
+        </div>
+
+        <img
+          *ngIf="selectedProcedure.picture"
+          [src]="selectedProcedure.picture"
+          alt="Aperçu"
+          class="h-48 w-full object-contain mx-auto">
+        <img
+          *ngIf="!selectedProcedure.picture"
+          src="assets/images/default_image.jpg"
+          alt="Aucune image"
+          class="h-48 w-full object-contain mx-auto">
+
+        <button class="bg-blue-500 text-white rounded shadow p-3" (click)="updateProcedure()">Modifier</button>
+      </div>
+    </p-dialog>
+
+    <!-- Dialog suppression -->
+    <p-dialog header="Supprimer une procédure" [(visible)]="dialog2Visible" [style]="{ width: '40vw' }">
+      <div class="flex flex-col gap-3 p-5">
+        <h1 class="text-2xl font-bold py-3">Procédure n° {{ selectedProcedure.id }}</h1>
+        <p>Voulez-vous définitivement supprimer cette procédure ?</p>
+        <button class="bg-red-500 hover:bg-red-700 text-white rounded shadow p-3" (click)="deleteProcedure()">Supprimer</button>
+      </div>
+    </p-dialog>
+
+    <p-toast></p-toast>
+  </div>
 </div>

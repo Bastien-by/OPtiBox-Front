@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, firstValueFrom } from 'rxjs';
 
 export interface AppUser {
   id: number;
@@ -20,72 +21,124 @@ const STORAGE_KEY = 'optibox_user';
 })
 export class AuthAppService {
 
-  private currentUserSubject = new BehaviorSubject<AppUser | null>(this.loadUserFromStorage());
+  private currentUserSubject = new BehaviorSubject<AppUser | null>(null);
   currentUser$ = this.currentUserSubject.asObservable();
 
-  private sessionTTL = 10 * 60 * 1000;
+  private sessionTTL =  10 * 60 * 1000;
+  private logoutTimer: ReturnType<typeof setTimeout> | null = null;
 
-  private loadUserFromStorage(): AppUser | null {
+  constructor(private httpClient: HttpClient) {
+    this.restoreSession();
+  }
+
+  // ── Initialisation session ────────────────────────────────────────────────
+
+  private restoreSession(): void {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      return null;
+      this.currentUserSubject.next(null);
+      return;
     }
 
     try {
       const stored: StoredUser = JSON.parse(raw);
-      const now = Date.now();
-      if (now > stored.expiry) {
+
+      if (Date.now() > stored.expiry) {
         localStorage.removeItem(STORAGE_KEY);
-        return null;
+        this.currentUserSubject.next(null);
+        return;
       }
-      return stored.value;
+
+      this.currentUserSubject.next(stored.value);
+      this.startLogoutTimer(stored.expiry);
     } catch {
       localStorage.removeItem(STORAGE_KEY);
-      return null;
+      this.currentUserSubject.next(null);
     }
   }
 
   private saveUserToStorage(user: AppUser): void {
+    const expiry = Date.now() + this.sessionTTL;
     const stored: StoredUser = {
       value: user,
-      expiry: Date.now() + this.sessionTTL
+      expiry
     };
+
     localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+    this.startLogoutTimer(expiry);
   }
 
-  // ✅ AJOUTE CETTE MÉTHODE (mock local, sans HTTP)
-  async authenticate(username: string, password: string): Promise<boolean> {
-    // Liste des utilisateurs en dur
-    const mockUsers = [
-      { id: 1, username: 'admin', password: 'admin123', role: 'ADMIN' as const },
-      { id: 2, username: 'operator', password: 'operator123', role: 'OPERATEUR' as const },
-      { id: 3, username: 'maintenance', password: 'maintenance123', role: 'MAINTENANCE' as const }
-    ];
-
-    // Simule un délai réseau (optionnel)
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const user = mockUsers.find(u => u.username === username && u.password === password);
-
-    if (user) {
-      // Login réussi → stocke l'utilisateur
-      this.login({ id: user.id, username: user.username, role: user.role });
-      return true;
+  private startLogoutTimer(expiry: number): void {
+    if (this.logoutTimer) {
+      clearTimeout(this.logoutTimer);
     }
 
-    // Identifiants incorrects
-    return false;
+    const remaining = expiry - Date.now();
+    console.log('expiry =', expiry);
+    console.log('now =', Date.now());
+    console.log('remaining =', remaining);
+
+    if (remaining <= 0) {
+      this.handleAutoLogout();
+      return;
+    }
+
+    this.logoutTimer = setTimeout(() => {
+      console.log('AUTO LOGOUT déclenché');
+      this.handleAutoLogout();
+    }, remaining);
   }
+
+  private handleAutoLogout(): void {
+    this.logout(false);
+    alert('Votre session a expiré. Vous allez être déconnecté.');
+    window.location.reload();
+  }
+
+  // ── Authentification ──────────────────────────────────────────────────────
+
+  async authenticate(token: string): Promise<boolean> {
+    try {
+      const users = await firstValueFrom(
+        this.httpClient.get<AppUser[]>('api/users')
+      );
+
+      const found = users.find(u => u.token === token.trim());
+
+      if (found) {
+        this.login(found);
+        return true;
+      }
+
+      return false;
+    } catch (err) {
+      console.error('Erreur authentification:', err);
+      return false;
+    }
+  }
+
+  // ── Session ───────────────────────────────────────────────────────────────
 
   login(user: AppUser): void {
     this.saveUserToStorage(user);
     this.currentUserSubject.next(user);
   }
 
-  logout(): void {
+  logout(reload: boolean = true): void {
+    if (this.logoutTimer) {
+      clearTimeout(this.logoutTimer);
+      this.logoutTimer = null;
+    }
+
     localStorage.removeItem(STORAGE_KEY);
     this.currentUserSubject.next(null);
+
+    if (reload) {
+      window.location.reload();
+    }
   }
+
+  // ── Getters ───────────────────────────────────────────────────────────────
 
   getCurrentUser(): AppUser | null {
     return this.currentUserSubject.value;
@@ -96,18 +149,15 @@ export class AuthAppService {
   }
 
   isAdmin(): boolean {
-    const user = this.getCurrentUser();
-    return !!user && user.role === 'ADMIN';
+    return this.getCurrentUser()?.role === 'ADMIN';
   }
 
   isMaintenance(): boolean {
-    const user = this.getCurrentUser();
-    return !!user && user.role === 'MAINTENANCE';
+    return this.getCurrentUser()?.role === 'MAINTENANCE';
   }
 
   isOperator(): boolean {
-    const user = this.getCurrentUser();
-    return !!user && user.role === 'OPERATEUR';
+    return this.getCurrentUser()?.role === 'OPERATEUR';
   }
 
   getUsername(): string {
