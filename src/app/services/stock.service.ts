@@ -41,9 +41,11 @@ export class StockService {
       id:           stockSent.id,
       available:    stockSent.available,
       status:       stockSent.status,
-      alitracer:    stockSent.alitracer,  // peut être "ALI001" ou "ALI001|ALI002"
+      alitracer:    stockSent.alitracer,
       reference:    stockSent.reference,
+      lockerNumber: stockSent.lockerNumber
     };
+
     this.httpClient.post('api/stocks', stock).subscribe((stockReceived: any) => {
       this.stockArray = this.stockArray.map(p =>
         p.id === stockReceived.id ? stockReceived : p

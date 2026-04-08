@@ -18,8 +18,8 @@
     <div class="bg-white p-6 rounded shadow-md mb-6">
       <h2 class="text-xl font-bold mb-4">Ajout d'un utilisateur</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
-        <input class="border border-gray-300 p-2" type="text" [(ngModel)]="user.username" placeholder="Nom de l'utilisateur" maxlength="20">
-        <input class="border border-gray-300 p-2" type="text" [(ngModel)]="user.token" placeholder="Mot de Passe" maxlength="20">
+        <input class="border border-gray-300 p-2" type="text" [(ngModel)]="user.username" placeholder="Prénom Nom" maxlength="30">
+        <input class="border border-gray-300 p-2" type="text" [(ngModel)]="user.token" placeholder="Code LOG" maxlength="30">
         <select class="border border-gray-300 p-2 rounded" [(ngModel)]="user.role">
           <option value="ADMIN">Admin</option>
           <option value="MAINTENANCE">Maintenance</option>
