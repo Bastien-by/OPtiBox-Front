@@ -21,7 +21,7 @@ export class StockService {
     return this.stockArray;
   }
 
-  addStock(stockSent: any, lockerNumber: number) {
+  addStock(stockSent: any, lockerNumber: number | null) {
     const stock = {
       product:      stockSent.product,
       alitracer:    stockSent.alitracer,  // peut être "ALI001" ou "ALI001|ALI002"
@@ -29,7 +29,7 @@ export class StockService {
       available:    true,
       status:       1,
       creationDate: new Date(),
-      lockerNumber: lockerNumber
+      lockerNumber: lockerNumber ?? null
     };
     this.httpClient.post('api/stocks', stock).subscribe(() => {
       this.refreshStocks();

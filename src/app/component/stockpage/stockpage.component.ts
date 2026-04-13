@@ -138,10 +138,11 @@ export class StockpageComponent implements OnInit {
   }
 
   createStock() {
-    if (!this.newLockerNumber || this.newLockerNumber < 1 || this.newLockerNumber > 24) {
+    // lockerNumber null ou 0 = stock mur (pas de casier) → autorisé
+    if (this.newLockerNumber !== null && (this.newLockerNumber < 1 || this.newLockerNumber > 24)) {
       this.messageService.add({
         severity: 'error', summary: 'Erreur',
-        detail: 'Le numéro de casier doit être compris entre 1 et 24.'
+        detail: 'Le numéro de casier doit être compris entre 1 et 24, ou laissez vide pour le mur.'
       });
       return;
     }
@@ -157,7 +158,7 @@ export class StockpageComponent implements OnInit {
 
     const stockToSend = {
       product:      this.selectedProductForCreate,
-      alitracer,      // "ALI001" ou "ALI001|ALI002"
+      alitracer,
       reference:    this.reference,
       available:    true,
       status:       1,

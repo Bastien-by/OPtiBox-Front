@@ -174,6 +174,30 @@ export class ScanpageComponent implements OnInit, OnDestroy {
     }
   }
 
+
+  // ── Mur (stocks sans casier) ────────────────────────────────────────────────
+
+  isWallMode = false;
+
+  get wallStocks(): any[] {
+    return this.stockService.getAllStocks().filter(
+      (s: any) => s.lockerNumber === null || s.lockerNumber === undefined || s.lockerNumber === 0
+    );
+  }
+
+  get wallWithdrawMax(): number {
+    return this.wallStocks.filter(
+      (s: any) => s.available && s.status !== 2
+    ).length;
+  }
+
+  openWallWithdrawDialog(): void {
+    this.isWallMode = true;
+    this.withdrawMax = this.wallWithdrawMax;
+    this.withdrawQuantity = 1;
+    this.withdrawDialogVisible = true;
+  }
+
   // ── Filtres produit ───────────────────────────────────────────────────────
 
   /**
@@ -331,8 +355,6 @@ export class ScanpageComponent implements OnInit, OnDestroy {
   }
 
   async confirmWithdrawQuantity(): Promise<void> {
-    if (!this.activeLocker) return;
-
     if (this.withdrawQuantity < 1 || this.withdrawQuantity > this.withdrawMax) {
       this.messageService.add({ severity: 'error', summary: 'Quantité invalide', detail: `Saisissez un nombre entre 1 et ${this.withdrawMax}.` });
       return;
@@ -340,6 +362,18 @@ export class ScanpageComponent implements OnInit, OnDestroy {
 
     this.withdrawDialogVisible      = false;
     this.lockerDetailsDialogVisible = false;
+
+    // ── Mode Mur : pas d'ouverture de casier → aller directement à la sécurité
+    if (this.isWallMode) {
+      this.withdrawStocksPool = this.wallStocks.filter(s => s.available && s.status !== 2);
+      this.expectedAlitracers = this.withdrawStocksPool.flatMap((s: any) => StockService.getAlitracerList(s));
+      this.lockedFlow         = 'withdraw';
+      this.safetyDialogVisible = true;
+      return;
+    }
+
+    // ── Mode Casier : ouverture physique
+    if (!this.activeLocker) return;
 
     try {
       await this.scanService.openLocker(this.activeLocker);
@@ -349,7 +383,6 @@ export class ScanpageComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // expectedAlitracers : tous les alitracers individuels du pool (multi-alitracer)
     this.expectedAlitracers = this.withdrawStocksPool.flatMap((s: any) => StockService.getAlitracerList(s));
     this.lockedFlow               = 'withdraw';
     this.lockerCloseDialogVisible = true;
@@ -469,6 +502,8 @@ export class ScanpageComponent implements OnInit, OnDestroy {
     if (this.scannedCount >= this.targetScanCount) {
       this.stopPolling();
       this.scanDialogVisible = false;
+      this.isWallMode = false; // <-- reset mode mur
+
       if (this.scanMode === 'deposit' && this.activeLocker) {
         try {
           await this.scanService.openLocker(this.activeLocker);

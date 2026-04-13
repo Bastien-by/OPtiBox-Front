@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { NgForOf, NgIf, NgClass, DatePipe } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 import { ToastModule } from 'primeng/toast';
 import { DialogModule } from 'primeng/dialog';
@@ -40,22 +41,36 @@ interface MonthData  {
   month: number; isCurrent: boolean; isPast: boolean;
 }
 
+/** Filtre produit affiché dans la barre de filtres (issu de getAllProcedures) */
+interface ProductFilter { title: string; picture: string; }
+
 @Component({
   selector: 'app-checkpage',
   standalone: true,
-  imports: [NgForOf, NgIf, NgClass, DatePipe, ReactiveFormsModule, FormsModule,
-    ToastModule, DialogModule, FaIconComponent],
+  imports: [
+    NgForOf, NgIf, NgClass, DatePipe,
+    ReactiveFormsModule, FormsModule,
+    ToastModule, DialogModule,
+    FaIconComponent, RouterLink
+  ],
   templateUrl: './checkpage.component.html',
   styleUrls: ['./checkpage.component.css'],
   providers: [MessageService]
 })
 export class CheckpageComponent implements OnInit, OnDestroy {
 
+  // ── Données ───────────────────────────────────────────────────────────────
   allStocks: Stock[] = [];
   lockersMap: { [lockerNumber: number]: LockerInfo | undefined } = {};
   stats: LockerStats = { withStock: 0, empty: 0, total: 24 };
   dataReady = false;
 
+  // ── Filtres produits (système identique à la scan page) ───────────────────
+  productFilters: ProductFilter[] = [];
+  activeFilterTitle: string | null = null;
+  filteredLockers: number[] = Array.from({ length: 24 }, (_, i) => i + 1);
+
+  // ── Casier / dialogs ──────────────────────────────────────────────────────
   activeLocker: number | null = null;
   lockerStocks: Stock[] = [];
   lockerDetailsDialogVisible = false;
@@ -76,25 +91,8 @@ export class CheckpageComponent implements OnInit, OnDestroy {
   yearDetailDialogVisible = false;
   scanDialogVisible = false;
 
-  /**
-   * true  = mode RÉGLEMENTAIRE (Excel + ratio mis à jour)
-   * false = mode INDIVIDUEL ou TOUT CONTRÔLER (ni Excel ni ratio)
-   */
-  globalControlMode = false;
-
-  /**
-   * true = mode "Tout Contrôler" :
-   *   - INDIVIDUAL (pas d'Excel, pas de ratio)
-   *   - Ouvre TOUS les casiers avec stock
-   *   - Inclut aussi les stocks hors casier (lockerNumber = 0 / null)
-   *   - Retire chaque stock de la liste après scan (comme le réglementaire)
-   */
+  globalControlMode  = false;
   isTotalControlMode = false;
-
-  /**
-   * Type gelé au moment du scan dans handleScannedCode.
-   * executeCheck lit ce champ, jamais globalControlMode directement.
-   */
   pendingCheckType: 'REGULATORY' | 'INDIVIDUAL' = 'INDIVIDUAL';
 
   lockersOpenedForControl: number[] = [];
@@ -106,15 +104,14 @@ export class CheckpageComponent implements OnInit, OnDestroy {
 
   manualSuffix    = '';
   manualScanError = '';
-  /** Affiché après un contrôle HS pour demander la destruction de l'objet */
   hsWarningDialogVisible = false;
-  /** Stock concerné par le dernier contrôle HS */
   hsWarningStock: Stock | null = null;
 
   private actionTimeout: any;
   private pollingInterval: any;
   protected isProcessing = false;
 
+  // ── Icônes ────────────────────────────────────────────────────────────────
   protected readonly faListCheck    = faListCheck;
   protected readonly faFileExcel    = faFileExcel;
   protected readonly faDoorOpen     = faDoorOpen;
@@ -143,12 +140,14 @@ export class CheckpageComponent implements OnInit, OnDestroy {
     await this.loadLockers();
     await this.loadLastCheckDates();
     this.buildLockersMapAndStats();
+    await this.loadProductFilters();
     await this.loadMonthlyExcelFiles();
     this.dataReady = true;
   }
 
   ngOnDestroy(): void { this.stopPolling(); }
 
+  // ── Auth ──────────────────────────────────────────────────────────────────
   isLoggedIn()    { return this.authApp.isLoggedIn(); }
   isAdmin()       { return this.authApp.isAdmin(); }
   isMaintenance() { return this.authApp.isMaintenance(); }
@@ -233,6 +232,8 @@ export class CheckpageComponent implements OnInit, OnDestroy {
     }
     this.lockersMap = map;
     this.stats = { withStock, empty, total: 24 };
+    // Ré-applique le filtre courant après chaque refresh des données
+    this.setFilter(this.activeFilterTitle);
   }
 
   async refreshLockers(): Promise<void> {
@@ -240,8 +241,76 @@ export class CheckpageComponent implements OnInit, OnDestroy {
     await this.loadLockers();
     await this.loadLastCheckDates();
     this.buildLockersMapAndStats();
+    await this.loadProductFilters();
     await this.loadMonthlyExcelFiles();
     this.dataReady = true;
+  }
+
+  /** Déclenche un contrôle individuel directement sur un stock hors casier */
+  startCheckForStockWithoutLocker(stock: Stock): void {
+    this.selectedStockForCheck = stock;
+    this.pendingCheckType      = 'INDIVIDUAL';
+    this.checkComment          = '';
+    this.checkDialogVisible    = true;
+    // Pas de casier à ouvrir ni à fermer
+    this.activeLocker          = null;
+    this.globalControlMode     = false;
+    this.isTotalControlMode    = false;
+  }
+
+  // ── Filtres produits ──────────────────────────────────────────────────────
+
+  /**
+   * Charge les filtres depuis getAllProcedures (comme dans la scan page).
+   * Fallback sur les titres des stocks si l'API est indisponible.
+   */
+  private async loadProductFilters(): Promise<void> {
+    try {
+      const procs = await this.httpClient.get<any[]>('api/procedures').toPromise() ?? [];
+      const usedTitles = new Set(this.allStocks.map(s => s.product.title));
+      const seen = new Set<string>();
+      this.productFilters = procs
+        .filter(p => p.title && usedTitles.has(p.title) && !seen.has(p.title) && seen.add(p.title))
+        .map(p => ({ title: p.title as string, picture: (p.picture as string) ?? '' }));
+    } catch {
+      // Fallback : déduit depuis allStocks
+      const seen = new Set<string>();
+      this.productFilters = [];
+      for (const s of this.allStocks) {
+        if (s.lockerNumber > 0 && !seen.has(s.product.title)) {
+          seen.add(s.product.title);
+          this.productFilters.push({ title: s.product.title, picture: s.product.picture ?? '' });
+        }
+      }
+    }
+  }
+
+  /** Active/désactive un filtre par titre de produit */
+  setFilter(title: string | null): void {
+    this.activeFilterTitle = title;
+    if (!title) {
+      this.filteredLockers = Array.from({ length: 24 }, (_, i) => i + 1);
+      return;
+    }
+    this.filteredLockers = [...new Set(
+      this.allStocks
+        .filter(s => s.product.title === title && s.lockerNumber > 0)
+        .map(s => s.lockerNumber)
+    )];
+  }
+
+  /** Retourne les numéros de la colonne qui passent le filtre actif */
+  getCol(nums: number[]): number[] {
+    return nums.filter(n => this.filteredLockers.includes(n));
+  }
+
+  /** Nombre de casiers distincts contenant le type de produit donné */
+  getLockerCountByTitle(title: string): number {
+    return new Set(
+      this.allStocks
+        .filter(s => s.product.title === title && s.lockerNumber > 0)
+        .map(s => s.lockerNumber)
+    ).size;
   }
 
   // ── Helpers casiers ───────────────────────────────────────────────────────
@@ -250,7 +319,6 @@ export class CheckpageComponent implements OnInit, OnDestroy {
     return this.allStocks.filter(s => s.lockerNumber === lockerNumber);
   }
 
-  /** Stocks sans casier (retirés, hors casier) */
   get stocksWithoutLocker(): Stock[] {
     return this.allStocks.filter(s => !s.lockerNumber || s.lockerNumber === 0);
   }
@@ -267,8 +335,8 @@ export class CheckpageComponent implements OnInit, OnDestroy {
   }
 
   openLockerDetails(lockerNumber: number): void {
-    this.activeLocker   = lockerNumber;
-    this.lockerStocks   = this.getStocksByLocker(lockerNumber);
+    this.activeLocker  = lockerNumber;
+    this.lockerStocks  = this.getStocksByLocker(lockerNumber);
     this.lockerDetailsDialogVisible = true;
   }
 
@@ -291,7 +359,7 @@ export class CheckpageComponent implements OnInit, OnDestroy {
 
   private isDateThisMonth(dateStr: string | null): boolean {
     if (!dateStr) return false;
-    const parts = dateStr.split(/[\s/:]/);
+    const parts = dateStr.split(/[\s/:-]/);
     if (parts.length < 3) return false;
     const d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
     const now = new Date();
@@ -406,11 +474,9 @@ export class CheckpageComponent implements OnInit, OnDestroy {
       this.showErrorToast("Erreur lors de l'ouverture des casiers");
       return;
     }
-
     this.expectedAlitracers = this.allStocks
       .filter(s => this.lockersOpenedForControl.includes(s.lockerNumber) && !this.isStockCheckedRegulatoryThisMonth(s))
       .flatMap(s => StockService.getAlitracerList(s));
-
     this.globalControlMode  = true;
     this.isTotalControlMode = false;
     this.activeLocker       = null;
@@ -419,23 +485,15 @@ export class CheckpageComponent implements OnInit, OnDestroy {
     this.startPolling();
   }
 
-  // ── Contrôle TOUT CONTRÔLER (individuel, tous les stocks) ─────────────────
+  // ── Contrôle TOUT CONTRÔLER ───────────────────────────────────────────────
 
-  /**
-   * Ouvre TOUS les casiers qui ont du stock, puis propose de scanner
-   * TOUS les articles (y compris ceux hors casier).
-   * Mode INDIVIDUAL : ne modifie ni Excel ni ratio réglementaire.
-   */
   async startTotalControl(): Promise<void> {
     this.stopPolling();
     this.lockersOpenedForControl = [];
-
-    // Ouvre tous les casiers avec stock
     const lockersWithStock: number[] = [];
     for (let num = 1; num <= 24; num++) {
       if (this.getStocksByLocker(num).length > 0) lockersWithStock.push(num);
     }
-
     if (lockersWithStock.length > 0) {
       this.lockerOpenProgress = '...';
       this.messageService.add({ severity: 'info', summary: 'Ouverture en cours',
@@ -444,7 +502,7 @@ export class CheckpageComponent implements OnInit, OnDestroy {
         const result = await new Promise<{ requested: number[], succeeded: number[], failed: number[] }>((resolve, reject) => {
           this.scanService.openLockers(lockersWithStock).subscribe({ next: res => resolve(res), error: err => reject(err) });
         });
-        this.lockerOpenProgress  = '';
+        this.lockerOpenProgress      = '';
         this.lockersOpenedForControl = result.succeeded;
         result.succeeded.forEach(n => this.addRecentAction('Ouverture Tout Contrôler', n));
         if (result.failed.length > 0) {
@@ -460,10 +518,7 @@ export class CheckpageComponent implements OnInit, OnDestroy {
         return;
       }
     }
-
-    // Tous les stocks sans exception (y compris hors casier)
     this.expectedAlitracers = this.allStocks.flatMap(s => StockService.getAlitracerList(s));
-
     this.globalControlMode  = false;
     this.isTotalControlMode = true;
     this.activeLocker       = null;
@@ -476,8 +531,6 @@ export class CheckpageComponent implements OnInit, OnDestroy {
 
   async confirmLockerClosed(): Promise<void> {
     this.lockerCloseDialogVisible = false;
-
-    // Fermeture multiple : réglementaire OU tout contrôler
     if (this.globalControlMode || this.isTotalControlMode) {
       this.stopPolling();
       this.messageService.add({ severity: 'info', summary: 'Fermeture en cours',
@@ -496,7 +549,6 @@ export class CheckpageComponent implements OnInit, OnDestroy {
         }
       } catch { this.showErrorToast('Erreur lors de la fermeture des casiers'); }
       this.lockersOpenedForControl = [];
-
     } else if (this.activeLocker) {
       try {
         await this.scanService.closeLocker(this.activeLocker);
@@ -505,20 +557,17 @@ export class CheckpageComponent implements OnInit, OnDestroy {
           detail: `Casier ${this.activeLocker} fermé.` });
       } catch { this.showErrorToast(`Impossible de fermer le casier ${this.activeLocker}`); }
     }
-
-    // Remise à zéro
     this.activeLocker          = null;
     this.selectedStockForCheck = null;
     this.globalControlMode     = false;
     this.isTotalControlMode    = false;
     this.pendingCheckType      = 'INDIVIDUAL';
-
     this.messageService.add({ severity: 'info', summary: 'Contrôle terminé',
       detail: 'Le mode de contrôle a été arrêté.' });
     await this.refreshLockers();
   }
 
-  // ── Contrôle INDIVIDUEL (casier unique) ───────────────────────────────────
+  // ── Contrôle INDIVIDUEL ───────────────────────────────────────────────────
 
   async startScanControl(): Promise<void> {
     if (!this.activeLocker) { this.showErrorToast('Aucun casier sélectionné'); return; }
@@ -577,7 +626,6 @@ export class CheckpageComponent implements OnInit, OnDestroy {
   private async handleScannedCode(decodedText: string): Promise<void> {
     try {
       const alitracer = decodedText.trim();
-
       if (this.expectedAlitracers.length > 0 && !this.expectedAlitracers.includes(alitracer)) {
         this.messageService.add({
           severity: 'error', summary: 'Alitracer non attendu',
@@ -589,21 +637,17 @@ export class CheckpageComponent implements OnInit, OnDestroy {
         });
         return;
       }
-
       const stock = StockService.findByAlitracer(this.allStocks, alitracer);
       if (!stock) {
         this.messageService.add({ severity: 'error', summary: 'Stock introuvable',
           detail: "Aucun stock trouvé pour l'ID Alitracer scanné." });
         return;
       }
-
-      // Gèle le type au moment du scan
       this.pendingCheckType      = this.globalControlMode ? 'REGULATORY' : 'INDIVIDUAL';
       this.selectedStockForCheck = stock;
       this.checkComment          = '';
       this.checkDialogVisible    = true;
       this.stopPolling();
-
     } catch { this.showErrorToast('Une erreur est survenue lors du traitement du scan.');
     } finally {
       await this.scanService.clearScan();
@@ -621,10 +665,8 @@ export class CheckpageComponent implements OnInit, OnDestroy {
     const appUser = this.authApp.getCurrentUser();
     if (!appUser) { this.showErrorToast('Vous devez être connecté pour réaliser un contrôle'); return; }
 
-    // Utilise le type gelé au moment du scan, pas globalControlMode
     const checkType = this.pendingCheckType;
     const checkDate = new Date().toISOString();
-
     const payload: any = {
       id: null, date: checkDate, status,
       comment: this.checkComment || '', checkType,
@@ -652,7 +694,6 @@ export class CheckpageComponent implements OnInit, OnDestroy {
           { params: { filename: pdfResult.filename } }).toPromise();
       }
 
-      // Excel uniquement pour REGULATORY
       if (checkType === 'REGULATORY') {
         await this.updateMonthlyExcel(this.selectedStockForCheck, status, this.checkComment, appUser.username);
       }
@@ -664,11 +705,9 @@ export class CheckpageComponent implements OnInit, OnDestroy {
       const alitracersOfStock = StockService.getAlitracerList(this.selectedStockForCheck);
 
       if (checkType === 'REGULATORY') {
-        // Ratio + Excel mis à jour
         this.selectedStockForCheck.lastRegulatoryCheckDate = formatted;
         this.expectedAlitracers = this.expectedAlitracers.filter(a => !alitracersOfStock.includes(a));
       } else if (this.isTotalControlMode) {
-        // "Tout Contrôler" : retire aussi de la liste pour faire avancer le compteur
         this.expectedAlitracers = this.expectedAlitracers.filter(a => !alitracersOfStock.includes(a));
       }
 
@@ -683,39 +722,34 @@ export class CheckpageComponent implements OnInit, OnDestroy {
       if (checkType === 'REGULATORY') await this.loadMonthlyExcelFiles();
       this.showAddToast(checkType);
 
-// ── Traitement spécifique HS ───────────────────────────────────────────────
+      // ── Traitement HS ──────────────────────────────────────────────────────
       if (status === 2) {
         try {
-          // Retire le stock de son casier côté backend (adapte l'endpoint si besoin)
           await this.httpClient.patch(
             `api/stocks/${this.selectedStockForCheck.id}/withdraw`, {}
           ).toPromise();
         } catch (e) {
           console.error('Erreur lors du retrait du stock HS :', e);
         }
-        // Mise à jour locale : hors casier + indisponible
-        const inList = this.allStocks.find(s => s.id === this.selectedStockForCheck!.id);
-        if (inList) inList.lockerNumber = 0;
+        const inListHS = this.allStocks.find(s => s.id === this.selectedStockForCheck!.id);
+        if (inListHS) inListHS.lockerNumber = 0;
         this.selectedStockForCheck.lockerNumber = 0;
-
         this.buildLockersMapAndStats();
-
-        // Affiche le dialog de destruction AVANT de relancer le scan
-        this.hsWarningStock        = this.selectedStockForCheck;
-        this.selectedStockForCheck = null;
-        this.checkComment          = '';
+        this.hsWarningStock         = this.selectedStockForCheck;
+        this.selectedStockForCheck  = null;
+        this.checkComment           = '';
         this.hsWarningDialogVisible = true;
-        // Ne relance PAS le polling ici — il sera relancé à la fermeture du dialog HS
         return;
       }
-// ─────────────────────────────────────────────────────────────────────────────
+      // ──────────────────────────────────────────────────────────────────────
 
-      this.selectedStockForCheck = null; this.checkComment = '';
+      this.selectedStockForCheck = null;
+      this.checkComment          = '';
 
-
-      // Fin automatique si tous les stocks ont été scannés (réglementaire ou tout contrôler)
+      // Fin automatique si tous les stocks ont été scannés
       if ((this.globalControlMode || this.isTotalControlMode) && this.expectedAlitracers.length === 0) {
-        this.messageService.add({ severity: 'success',
+        this.messageService.add({
+          severity: 'success',
           summary: this.globalControlMode ? 'Contrôle réglementaire terminé' : 'Tout contrôlé',
           detail: this.globalControlMode
             ? 'Tous les stocks ont été contrôlés réglementairement ce mois-ci. ✅'
@@ -723,6 +757,16 @@ export class CheckpageComponent implements OnInit, OnDestroy {
         });
         setTimeout(() => this.stopScanControl(), 1500);
         return;
+      }
+
+      // Relance le polling uniquement si on est en mode scan actif
+      if (this.scanDialogVisible) {
+        this.messageService.add({ severity: 'info', summary: 'Contrôle enregistré',
+          detail: 'Vous pouvez scanner le prochain stock.' });
+        setTimeout(() => this.startPolling(), 500);
+      } else {
+        // Contrôle hors casier direct (pas de dialog scan)
+        await this.refreshLockers();
       }
 
       this.messageService.add({ severity: 'info', summary: 'Contrôle enregistré',
@@ -735,14 +779,18 @@ export class CheckpageComponent implements OnInit, OnDestroy {
   // ── Statut & helpers ──────────────────────────────────────────────────────
 
   getStatusLabelFromStock(stock: Stock): string {
-    if (stock.status === 1) return 'OK'; if (stock.status === 0) return 'NOK';
-    if (stock.status === 2) return 'HS'; return 'Inconnu';
+    if (stock.status === 1) return 'OK';
+    if (stock.status === 0) return 'NOK';
+    if (stock.status === 2) return 'HS';
+    return 'Inconnu';
   }
 
   getStatusClassFromStock(stock: Stock): string {
     switch (stock.status) {
-      case 1: return 'text-green-500 font-bold'; case 0: return 'text-orange-500 font-bold';
-      case 2: return 'text-red-600 font-bold';   default: return 'text-gray-500';
+      case 1:  return 'text-green-500 font-bold';
+      case 0:  return 'text-orange-500 font-bold';
+      case 2:  return 'text-red-600 font-bold';
+      default: return 'text-gray-500';
     }
   }
 
@@ -758,17 +806,12 @@ export class CheckpageComponent implements OnInit, OnDestroy {
     this.messageService.add({ severity: 'error', summary: 'Erreur', detail });
   }
 
-  /** Appelée à la fermeture du dialog HS */
   closeHsWarning(): void {
     this.hsWarningDialogVisible = false;
     this.hsWarningStock         = null;
-
-    // Retire l'alitracer du stock HS de la liste attendue (si mode scan actif)
     if (this.scanDialogVisible) {
       setTimeout(() => this.startPolling(), 500);
     }
-
-    // Si plus aucun stock à scanner en mode global/total → fermeture automatique
     if ((this.globalControlMode || this.isTotalControlMode) && this.expectedAlitracers.length === 0) {
       this.messageService.add({
         severity: 'success',
@@ -778,7 +821,6 @@ export class CheckpageComponent implements OnInit, OnDestroy {
       setTimeout(() => this.stopScanControl(), 1500);
     }
   }
-
 
   private addRecentAction(action: string, locker: number): void {
     this.recentActions.unshift({ action, locker, time: new Date() });
