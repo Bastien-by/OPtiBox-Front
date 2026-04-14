@@ -180,7 +180,7 @@ export class ScanpageComponent implements OnInit, OnDestroy {
   isWallMode = false;
 
   get wallStocks(): any[] {
-    return this.stockService.getAllStocks().filter(
+    return this.allStocks.filter(
       (s: any) => s.lockerNumber === null || s.lockerNumber === undefined || s.lockerNumber === 0
     );
   }
@@ -524,6 +524,11 @@ export class ScanpageComponent implements OnInit, OnDestroy {
   }
 
   private async processWithdrawScan(stock: any): Promise<void> {
+    // Mise à jour locale immédiate — évite le décalage visuel
+    stock.available = false;
+    const inAll = this.allStocks.find(s => s.id === stock.id);
+    if (inAll) inAll.available = false;
+
     this.history.type = 'withdraw'; this.stock.id = stock.id;
     this.review = stock; this.isStockSelected = true;
     this.getLatestDate();

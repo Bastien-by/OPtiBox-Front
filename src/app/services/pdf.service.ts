@@ -10,7 +10,7 @@ export interface CheckPdfData {
   productName: string;
   alitracer: string;
   reference: string;
-  lockerNumber: number;
+  lockerNumber: number | null;
   status: number;
   comment: string;
   controlledBy: string;
@@ -32,6 +32,10 @@ export class PdfService {
    * Génère le PDF et le sauvegarde sur le backend (SANS téléchargement auto)
    */
   async generateAndSavePdf(data: CheckPdfData): Promise<any> {
+    const lockerLabel = data.lockerNumber != null
+      ? data.lockerNumber.toString()
+      : 'Hors casier (Mur)';
+
     const docDefinition: any = {
       content: [
         {
@@ -85,7 +89,8 @@ export class PdfService {
               ],
               [
                 { text: 'Casier N°', bold: true, fillColor: '#f3f4f6' },
-                { text: data.lockerNumber.toString() }
+                // ✅ Gère null (stock mur)
+                { text: lockerLabel }
               ],
               [
                 { text: 'État du stock', bold: true, fillColor: '#f3f4f6' },
@@ -137,19 +142,15 @@ export class PdfService {
       }
     };
 
-    // ✅ Format de date lisible : 09-01-2026
     const dateFormatted = this.formatDateForFilename(data.checkDate);
     const filename = `Controle_${data.alitracer || data.reference}_${dateFormatted}.pdf`;
 
-    // ✅ NE TÉLÉCHARGE PAS automatiquement
-    // pdfMake.createPdf(docDefinition).download(filename);
-
-    // Sauvegarde sur backend
     return new Promise((resolve, reject) => {
       pdfMake.createPdf(docDefinition).getBlob((blob: Blob) => {
         const formData = new FormData();
         formData.append('file', blob, filename);
-        formData.append('stockId', data.lockerNumber.toString());
+        // ✅ Gère null : on envoie '0' ou une chaîne vide selon ce qu'attend le backend
+        formData.append('stockId', data.lockerNumber != null ? data.lockerNumber.toString() : '0');
         formData.append('checkDate', data.checkDate);
         formData.append('alitracer', data.alitracer);
 
@@ -167,9 +168,9 @@ export class PdfService {
    */
   private formatDateForFilename(isoDate: string): string {
     const date = new Date(isoDate);
-    const day = String(date.getDate()).padStart(2, '0');
+    const day   = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
+    const year  = date.getFullYear();
     return `${day}-${month}-${year}`;
   }
 

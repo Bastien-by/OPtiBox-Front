@@ -385,67 +385,55 @@
           Aucun casier ne contient ce type de produit.
         </div>
 
-      </div><!-- /grille -->
+        <!-- ════════════════════════════════════════════════
+     COLONNE MUR — dans le div.flex, après col 8
+     ════════════════════════════════════════════════ -->
+        <ng-container *ngIf="stocksWithoutLocker.length > 0">
+          <div class="flex flex-col border border-gray-400 bg-gray-200 rounded-sm shadow-sm self-stretch">
 
-      <!-- Stocks hors casier (retraits / HS) -->
-      <div *ngIf="dataReady && stocksWithoutLocker.length > 0"
-           class="mt-6 border-t border-gray-200 pt-5">
+            <div
+              class="cursor-pointer flex-1 flex flex-col"
+              (click)="openWallDetails()">
 
-        <p class="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-2">
-          🧱 Vue Murale
-          <span class="font-normal text-gray-400">
-      inclus automatiquement dans "Tout Contrôler" · contrôlables individuellement ci-dessous
-    </span>
-        </p>
+              <div
+                class="flex-1 w-24 sm:w-28 flex flex-col items-center justify-center transition-transform transform hover:scale-105 p-2"
+                [ngClass]="{
+          'bg-orange-500 text-white': wallNeedsCheck(),
+          'bg-green-500 text-black':  !wallNeedsCheck(),
+          'ring-4 ring-yellow-400':   activeFilterTitle !== null && wallMatchesActiveFilter()
+        }">
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
-          <div *ngFor="let stock of stocksWithoutLocker"
-               class="flex items-center gap-3 border rounded-xl px-4 py-3 bg-gray-50 hover:shadow-md transition">
+                <div class="text-xs sm:text-sm leading-tight text-center">
+                  <div class="mb-1 font-bold text-base">MUR</div>
 
-            <!-- Image -->
-            <div class="w-12 h-12 flex-shrink-0 flex items-center justify-center bg-white border border-gray-200 rounded-full overflow-hidden">
-              <img
-                [src]="stock.product.picture || 'assets/images/default_image.jpg'"
-                [alt]="stock.product.title"
-                class="max-w-full max-h-full object-contain">
-            </div>
+                  <div class="text-[11px] sm:text-xs font-semibold opacity-90">
+                    {{ stocksWithoutLocker.length }} stock(s)
+                  </div>
 
-            <!-- Infos -->
-            <div class="flex-1 text-xs min-w-0">
-              <p class="font-bold text-gray-800 truncate">{{ stock.product.title }}</p>
-              <p class="font-mono text-gray-500">{{ stock.alitracer }}</p>
-              <p class="text-gray-400">{{ stock.product.size }} — {{ stock.product.cmu }}</p>
+                  <!-- Ratio réglementaire uniquement -->
+                  <div class="font-semibold mt-0.5 text-xs opacity-90">
+                    {{ getWallCheckRatio() }}
+                  </div>
 
-              <!-- Statut dernier contrôle -->
-              <div class="mt-1 flex items-center gap-1 flex-wrap">
-                <span *ngIf="stock.status === 1" class="text-green-600 font-bold">✅ OK</span>
-                <span *ngIf="stock.status === 0" class="text-orange-500 font-bold">⚠️ NOK</span>
-                <span *ngIf="stock.status === 2" class="text-red-600 font-bold">🚫 HS</span>
-                <span *ngIf="stock.status === null" class="text-gray-400 italic">Jamais contrôlé</span>
+                  <div *ngIf="wallNeedsCheck()"
+                       class="mt-3 text-xs font-bold text-white bg-red-600 px-2 py-0.5 rounded">
+                    Ctrl à faire
+                  </div>
 
-                <span *ngIf="isStockCheckedThisMonth(stock)"
-                      class="ml-1 text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-semibold">
-            Contrôlé ce mois
-          </span>
-                <span *ngIf="!isStockCheckedThisMonth(stock)"
-                      class="ml-1 text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full font-semibold">
-            ⚠ Ctrl à faire
-          </span>
+                  <div *ngIf="!wallNeedsCheck()"
+                       class="mt-3 text-xs font-bold text-black bg-white/70 px-2 py-0.5 rounded">
+                    À jour
+                  </div>
+                </div>
+
               </div>
             </div>
-
-            <!-- Bouton contrôle -->
-            <button
-              type="button"
-              class="flex-shrink-0 flex flex-col items-center gap-1 bg-blue-500 hover:bg-blue-700 text-white font-bold px-3 py-2 rounded-lg text-xs transition"
-              (click)="startCheckForStockWithoutLocker(stock)">
-              <fa-icon [icon]="faListCheck"></fa-icon>
-              Contrôler
-            </button>
-
           </div>
-        </div>
-      </div>
+        </ng-container>
+
+      </div><!-- /grille -->
+
+
 
     </div><!-- /vue murale -->
 
@@ -608,6 +596,92 @@
       </div>
     </p-dialog>
 
+    <!-- ════════════════════════════════════════════════
+     DIALOG — Détail MUR
+     ════════════════════════════════════════════════ -->
+    <p-dialog
+      header="MUR"
+      [(visible)]="wallDetailsDialogVisible"
+      [style]="{ width: '70vw' }">
+
+      <div class="flex flex-col gap-4 text-sm">
+
+        <div class="flex flex-wrap justify-between items-start gap-3 mb-2">
+          <div>
+            <p class="font-semibold">Stocks hors casier</p>
+            <p class="text-xs text-gray-500 mt-0.5">
+              Le contrôle <b>individuel</b> est libre (répétable dans le mois) — il n'impacte pas le ratio ni l'Excel.<br>
+              Le contrôle <b>réglementaire</b> se fait une fois par mois — il met à jour le ratio et l'Excel.
+            </p>
+          </div>
+          <button
+            *ngIf="wallStocks.length > 0"
+            class="flex items-center gap-2 bg-blue-500 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded text-sm flex-shrink-0 transition"
+            type="button"
+            (click)="startWallScanControl()">
+            <fa-icon [icon]="faUser"></fa-icon>
+            Contrôle
+          </button>
+        </div>
+
+        <!-- Statut réglementaire du mur -->
+        <div class="rounded-lg px-4 py-2 text-sm font-medium"
+             [ngClass]="isWallFullyCheckedRegulatoryThisMonth()
+               ? 'bg-green-50 text-green-700 border border-green-200'
+               : 'bg-orange-50 text-orange-700 border border-orange-200'">
+          <span *ngIf="isWallFullyCheckedRegulatoryThisMonth()">
+            ✅ Contrôle réglementaire à jour ce mois-ci
+          </span>
+          <span *ngIf="!isWallFullyCheckedRegulatoryThisMonth()">
+            ⚠️ Contrôle réglementaire en attente ce mois-ci
+          </span>
+        </div>
+
+        <!-- Liste des stocks du mur -->
+        <div *ngIf="wallStocks.length > 0; else noStockInWall"
+             class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div *ngFor="let stock of wallStocks"
+               class="flex items-start gap-3 border rounded px-4 py-3 bg-gray-50">
+            <div class="h-12 w-12 rounded-full flex-shrink-0 flex items-center justify-center bg-white border border-gray-200 overflow-hidden">
+              <img
+                [src]="stock.product.picture || 'assets/images/default_image.jpg'"
+                alt="product image"
+                class="max-w-full max-h-full object-contain">
+            </div>
+            <div class="text-xs flex-1">
+              <div><b>ID Alitracer :</b> {{ stock.alitracer }}</div>
+              <div><b>Taille :</b> {{ stock.product.size }}</div>
+              <div><b>CMU :</b> {{ stock.product.cmu }}</div>
+              <div class="mt-1">
+                <b>Dernier contrôle :</b>
+                <span *ngIf="stock.lastCheckDate"> {{ stock.lastCheckDate }}</span>
+                <span *ngIf="!stock.lastCheckDate" class="text-gray-400"> Jamais contrôlé</span>
+              </div>
+              <div class="mt-1 flex items-center gap-1">
+                <span class="inline-flex items-center gap-1 bg-blue-100 text-blue-700 text-xs font-semibold px-1.5 py-0.5 rounded">
+                  Statut
+                </span>
+                <span [ngClass]="getStatusClass(stock)">
+                  {{ stock.status === 1 ? 'OK' : stock.status === 0 ? 'NOK' : 'HS' }}
+                </span>
+              </div>
+              <div class="mt-0.5 flex items-center gap-1">
+                <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-semibold px-1.5 py-0.5 rounded">
+                  <fa-icon [icon]="faShieldAlt" class="text-xs"></fa-icon> Réglementaire
+                </span>
+                <span *ngIf="isStockCheckedRegulatoryThisMonth(stock)" class="text-green-600 font-bold">✅ À jour</span>
+                <span *ngIf="!isStockCheckedRegulatoryThisMonth(stock)" class="text-orange-600 font-bold">⚠️ En attente</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #noStockInWall>
+          <span class="text-gray-400 text-sm italic">Aucun stock dans le mur</span>
+        </ng-template>
+      </div>
+    </p-dialog>
+
 
     <!-- ════════════════════════════════════════════════
          DIALOG — Détail d'une ANNÉE
@@ -699,7 +773,7 @@
         </div>
 
         <div class="flex flex-col md:flex-row md:items-start gap-6 mb-6">
-          <!-- Image object-contain (fix rognage) -->
+          <!-- Image object-contain -->
           <div class="w-32 h-32 flex-shrink-0 flex items-center justify-center bg-gray-50 rounded border border-gray-100 overflow-hidden">
             <img
               class="max-w-full max-h-full object-contain"
@@ -887,8 +961,8 @@
     </div>
   </div>
 
-  <!-- Stocks restants — individuel -->
-  <div class="p-6 bg-black/60" *ngIf="!globalControlMode && !isTotalControlMode && activeLocker">
+  <!-- Stocks restants — individuel (casier sélectionné, pas de mode global ni total) -->
+  <div class="p-6 bg-black/60" *ngIf="!globalControlMode && !isTotalControlMode && activeLocker !== null">
     <p class="text-gray-200 font-semibold mb-3">
       Stocks du casier {{ activeLocker }}
       <span class="ml-2 text-xs text-blue-300 font-normal italic">(contrôle individuel — ratio inchangé)</span>
